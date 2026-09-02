@@ -46,7 +46,8 @@ export function SearchAutocomplete() {
       
       try {
         // In a real scenario, map this to your actual backend URL via env variables
-        const response = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(query)}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/search?q=${encodeURIComponent(query)}`);
         if (response.ok) {
           const data = await response.json();
           setResults(data);

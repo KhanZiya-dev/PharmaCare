@@ -9,7 +9,8 @@ import { notFound } from "next/navigation";
 async function getProductData(slug: string) {
   try {
     // In production, map to the actual backend URL
-    const res = await fetch(`http://localhost:8000/product/${slug}`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const res = await fetch(`${apiUrl}/product/${slug}`, {
       next: { revalidate: 60 } // Revalidate every minute
     });
     

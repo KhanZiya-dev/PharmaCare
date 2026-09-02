@@ -111,7 +111,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   
                   <td className="p-4 text-right">
                     <a
-                      href={`http://localhost:8000/redirect?mapping_id=${platform.id}`}
+                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/redirect?mapping_id=${platform.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
