@@ -13,6 +13,7 @@ app = FastAPI(title="PharmaCare API", version="1.0.0")
 origins = [
     "http://localhost:3000", # Next.js frontend
     "https://pharmacare.in", # Production domain
+    "https://pharma-care-alpha.vercel.app", # Vercel deployment
 ]
 
 app.add_middleware(
