@@ -14,8 +14,8 @@ class PharmEasyScraper(BaseScraper):
         """
         try:
             # PharmEasy specific selectors
-            selling_price_text = page.locator(".PriceDetails_discountedPrice__A2kE9").first.inner_text(timeout=5000)
-            mrp_text = page.locator(".PriceDetails_mrpPrice__4Z-0_").first.inner_text(timeout=2000)
+            selling_price_text = page.locator(".PriceDetails_discountedPrice__A2kE9").first.inner_text(timeout=10000)
+            mrp_text = page.locator(".PriceDetails_mrpPrice__4Z-0_").first.inner_text(timeout=10000)
         except Exception as e:
             logger.warning(f"Could not find primary price elements on PharmEasy: {e}")
             try:

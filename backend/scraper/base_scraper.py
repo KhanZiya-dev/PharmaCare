@@ -28,7 +28,8 @@ class BaseScraper:
             stealth_sync(page)
             
             try:
-                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_timeout(5000) # Give SPAs time to render pricing
                 return self.extract_data(page)
             except Exception as e:
                 logger.error(f"Failed to scrape {url}: {str(e)}")
