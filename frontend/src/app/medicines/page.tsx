@@ -26,9 +26,12 @@ export default function MedicinesPage() {
     async function fetchProducts() {
       setIsLoading(true);
       try {
-        // Fetch products with a broad search to populate the page
-        const query = searchQuery.trim().length >= 2 ? searchQuery : "tablet";
-        const res = await fetch(`${apiUrl}/search?q=${encodeURIComponent(query)}`);
+        // Fetch products based on search or category default
+        let endpoint = `${apiUrl}/products?category=medicine`;
+        if (searchQuery.trim().length >= 2) {
+          endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}`;
+        }
+        const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
           setProducts(data);

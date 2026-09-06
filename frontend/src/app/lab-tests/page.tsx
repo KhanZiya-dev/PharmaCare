@@ -25,16 +25,25 @@ export default function LabTestsPage() {
     async function fetchProducts() {
       setIsLoading(true);
       try {
-        // Search for lab tests / diagnostic products
-        const query = searchQuery.trim().length >= 2 ? searchQuery : "test";
-        const res = await fetch(`${apiUrl}/search?q=${encodeURIComponent(query)}`);
+        // Fetch lab tests based on search or category default
+        let endpoint = `${apiUrl}/products?category=diagnostic`;
+        if (searchQuery.trim().length >= 2) {
+          endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}`;
+        }
+        const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
-          // Filter for diagnostic category if available
-          const diagnostics = data.filter(
-            (p: Product) => p.category?.toLowerCase() === "diagnostic" || p.category?.toLowerCase() === "lab test"
-          );
-          setProducts(diagnostics.length > 0 ? diagnostics : data);
+          
+          if (searchQuery.trim().length >= 2) {
+            // Filter for diagnostic category if we used generic search
+            const diagnostics = data.filter(
+              (p: Product) => p.category?.toLowerCase() === "diagnostic" || p.category?.toLowerCase() === "lab test"
+            );
+            setProducts(diagnostics.length > 0 ? diagnostics : data);
+          } else {
+            // Already filtered by backend
+            setProducts(data);
+          }
         }
       } catch (error) {
         console.error("Error fetching lab tests:", error);

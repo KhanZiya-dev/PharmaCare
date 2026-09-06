@@ -78,6 +78,19 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
     response = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{q}%").limit(10).execute()
     return response.data
 
+@app.get("/products")
+@limiter.limit("60/minute")
+def list_products(request: Request, category: str = None, supabase: Client = Depends(get_supabase)):
+    """
+    Fetch a list of recent products, optionally filtered by category.
+    """
+    query = supabase.table("products").select("id, name, slug, category, image_url").order("created_at", desc=True).limit(20)
+    if category:
+        query = query.eq("category", category)
+    
+    response = query.execute()
+    return response.data
+
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
 def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
