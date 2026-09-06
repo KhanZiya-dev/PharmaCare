@@ -5,12 +5,13 @@ import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { AlertCircle, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function getProductData(slug: string) {
   try {
-    // In production, map to the actual backend URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const res = await fetch(`${apiUrl}/product/${slug}`, {
+    const res = await fetch(`${API_URL}/product/${slug}`, {
       next: { revalidate: 60 } // Revalidate every minute
     });
     
@@ -26,8 +27,35 @@ async function getProductData(slug: string) {
   }
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const data = await getProductData(params.slug);
+// Dynamic SEO metadata per product
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getProductData(slug);
+
+  if (!data) {
+    return {
+      title: "Product Not Found — PharmaCare",
+    };
+  }
+
+  const { product } = data;
+  return {
+    title: `${product.name} — Compare Prices | PharmaCare`,
+    description: `Compare prices for ${product.name}${product.composition ? ` (${product.composition})` : ""} across top Indian e-pharmacies. View 30-day price history and find the best deal.`,
+  };
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const data = await getProductData(slug);
 
   if (!data) {
     notFound();

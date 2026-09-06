@@ -1,13 +1,22 @@
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from supabase import create_client, Client
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="PharmaCare API", version="1.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Security: CORS Policy
 origins = [
@@ -24,23 +33,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Supabase Client setup
+# Supabase Client setup (Singleton - created once at startup)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-def get_supabase() -> Client:
+_supabase_client: Client | None = None
+
+def _create_supabase_client() -> Client:
+    """Create Supabase client once at module level."""
     if not SUPABASE_URL or not SUPABASE_KEY:
-        raise HTTPException(status_code=500, detail="Supabase credentials not configured.")
+        raise ValueError("Supabase credentials not configured in .env")
     return create_client(SUPABASE_URL, SUPABASE_KEY)
+
+try:
+    _supabase_client = _create_supabase_client()
+except Exception as e:
+    import logging
+    logging.warning(f"Could not create Supabase client at startup: {e}")
+    _supabase_client = None
+
+def get_supabase() -> Client:
+    if _supabase_client is None:
+        raise HTTPException(status_code=500, detail="Supabase credentials not configured.")
+    return _supabase_client
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to PharmaCare API"}
 
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "ok", "service": "pharmacare-api"}
+
 @app.get("/search")
-def search_products(q: str = Query(..., min_length=2), supabase: Client = Depends(get_supabase)):
+@limiter.limit("60/minute")
+def search_products(request: Request, q: str = Query(..., min_length=2), supabase: Client = Depends(get_supabase)):
     """
     Fuzzy search implementation for products.
+    Rate limited to 60 requests per minute per IP.
     """
     # Uses Supabase's text search (which leverages pg_trgm in the background if configured via RPC, 
     # or ilike for basic operations)
@@ -48,20 +79,24 @@ def search_products(q: str = Query(..., min_length=2), supabase: Client = Depend
     return response.data
 
 @app.get("/product/{slug}")
-def get_product(slug: str, supabase: Client = Depends(get_supabase)):
+@limiter.limit("60/minute")
+def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
     """
     Fetch current prices and 30-day history data for a specific product.
     """
     # 1. Fetch product details
-    product_res = supabase.table("products").select("*").eq("slug", slug).single().execute()
-    if not product_res.data:
+    try:
+        product_res = supabase.table("products").select("*").eq("slug", slug).single().execute()
+        product = product_res.data
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
-        
-    product = product_res.data
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
     
     # 2. Fetch platform mappings and latest prices
     mappings_res = supabase.table("platform_product_links").select(
-        "id, affiliate_url, platforms(name, logo_url)"
+        "id, affiliate_url, scrape_url, platforms(name, logo_url)"
     ).eq("product_id", product["id"]).execute()
     
     mappings = mappings_res.data
@@ -90,13 +125,22 @@ def get_product(slug: str, supabase: Client = Depends(get_supabase)):
     }
 
 @app.get("/redirect")
-def redirect_to_platform(mapping_id: str, supabase: Client = Depends(get_supabase)):
+@limiter.limit("60/minute")
+def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = Depends(get_supabase)):
     """
-    Redirects to the affiliate URL of the platform.
+    Redirects to the affiliate URL of the platform via HTTP 307.
     """
-    mapping_res = supabase.table("platform_product_links").select("affiliate_url, scrape_url").eq("id", mapping_id).single().execute()
-    if not mapping_res.data:
+    try:
+        mapping_res = supabase.table("platform_product_links").select("affiliate_url, scrape_url").eq("id", mapping_id).single().execute()
+        mapping_data = mapping_res.data
+    except Exception:
+        raise HTTPException(status_code=404, detail="Mapping not found")
+    
+    if not mapping_data:
         raise HTTPException(status_code=404, detail="Mapping not found")
         
-    target_url = mapping_res.data.get("affiliate_url") or mapping_res.data.get("scrape_url")
-    return {"redirect_url": target_url} # Frontend will handle the actual redirection
+    target_url = mapping_data.get("affiliate_url") or mapping_data.get("scrape_url")
+    if not target_url:
+        raise HTTPException(status_code=404, detail="No redirect URL available")
+    
+    return RedirectResponse(url=target_url, status_code=307)

@@ -1,6 +1,9 @@
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 import logging
+import random
+import time
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -9,6 +12,13 @@ class BaseScraper:
     def __init__(self, platform_id: int, platform_name: str):
         self.platform_id = platform_id
         self.platform_name = platform_name
+        self.proxy_url = os.getenv("PROXY_URL")  # Optional: rotating proxy URL
+
+    def _random_delay(self, min_sec: float = 3.5, max_sec: float = 7.2):
+        """Add a randomized delay between requests to avoid IP bans."""
+        delay = random.uniform(min_sec, max_sec)
+        logger.info(f"Waiting {delay:.1f}s before next action...")
+        time.sleep(delay)
 
     def scrape(self, url: str):
         """
@@ -18,7 +28,15 @@ class BaseScraper:
         logger.info(f"Starting scrape for {self.platform_name} at {url}")
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            # Configure browser launch options
+            launch_options = {"headless": True}
+            
+            # Add proxy if configured
+            if self.proxy_url:
+                launch_options["proxy"] = {"server": self.proxy_url}
+                logger.info(f"Using proxy: {self.proxy_url}")
+
+            browser = p.chromium.launch(**launch_options)
             context = browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )

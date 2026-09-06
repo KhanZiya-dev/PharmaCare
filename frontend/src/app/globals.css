@@ -31,21 +31,30 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 :root {
   --background: var(--color-background);
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* For dark mode, keeping it simple as MVP usually focuses on light mode first */
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Skeleton loading shimmer effect */
+.skeleton {
+  background: linear-gradient(90deg, #e0e3e5 25%, #f0f2f4 50%, #e0e3e5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
 }

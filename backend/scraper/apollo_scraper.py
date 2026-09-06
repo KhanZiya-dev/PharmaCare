@@ -23,12 +23,8 @@ class ApolloScraper(BaseScraper):
                 selling_price_text = page.locator("text=₹").first.inner_text()
                 mrp_text = selling_price_text
             except:
-                logger.info("Bot protection detected or page failed to load. Using fallback demonstration data.")
-                return {
-                    "mrp": 199.0,
-                    "selling_price": 185.0,
-                    "in_stock": True
-                }
+                logger.error("Bot protection detected or page failed to load. Could not extract any pricing data.")
+                return None
 
         selling_price = self._clean_price(selling_price_text) if selling_price_text else None
         mrp = self._clean_price(mrp_text) if mrp_text else None

@@ -30,6 +30,8 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
     return priceA - priceB;
   });
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-accent overflow-hidden">
       <div className="overflow-x-auto">
@@ -47,7 +49,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
               const hasPrice = !!platform.latest_price;
               const isLowest = index === 0 && hasPrice;
               const inStock = platform.latest_price?.in_stock ?? false;
-              const targetUrl = platform.affiliate_url || platform.scrape_url;
+              const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
 
               return (
                 <tr 
@@ -111,7 +113,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   
                   <td className="p-4 text-right">
                     <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/redirect?mapping_id=${platform.id}`}
+                      href={redirectUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${

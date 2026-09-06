@@ -1,7 +1,7 @@
 import schedule
 import time
 import logging
-from runner import run_scrapers
+from scraper.engine import run_engine
 
 # Set up logging for the scheduler
 logging.basicConfig(
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def job():
     logger.info("Starting scheduled scraper job...")
-    run_scrapers()
+    run_engine()
     logger.info("Scheduled scraper job finished.")
 
 def start_scheduler():
