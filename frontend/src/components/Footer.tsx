@@ -56,18 +56,21 @@ export function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <a
-                  href="https://wa.me/1234567890"
+                  href="https://wa.me/919326561573"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-500 hover:text-[#25D366] transition-colors"
                 >
-                  WhatsApp Support
+                  Chat with us: +91 9326561573
                 </a>
               </li>
               <li>
-                <span className="text-sm text-gray-500">
-                  help@pharmacare.in
-                </span>
+                <a 
+                  href="mailto:ziyarites@gmail.com"
+                  className="text-sm text-gray-500 hover:text-primary transition-colors"
+                >
+                  ziyarites@gmail.com
+                </a>
               </li>
             </ul>
           </div>
