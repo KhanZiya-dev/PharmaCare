@@ -2,7 +2,8 @@ import { Navbar } from "@/components/Navbar";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
-import { AlertCircle, ChevronLeft, Pill } from "lucide-react";
+import { ProductCard } from "@/components/ProductCard";
+import { AlertCircle, ChevronLeft, Pill, Replace } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -62,7 +63,7 @@ export default async function ProductPage({
     notFound();
   }
 
-  const { product, platforms } = data;
+  const { product, platforms, alternatives } = data;
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
@@ -139,6 +140,30 @@ export default async function ProductPage({
           </div>
 
         </div>
+
+        {/* Alternative Medicines Section */}
+        {alternatives && alternatives.length > 0 && (
+          <div className="mt-12 mb-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Replace className="h-6 w-6 text-primary" />
+              <h2 className="font-bold text-2xl text-foreground">
+                Alternative Medicines <span className="text-sm font-normal text-gray-500 ml-2">(Same Composition)</span>
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {alternatives.map((alt: any) => (
+                <ProductCard
+                  key={alt.id}
+                  name={alt.name}
+                  slug={alt.slug}
+                  category={alt.category}
+                  composition={alt.composition}
+                  image_url={alt.image_url}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </main>

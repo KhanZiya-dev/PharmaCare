@@ -175,9 +175,20 @@ def get_product(request: Request, slug: str, supabase: Client = Depends(get_supa
         else:
             mapping["latest_price"] = None
     
+    # 4. Fetch alternatives (products with same composition)
+    alternatives = []
+    if product.get("composition"):
+        try:
+            alt_res = supabase.table("products").select("id, name, slug, category, composition, image_url").eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
+            alternatives = alt_res.data
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to fetch alternatives: {e}")
+            
     return {
         "product": product,
-        "platforms": mappings
+        "platforms": mappings,
+        "alternatives": alternatives
     }
 
 @app.get("/redirect")
