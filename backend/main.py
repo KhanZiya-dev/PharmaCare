@@ -102,13 +102,37 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
 def list_products(request: Request, category: str = None, supabase: Client = Depends(get_supabase)):
     """
     Fetch a list of recent products, optionally filtered by category.
+    Sorted by:
+    1. Has fetched prices
+    2. Has platform links mapped
+    3. Created recently
     """
-    query = supabase.table("products").select("id, name, slug, category, image_url").order("created_at", desc=True).limit(20)
+    # Fetch all matching products with their nested relations
+    query = supabase.table("products").select("id, name, slug, category, image_url, created_at, platform_product_links(id, price_history(id))")
     if category:
         query = query.eq("category", category)
     
     response = query.execute()
-    return response.data
+    products = response.data
+
+    def get_priority(p):
+        links = p.get("platform_product_links", [])
+        if not links:
+            return 0
+        has_prices = any(len(link.get("price_history", [])) > 0 for link in links)
+        if has_prices:
+            return 2
+        return 1
+
+    # Sort by priority DESC, then by created_at DESC
+    sorted_products = sorted(products, key=lambda p: (get_priority(p), p.get("created_at", "")), reverse=True)
+    
+    # Clean up relations before returning
+    for p in sorted_products:
+        p.pop("platform_product_links", None)
+        p.pop("created_at", None)
+        
+    return sorted_products[:20]
 
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
