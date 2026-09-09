@@ -2,10 +2,11 @@ import { Navbar } from "@/components/Navbar";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
-import { AlertCircle, ChevronLeft } from "lucide-react";
+import { AlertCircle, ChevronLeft, Pill } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { ProductImage } from "./ProductImage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -83,17 +84,7 @@ export default async function ProductPage({
         {/* Product Header */}
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-accent mb-8">
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {product.image_url ? (
-              <img 
-                src={product.image_url} 
-                alt={product.name} 
-                className="w-32 h-32 object-contain bg-gray-50 rounded-xl border border-accent p-2"
-              />
-            ) : (
-              <div className="w-32 h-32 bg-gray-50 rounded-xl border border-accent flex items-center justify-center">
-                <span className="text-gray-400 text-xs">No Image</span>
-              </div>
-            )}
+            <ProductImage imageUrl={product.image_url} name={product.name} />
             
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">

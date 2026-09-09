@@ -1,8 +1,10 @@
 from .base_scraper import BaseScraper
 import re
+import json
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class OneMgScraper(BaseScraper):
     def __init__(self, platform_id: int):
@@ -10,52 +12,140 @@ class OneMgScraper(BaseScraper):
 
     def extract_data(self, page):
         """
-        Extracts data from 1mg product page.
-        Note: These CSS selectors are best-effort placeholders and will likely need tuning
-        when tested against live 1mg structure.
+        Extracts price data from a Tata 1mg product page.
+
+        Strategy (ordered by reliability):
+        1. JSON-LD structured data (schema.org Product)
+        2. __NEXT_DATA__ embedded JSON (1mg uses Next.js)
+        3. Semantic CSS selectors targeting stable attributes
+        4. Text-based ₹ pattern matching (last resort)
         """
+
+        # ── Layer 1: JSON-LD ──
+        result = self._extract_json_ld(page)
+        if result and result.get("selling_price"):
+            logger.info(f"1mg: Extracted via JSON-LD: {result}")
+            result["in_stock"] = self._check_stock_status(page)
+            return result
+
+        # ── Layer 2: __NEXT_DATA__ ──
+        result = self._extract_from_next_data(page)
+        if result and result.get("selling_price"):
+            logger.info(f"1mg: Extracted via __NEXT_DATA__: {result}")
+            return result
+
+        # ── Layer 3: Semantic selectors ──
+        result = self._extract_from_dom(page)
+        if result and result.get("selling_price"):
+            logger.info(f"1mg: Extracted via DOM selectors: {result}")
+            return result
+
+        # ── Layer 4: Text-based fallback ──
+        result = self._extract_prices_from_text(page)
+        if result and result.get("selling_price"):
+            result["in_stock"] = self._check_stock_status(page)
+            logger.info(f"1mg: Extracted via text fallback: {result}")
+            return result
+
+        logger.error("1mg: All extraction methods failed.")
+        return None
+
+    def _extract_from_next_data(self, page) -> dict | None:
+        """Parse __NEXT_DATA__ for price info on 1mg."""
         try:
-            # 1mg often has price in spans with specific classes or data attributes
-            # E.g. selling price is often the large text, MRP is struck through
-            selling_price_text = page.locator(".PriceBoxPlanOption__offer-price-cp___2QPU_").first.inner_text(timeout=10000)
-            mrp_text = page.locator(".PriceDetails__discount-div___3k55z").first.inner_text(timeout=10000)
-        except Exception as e:
-            # Fallback or general approach
-            logger.warning(f"Could not find primary price elements on 1mg: {e}")
-            try:
-                # Basic fallback to look for text with ₹ or Rs.
-                selling_price_text = page.locator("text=₹").first.inner_text()
-                mrp_text = selling_price_text # fallback if MRP not found separately
-            except:
-                logger.error("Bot protection detected or page failed to load. Could not extract any pricing data.")
+            data = self._extract_next_data(page)
+            if not data:
                 return None
+            
+            # Navigate the nested JSON to find price data
+            props = data.get("props", {}).get("pageProps", {})
+            
+            # 1mg may store product data under various keys
+            product = (
+                props.get("productData")
+                or props.get("product")
+                or props.get("data", {}).get("product")
+                or props
+            )
+            
+            selling_price = (
+                self._safe_float(product.get("price"))
+                or self._safe_float(product.get("selling_price"))
+                or self._safe_float(product.get("sp"))
+            )
+            mrp = (
+                self._safe_float(product.get("mrp"))
+                or self._safe_float(product.get("market_price"))
+                or selling_price
+            )
+            
+            if selling_price:
+                in_stock = product.get("is_in_stock", product.get("in_stock", True))
+                return {
+                    "selling_price": selling_price,
+                    "mrp": mrp or selling_price,
+                    "in_stock": bool(in_stock),
+                }
+        except Exception as e:
+            logger.debug(f"1mg __NEXT_DATA__ parsing failed: {e}")
+        return None
 
-        # Clean strings to extract floats
-        selling_price = self._clean_price(selling_price_text) if selling_price_text else None
-        mrp = self._clean_price(mrp_text) if mrp_text else None
-        if not mrp and selling_price:
-            mrp = selling_price
+    def _extract_from_dom(self, page) -> dict | None:
+        """
+        Use stable, semantic selectors to find prices in the DOM.
+        Avoids hashed class names and uses data attributes, ARIA, or tag structure.
+        """
+        selling_price = None
+        mrp = None
 
-        # Check stock status - look for "Out of stock" text
-        in_stock = True
         try:
-            if page.locator("text=Out of stock").count() > 0:
-                in_stock = False
-        except:
-            pass
+            # Strategy: look for price containers by their visual structure
+            # The selling price is typically the large, prominent price
+            # The MRP is typically inside a <del> or <s> (struck-through) element
 
-        return {
-            "mrp": mrp,
-            "selling_price": selling_price,
-            "in_stock": in_stock
-        }
+            # Try data attributes first (some sites use data-price or similar)
+            for selector in [
+                '[data-price]',
+                '[data-selling-price]',
+                '[data-sp]',
+            ]:
+                el = page.locator(selector).first
+                if el.count() > 0:
+                    val = el.get_attribute("data-price") or el.get_attribute("data-selling-price") or el.get_attribute("data-sp")
+                    selling_price = self._safe_float(val)
+                    if selling_price:
+                        break
 
-    def _clean_price(self, text: str) -> float:
-        if not text:
-            return None
-        # Remove non-numeric chars except dot
-        clean = re.sub(r'[^\d.]', '', text)
-        try:
-            return float(clean)
-        except ValueError:
-            return None
+            # Find MRP in struck-through text
+            if not mrp:
+                for selector in ['del', 's', '.line-through', '[style*="line-through"]']:
+                    try:
+                        el = page.locator(selector).first
+                        if el.count() > 0:
+                            text = el.inner_text(timeout=3000)
+                            mrp = self._clean_price(text)
+                            if mrp:
+                                break
+                    except Exception:
+                        continue
+
+            # If we still don't have selling price, look for ₹ near "price" text
+            if not selling_price:
+                try:
+                    # Try finding the main price display
+                    price_el = page.locator('text=/₹\\s*\\d/').first
+                    if price_el.count() > 0:
+                        text = price_el.inner_text(timeout=3000)
+                        selling_price = self._clean_price(text)
+                except Exception:
+                    pass
+
+            if selling_price:
+                return {
+                    "selling_price": selling_price,
+                    "mrp": mrp or selling_price,
+                    "in_stock": self._check_stock_status(page),
+                }
+        except Exception as e:
+            logger.debug(f"1mg DOM extraction failed: {e}")
+        return None

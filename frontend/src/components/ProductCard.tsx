@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { TrendingDown } from "lucide-react";
+import { TrendingDown, Pill } from "lucide-react";
 
 interface ProductCardProps {
   name: string;
@@ -9,7 +12,22 @@ interface ProductCardProps {
   image_url?: string;
 }
 
+function isValidImageUrl(url?: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function ProductCard({ name, slug, category, composition, image_url }: ProductCardProps) {
+  const [imgError, setImgError] = useState(false);
+  const hasValidImage = isValidImageUrl(image_url) && !imgError;
+
   return (
     <Link
       href={`/product/${slug}`}
@@ -17,10 +35,19 @@ export function ProductCard({ name, slug, category, composition, image_url }: Pr
     >
       {/* Image */}
       <div className="h-40 bg-gray-50 flex items-center justify-center border-b border-accent p-4">
-        {image_url ? (
-          <img src={image_url} alt={name} className="max-h-full max-w-full object-contain" />
+        {hasValidImage ? (
+          <img
+            src={image_url!}
+            alt={name}
+            className="max-h-full max-w-full object-contain"
+            onError={() => setImgError(true)}
+            loading="lazy"
+          />
         ) : (
-          <div className="text-gray-300 text-sm font-medium">No Image</div>
+          <div className="flex flex-col items-center gap-2 text-gray-300">
+            <Pill className="h-10 w-10" />
+            <span className="text-xs font-medium">No Image</span>
+          </div>
         )}
       </div>
 

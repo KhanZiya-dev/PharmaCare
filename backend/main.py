@@ -1,7 +1,9 @@
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, Depends, HTTPException, Query, Request
+from fastapi import FastAPI, Depends, HTTPException, Query, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from contextlib import asynccontextmanager
+import threading
 from supabase import create_client, Client
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -14,7 +16,15 @@ load_dotenv()
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="PharmaCare API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the background scraper scheduler in a separate thread
+    from scraper.scheduler import start_scheduler
+    scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
+    scheduler_thread.start()
+    yield
+
+app = FastAPI(title="PharmaCare API", version="1.0.0", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -65,6 +75,15 @@ def read_root():
 def health_check():
     """Health check endpoint for monitoring."""
     return {"status": "ok", "service": "pharmacare-api"}
+
+@app.get("/cron/update-prices")
+def cron_update_prices(background_tasks: BackgroundTasks):
+    """
+    Endpoint to trigger the scraper manually or via external cron services (e.g. cron-job.org).
+    """
+    from scraper.engine import run_engine
+    background_tasks.add_task(run_engine)
+    return {"status": "Scraper job started in the background"}
 
 @app.get("/search")
 @limiter.limit("60/minute")
