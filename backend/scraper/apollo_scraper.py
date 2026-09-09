@@ -128,13 +128,22 @@ class ApolloScraper(BaseScraper):
                 except Exception:
                     continue
 
-            # Apollo: the main displayed price text (₹261.5 style on the page)
+            # Apollo: find the price with the largest font size
             if not selling_price:
                 try:
-                    price_el = page.locator('text=/₹\\s*\\d/').first
-                    if price_el.count() > 0:
-                        text = price_el.inner_text(timeout=3000)
-                        selling_price = self._clean_price(text)
+                    price_elements = page.locator('text=/₹\\s*\\d/').all()
+                    max_size = 0
+                    for el in price_elements:
+                        try:
+                            # Evaluate font size and extract numerical value
+                            size_str = el.evaluate("el => window.getComputedStyle(el).fontSize")
+                            size = float(size_str.replace('px', ''))
+                            if size > max_size:
+                                max_size = size
+                                text = el.inner_text(timeout=3000)
+                                selling_price = self._clean_price(text)
+                        except Exception:
+                            continue
                 except Exception:
                     pass
 
