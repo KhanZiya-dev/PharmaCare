@@ -63,8 +63,9 @@ export function PriceHistoryChart({ platforms }: PriceHistoryChartProps) {
     }
 
     platforms.forEach((platform) => {
-      // Find the entry for this date
-      const entryForDate = platform.history.find(
+      // Find the latest entry for this date by searching backwards
+      // We use [...platform.history].reverse().find() to get the most recent scrape for that day
+      const entryForDate = [...platform.history].reverse().find(
         (entry) => entry.scraped_at.startsWith(date)
       );
       
