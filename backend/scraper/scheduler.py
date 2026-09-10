@@ -1,7 +1,6 @@
 import schedule
 import time
 import logging
-from scraper.engine import run_engine
 
 # Set up logging for the scheduler
 logging.basicConfig(
@@ -12,7 +11,11 @@ logger = logging.getLogger(__name__)
 
 def job():
     logger.info("Starting scheduled scraper job...")
-    run_engine()
+    try:
+        from scraper.engine import run_engine
+        run_engine()
+    except Exception as e:
+        logger.error(f"Scraper job failed: {e}")
     logger.info("Scheduled scraper job finished.")
 
 def start_scheduler():
