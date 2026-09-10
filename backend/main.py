@@ -108,7 +108,7 @@ def list_products(request: Request, category: str = None, supabase: Client = Dep
     3. Created recently
     """
     # Fetch all matching products with their nested relations
-    query = supabase.table("products").select("id, name, slug, category, image_url, created_at, platform_product_links(id, price_history(id))")
+    query = supabase.table("products").select("id, name, slug, category, composition, image_url, created_at, platform_product_links(id, price_history(id))")
     if category:
         query = query.eq("category", category)
     
@@ -116,16 +116,16 @@ def list_products(request: Request, category: str = None, supabase: Client = Dep
     products = response.data
 
     def get_priority(p):
-        links = p.get("platform_product_links", [])
+        links = p.get("platform_product_links") or []
         if not links:
             return 0
-        has_prices = any(len(link.get("price_history", [])) > 0 for link in links)
+        has_prices = any(len(link.get("price_history") or []) > 0 for link in links)
         if has_prices:
             return 2
         return 1
 
-    # Sort by priority DESC, then by created_at DESC
-    sorted_products = sorted(products, key=lambda p: (get_priority(p), p.get("created_at", "")), reverse=True)
+    # Sort by priority DESC (-priority), then alphabetically by name ASC
+    sorted_products = sorted(products, key=lambda p: (-get_priority(p), p.get("name", "").lower()))
     
     # Clean up relations before returning
     for p in sorted_products:
