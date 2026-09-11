@@ -1,20 +1,24 @@
 import os
 import logging
+import asyncio
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from datetime import datetime, timezone
+from playwright.async_api import async_playwright
+from playwright_stealth import stealth_async
+from fake_useragent import UserAgent
 
-# Import scrapers
 from .onemg_scraper import OneMgScraper
 from .pharmeasy_scraper import PharmEasyScraper
 from .apollo_scraper import ApolloScraper
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load env variables
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+
+# Generate realistic user agents
+ua = UserAgent(browsers=['chrome', 'edge', 'safari'])
 
 def get_supabase_client() -> Client:
     url = os.getenv("SUPABASE_URL")
@@ -35,8 +39,72 @@ def get_scraper_for_platform(platform_name: str, platform_id: int):
         logger.warning(f"No specific scraper found for platform: {platform_name}")
         return None
 
-def run_engine():
-    logger.info("Initializing Scraper Engine...")
+async def worker(name, queue: asyncio.Queue, browser, results_list):
+    """
+    Worker task that pulls URLs from the queue and scrapes them using a persistent browser context.
+    """
+    logger.info(f"Worker {name} started")
+    
+    # Create a fresh context for this worker to isolate cookies/sessions slightly and use a unique User-Agent
+    context = await browser.new_context(
+        user_agent=ua.random,
+        viewport={"width": 1920, "height": 1080}
+    )
+    
+    while True:
+        try:
+            link = await queue.get()
+            
+            link_id = link.get("id")
+            scrape_url = link.get("scrape_url")
+            platform = link.get("platforms")
+            platform_id = platform.get("id")
+            platform_name = platform.get("name")
+            
+            scraper = get_scraper_for_platform(platform_name, platform_id)
+            if scraper:
+                page = await context.new_page()
+                await stealth_async(page)
+                
+                # Jitter delay before request to mimic human speed and avoid bursting
+                await scraper._random_delay(1.5, 4.0) 
+                
+                data = await scraper.scrape_page(page, scrape_url)
+                
+                if data and data.get("selling_price"):
+                    now = datetime.now(timezone.utc).isoformat()
+                    
+                    mrp = data.get("mrp") or data["selling_price"]
+                    selling = data["selling_price"]
+                    discount_pct = round(((mrp - selling) / mrp) * 100, 2) if mrp and mrp > 0 else 0
+                    
+                    record = {
+                        "mapping_id": link_id,
+                        "selling_price": selling,
+                        "mrp": mrp,
+                        "in_stock": data.get("in_stock", True),
+                        "discount_pct": discount_pct,
+                        "scraped_at": now,
+                    }
+                    results_list.append(record)
+                    logger.info(f"Worker {name}: Successfully scraped {platform_name} price for link {link_id}")
+                else:
+                    logger.warning(f"Worker {name}: Failed to get data for {scrape_url}")
+                
+                await page.close()
+            
+            queue.task_done()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Worker {name} encountered error: {e}")
+            queue.task_done()
+            
+    await context.close()
+
+
+async def run_engine_async():
+    logger.info("Initializing Async Scraper Engine...")
     try:
         supabase = get_supabase_client()
     except Exception as e:
@@ -44,87 +112,94 @@ def run_engine():
         return
 
     logger.info("Fetching platform product links...")
-    # Fetch links joined with platform details
     links_res = supabase.table("platform_product_links").select(
         "id, scrape_url, product_id, platforms(id, name)"
     ).execute()
 
-    if not links_res.data:
+    links = links_res.data
+    if not links:
         logger.warning("No active product links found to scrape.")
         return
 
-    links = links_res.data
     logger.info(f"Found {len(links)} links to scrape.")
 
-    # Cache scraper instances per platform to avoid recreating browsers
-    scraper_cache = {}
-
+    queue = asyncio.Queue()
     for link in links:
-        link_id = link.get("id")
-        scrape_url = link.get("scrape_url")
-        product_id = link.get("product_id")
-        platform = link.get("platforms")
+        if link.get("scrape_url") and link.get("platforms"):
+            queue.put_nowait(link)
+
+    results = []
+    
+    proxy_url = os.getenv("PROXY_URL")
+    launch_options = {"headless": True}
+    if proxy_url:
+        launch_options["proxy"] = {"server": proxy_url}
+        logger.info(f"Using proxy: {proxy_url}")
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(**launch_options)
         
-        if not scrape_url or not platform:
-            logger.warning(f"Invalid link configuration for link_id {link_id}. Skipping.")
-            continue
+        # Spawn 5 concurrent workers
+        num_workers = 5
+        tasks = []
+        for i in range(num_workers):
+            task = asyncio.create_task(worker(f"W-{i+1}", queue, browser, results))
+            tasks.append(task)
             
-        platform_id = platform.get("id")
-        platform_name = platform.get("name")
-
-        logger.info(f"Processing product_id: {product_id} on platform: {platform_name}")
+        # Wait until queue is completely processed
+        await queue.join()
         
-        scraper = scraper_cache.get(platform_id)
-        if not scraper:
-            scraper = get_scraper_for_platform(platform_name, platform_id)
-            if scraper:
-                scraper_cache[platform_id] = scraper
+        # Cancel workers now that queue is empty
+        for task in tasks:
+            task.cancel()
+            
+        # Wait until all worker tasks have been cancelled
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await browser.close()
         
-        if not scraper:
-            continue
+    logger.info(f"Scraping phase finished. Acquired {len(results)} successful results. Batch updating database...")
+    
+    if results:
+        # Batch insert price history in chunks of 100
+        chunk_size = 100
+        for i in range(0, len(results), chunk_size):
+            chunk = results[i:i+chunk_size]
+            try:
+                supabase.table("price_history").insert(chunk).execute()
+                logger.info(f"Batch inserted {len(chunk)} price history records.")
+            except Exception as e:
+                logger.error(f"Batch insert failed: {e}")
+                
+        # Update last_scraped timestamps
+        # Note: Supabase doesn't natively support bulk UPDATE via REST with different values.
+        # But we can update them in a quick loop, or just update all matching mapping_ids to 'now'.
+        now = datetime.now(timezone.utc).isoformat()
+        mapping_ids = [res["mapping_id"] for res in results]
+        
+        if mapping_ids:
+            try:
+                # We can update all successful mapping_ids in one query
+                supabase.table("platform_product_links").update({"last_scraped": now}).in_("id", mapping_ids).execute()
+                logger.info(f"Updated last_scraped timestamp for {len(mapping_ids)} links.")
+            except Exception as e:
+                logger.error(f"Failed to batch update last_scraped: {e}")
+                
+    logger.info("Async Scraper Engine run complete.")
 
-        # Add randomized delay between requests to avoid IP bans
-        scraper._random_delay()
 
-        try:
-            data = scraper.scrape(scrape_url)
-            if data and data.get("selling_price"):
-                logger.info(f"Scraped data for {platform_name}: {data}")
-                
-                now = datetime.now(timezone.utc).isoformat()
-                
-                # Build the price history record
-                history_record = {
-                    "mapping_id": link_id,
-                    "selling_price": data["selling_price"],
-                    "mrp": data.get("mrp") or data["selling_price"],
-                    "in_stock": data.get("in_stock", True),
-                    "scraped_at": now,
-                }
-                
-                # Calculate discount percentage
-                mrp = history_record["mrp"]
-                selling = history_record["selling_price"]
-                if mrp and selling and mrp > 0:
-                    discount_pct = round(((mrp - selling) / mrp) * 100, 2)
-                    history_record["discount_pct"] = discount_pct
-                
-                # Insert price history into Supabase
-                supabase.table("price_history").insert(history_record).execute()
-                logger.info(f"Successfully recorded price for link_id: {link_id}")
-                
-                # Update last_scraped timestamp on the mapping
-                supabase.table("platform_product_links").update({
-                    "last_scraped": now
-                }).eq("id", link_id).execute()
-                
-            else:
-                logger.warning(f"Failed to scrape meaningful data for {scrape_url}")
-                
-        except Exception as e:
-            logger.error(f"Error during scraping or database insertion for link_id {link_id}: {e}")
-
-    logger.info("Scraper Engine run complete.")
+def run_engine():
+    """Wrapper to run the async engine synchronously (e.g. from FastAPI BackgroundTasks)"""
+    import sys
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    
+    try:
+        # Create a new event loop for this thread to avoid 'There is no current event loop' errors
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run_engine_async())
+    finally:
+        loop.close()
 
 if __name__ == "__main__":
     run_engine()
