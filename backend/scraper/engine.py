@@ -86,6 +86,12 @@ async def worker(name, queue: asyncio.Queue, browser, results_list):
                         "discount_pct": discount_pct,
                         "scraped_at": now,
                     }
+                    
+                    product_id = link.get("product_id")
+                    if data.get("image_url") and product_id:
+                        record["_image_url"] = data.get("image_url")
+                        record["_product_id"] = product_id
+                        
                     results_list.append(record)
                     logger.info(f"Worker {name}: Successfully scraped {platform_name} price for link {link_id}")
                 else:
@@ -110,6 +116,11 @@ async def run_engine_async():
     except Exception as e:
         logger.error(f"Failed to connect to Supabase: {e}", exc_info=True)
         return
+
+    logger.info("Fetching products without images...")
+    no_image_products_res = supabase.table("products").select("id").is_("image_url", "null").execute()
+    products_needing_image = {p["id"] for p in no_image_products_res.data}
+    logger.info(f"Found {len(products_needing_image)} products needing images.")
 
     logger.info("Fetching platform product links...")
     links_res = supabase.table("platform_product_links").select(
@@ -160,10 +171,30 @@ async def run_engine_async():
     logger.info(f"Scraping phase finished. Acquired {len(results)} successful results. Batch updating database...")
     
     if results:
+        # Collect image updates and clean up results for price_history table
+        image_updates = {}
+        cleaned_results = []
+        for res in results:
+            if "_image_url" in res and res.get("_product_id") in products_needing_image:
+                image_updates[res["_product_id"]] = res["_image_url"]
+            
+            cleaned_res = {k: v for k, v in res.items() if not k.startswith("_")}
+            cleaned_results.append(cleaned_res)
+            
+        # Batch update product images
+        if image_updates:
+            logger.info(f"Updating images for {len(image_updates)} products...")
+            for prod_id, img_url in image_updates.items():
+                try:
+                    supabase.table("products").update({"image_url": img_url}).eq("id", prod_id).execute()
+                except Exception as e:
+                    logger.error(f"Failed to update image for product {prod_id}: {e}")
+            logger.info("Product images updated successfully.")
+            
         # Batch insert price history in chunks of 100
         chunk_size = 100
-        for i in range(0, len(results), chunk_size):
-            chunk = results[i:i+chunk_size]
+        for i in range(0, len(cleaned_results), chunk_size):
+            chunk = cleaned_results[i:i+chunk_size]
             try:
                 supabase.table("price_history").insert(chunk).execute()
                 logger.info(f"Batch inserted {len(chunk)} price history records.")

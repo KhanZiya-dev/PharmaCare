@@ -30,7 +30,10 @@ class BaseScraper:
             # We assume stealth is applied when creating the page/context in engine
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_timeout(3000) # Give SPAs time to render pricing
-            return await self.extract_data(page)
+            data = await self.extract_data(page)
+            if data and not data.get("image_url"):
+                data["image_url"] = await self._extract_og_image(page)
+            return data
         except Exception as e:
             logger.error(f"Failed to scrape {url}: {str(e)}")
             return None
@@ -107,13 +110,39 @@ class BaseScraper:
         availability = str(offers.get("availability", "")).lower()
         in_stock = "outofstock" not in availability
         
+        # Image extraction
+        image_url = None
+        image_data = product.get("image")
+        if isinstance(image_data, str):
+            image_url = image_data
+        elif isinstance(image_data, list) and len(image_data) > 0:
+            if isinstance(image_data[0], str):
+                image_url = image_data[0]
+            elif isinstance(image_data[0], dict):
+                image_url = image_data[0].get("url")
+        elif isinstance(image_data, dict):
+            image_url = image_data.get("url")
+        
         if selling_price:
             logger.info(f"JSON-LD extracted: selling={selling_price}, mrp={mrp}, in_stock={in_stock}")
             return {
                 "selling_price": selling_price,
                 "mrp": mrp,
                 "in_stock": in_stock,
+                "image_url": image_url,
             }
+        return None
+
+    async def _extract_og_image(self, page: Page) -> str | None:
+        """Extract main product image from meta og:image tag."""
+        try:
+            meta = page.locator('meta[property="og:image"]')
+            if await meta.count() > 0:
+                url = await meta.first.get_attribute("content")
+                if url and url.startswith("http"):
+                    return url
+        except Exception as e:
+            logger.debug(f"OG Image extraction failed: {e}")
         return None
 
     async def _extract_next_data(self, page: Page) -> dict | None:
