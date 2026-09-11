@@ -125,6 +125,9 @@ class BaseScraper:
         
         if selling_price:
             logger.info(f"JSON-LD extracted: selling={selling_price}, mrp={mrp}, in_stock={in_stock}")
+            if image_url and "logo" in image_url.lower():
+                image_url = None
+                
             return {
                 "selling_price": selling_price,
                 "mrp": mrp,
@@ -140,6 +143,8 @@ class BaseScraper:
             if await meta.count() > 0:
                 url = await meta.first.get_attribute("content")
                 if url and url.startswith("http"):
+                    if "logo" in url.lower():
+                        return None
                     return url
         except Exception as e:
             logger.debug(f"OG Image extraction failed: {e}")
