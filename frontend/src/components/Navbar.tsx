@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { Pill, Menu, X, MessageCircle } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname?.startsWith(path);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/80 border-b border-accent">
@@ -22,14 +29,23 @@ export function Navbar() {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/medicines" className="text-foreground hover:text-primary transition-colors font-medium">
+          <div className="hidden md:flex items-center space-x-2">
+            <Link 
+              href="/medicines" 
+              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/medicines") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+            >
               Medicines
             </Link>
-            <Link href="/lab-tests" className="text-foreground hover:text-primary transition-colors font-medium">
+            <Link 
+              href="/lab-tests" 
+              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/lab-tests") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+            >
               Lab Tests
             </Link>
-            <Link href="/trends" className="text-foreground hover:text-primary transition-colors font-medium">
+            <Link 
+              href="/trends" 
+              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/trends") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+            >
               Price Trends
             </Link>
           </div>
@@ -69,19 +85,22 @@ export function Navbar() {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg">
             <Link
               href="/medicines"
-              className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary hover:bg-accent/30 rounded-md"
+              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/medicines") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
+              onClick={() => setIsMenuOpen(false)}
             >
               Medicines
             </Link>
             <Link
               href="/lab-tests"
-              className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary hover:bg-accent/30 rounded-md"
+              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/lab-tests") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
+              onClick={() => setIsMenuOpen(false)}
             >
               Lab Tests
             </Link>
             <Link
               href="/trends"
-              className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary hover:bg-accent/30 rounded-md"
+              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/trends") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
+              onClick={() => setIsMenuOpen(false)}
             >
               Price Trends
             </Link>
