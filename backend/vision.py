@@ -53,7 +53,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
         response = model.generate_content(
             [prompt, img],
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=250,
+                max_output_tokens=1024,
                 response_mime_type="application/json"
             )
         )
@@ -62,6 +62,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
             return []
             
         try:
+            logger.debug(f"Finish Reason: {response.candidates[0].finish_reason}")
             parsed_list = json.loads(response.text.strip())
             if isinstance(parsed_list, list):
                 medicines = [str(m).strip() for m in parsed_list if str(m).strip().upper() != "UNCLEAR" and str(m).strip()]
@@ -69,6 +70,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
             return []
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON from Gemini: {response.text} Error: {e}")
+            logger.error(f"Finish Reason: {response.candidates[0].finish_reason}")
             return []
     except Exception as e:
         logger.error(f"Error calling Gemini API: {e}")
