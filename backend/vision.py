@@ -5,25 +5,32 @@ import logging
 import json
 import re
 
+import random
+
 logger = logging.getLogger(__name__)
 
-# Try configuring the API key
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-else:
-    logger.warning("GEMINI_API_KEY is not set in the environment.")
+def get_api_key():
+    keys_str = os.getenv("GEMINI_API_KEY")
+    if not keys_str:
+        return None
+    # Split by comma and remove empty/whitespace keys
+    keys = [k.strip() for k in keys_str.split(",") if k.strip()]
+    if not keys:
+        return None
+    return random.choice(keys)
 
 def extract_medicines_from_image(image_path: str) -> list[str]:
     """
     Extracts medicine names from an image using Gemini Pro Vision.
     Returns a list of extracted medicine names.
     """
+    api_key = get_api_key()
     if not api_key:
-        logger.error("Cannot extract text: GEMINI_API_KEY is missing.")
+        logger.error("Cannot extract text: GEMINI_API_KEY is missing or empty.")
         return []
         
     try:
+        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-3.6-flash')
         # Optimize: Downscale image to max 800x800 to save bandwidth and tokens
         img = Image.open(image_path).convert('RGB')
