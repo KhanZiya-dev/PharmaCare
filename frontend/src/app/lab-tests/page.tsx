@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
-import { Search, Loader2, Microscope } from "lucide-react";
+import { Search, Loader2, Microscope, Camera } from "lucide-react";
+import LensSearchModal from "@/components/LensSearchModal";
 
 interface Product {
   id: string;
@@ -18,6 +19,7 @@ export default function LabTestsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLensOpen, setIsLensOpen] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -81,14 +83,22 @@ export default function LabTestsPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            className="w-full pl-12 pr-4 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
+            className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
             placeholder="Search lab tests by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {isLoading && (
-            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
+            <Loader2 className="absolute right-14 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
           )}
+          <button
+            type="button"
+            onClick={() => setIsLensOpen(true)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+            title="Search by Image"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Product Grid */}
@@ -128,6 +138,7 @@ export default function LabTestsPage() {
           </div>
         )}
       </div>
+      <LensSearchModal isOpen={isLensOpen} onClose={() => setIsLensOpen(false)} />
     </main>
   );
 }
