@@ -35,20 +35,7 @@ export default function RootLayout({
         {children}
         <Footer />
 
-        {/* Global Sticky WhatsApp FAB */}
-        <a
-          href="https://wa.me/1234567890"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#1DA851] text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group"
-          aria-label="WhatsApp Support"
-        >
-          <MessageCircle className="h-6 w-6" />
-          {/* Tooltip */}
-          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Need help? Chat with us
-          </span>
-        </a>
+
       </body>
     </html>
   );

@@ -31,6 +31,12 @@ export function Navbar() {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-2">
             <Link 
+              href="/" 
+              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+            >
+              Home
+            </Link>
+            <Link 
               href="/medicines" 
               className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/medicines") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
             >
@@ -50,18 +56,7 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* WhatsApp Support Button */}
-          <div className="hidden md:flex items-center">
-            <a
-              href="https://wa.me/1234567890"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white px-4 py-2 rounded-full font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>Support</span>
-            </a>
-          </div>
+
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
@@ -84,6 +79,13 @@ export function Navbar() {
         <div className="md:hidden bg-white border-t border-accent absolute w-full">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg">
             <Link
+              href="/"
+              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
               href="/medicines"
               className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/medicines") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
               onClick={() => setIsMenuOpen(false)}
@@ -104,15 +106,7 @@ export function Navbar() {
             >
               Price Trends
             </Link>
-            <a
-              href="https://wa.me/1234567890"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 flex w-full items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2 rounded-full font-medium"
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>WhatsApp Support</span>
-            </a>
+
           </div>
         </div>
       )}

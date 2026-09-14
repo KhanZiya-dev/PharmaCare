@@ -108,7 +108,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-2 text-indigo-600">
             <Camera className="w-5 h-5" />
-            <h3 className="font-semibold text-gray-800">AI Lens Search</h3>
+            <h3 className="font-semibold text-gray-800">Search by Dr. Prescription</h3>
           </div>
           <button 
             onClick={() => {
