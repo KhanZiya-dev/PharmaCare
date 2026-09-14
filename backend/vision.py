@@ -22,7 +22,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
         return []
         
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-3.6-flash')
         img = Image.open(image_path)
         
         prompt = (
