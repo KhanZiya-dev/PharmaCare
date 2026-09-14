@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import ReactDOM from "react-dom";
 import Link from "next/link";
 import { Search, Upload, X, Loader2, Camera, Image as ImageIcon } from "lucide-react";
 
@@ -91,8 +92,16 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+  const [mounted, setMounted] = useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
@@ -176,8 +185,8 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           {/* Error State */}
           {error && (
             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-center">
-              {error}
-              <button onClick={resetState} className="ml-2 font-medium underline hover:text-red-700">Try again</button>
+               {error}
+               <button onClick={resetState} className="ml-2 font-medium underline hover:text-red-700">Try again</button>
             </div>
           )}
 
@@ -240,4 +249,6 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       `}} />
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 }
