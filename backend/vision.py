@@ -71,7 +71,14 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON from Gemini: {response.text} Error: {e}")
             logger.error(f"Finish Reason: {response.candidates[0].finish_reason}")
+            # If it cut off due to token limits, say so
+            if response.candidates[0].finish_reason == 2:
+                raise ValueError("Response was cut off. Please increase token limit or try a simpler image.")
             return []
     except Exception as e:
         logger.error(f"Error calling Gemini API: {e}")
+        if "429" in str(e) or "quota" in str(e).lower():
+            raise ValueError("AI API Quota Exceeded (Free Tier). Please try again later.")
+        if isinstance(e, ValueError):
+            raise e
         return []
