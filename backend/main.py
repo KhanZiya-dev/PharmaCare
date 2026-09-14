@@ -101,10 +101,12 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
     # Log if no results found
     if not response.data and len(q) > 3:
         try:
-            supabase.table("missing_searches").insert({
-                "search_query": q,
-                "search_type": "text"
-            }).execute()
+            existing = supabase.table("missing_searches").select("id").eq("search_query", q).execute()
+            if not existing.data:
+                supabase.table("missing_searches").insert({
+                    "search_query": q,
+                    "search_type": "text"
+                }).execute()
         except Exception as e:
             import logging
             logging.warning(f"Failed to log missing search: {e}")
@@ -154,8 +156,13 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
                     
         if not_found_names:
             try:
-                inserts = [{"search_query": name, "search_type": "vision"} for name in not_found_names]
-                supabase.table("missing_searches").insert(inserts).execute()
+                existing = supabase.table("missing_searches").select("search_query").in_("search_query", not_found_names).execute()
+                existing_names = {row["search_query"] for row in existing.data}
+                new_names = [name for name in not_found_names if name not in existing_names]
+                
+                if new_names:
+                    inserts = [{"search_query": name, "search_type": "vision"} for name in new_names]
+                    supabase.table("missing_searches").insert(inserts).execute()
             except Exception as e:
                 import logging
                 logging.warning(f"Failed to log missing vision searches: {e}")
