@@ -97,6 +97,18 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
     # Uses Supabase's text search (which leverages pg_trgm in the background if configured via RPC, 
     # or ilike for basic operations)
     response = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{q}%").limit(10).execute()
+    
+    # Log if no results found
+    if not response.data and len(q) > 3:
+        try:
+            supabase.table("missing_searches").insert({
+                "search_query": q,
+                "search_type": "text"
+            }).execute()
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to log missing search: {e}")
+            
     return response.data
 
 @app.post("/api/vision-search")
@@ -140,6 +152,14 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
                         seen_ids.add(product["id"])
                         all_matches.append(product)
                     
+        if not_found_names:
+            try:
+                inserts = [{"search_query": name, "search_type": "vision"} for name in not_found_names]
+                supabase.table("missing_searches").insert(inserts).execute()
+            except Exception as e:
+                import logging
+                logging.warning(f"Failed to log missing vision searches: {e}")
+
         return {
             "results": all_matches,
             "extracted_text": extracted_names,

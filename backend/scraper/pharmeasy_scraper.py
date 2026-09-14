@@ -19,7 +19,6 @@ class PharmEasyScraper(BaseScraper):
         result = await self._extract_json_ld(page)
         if result and result.get("selling_price"):
             logger.info(f"PharmEasy: Extracted via JSON-LD: {result}")
-            result["in_stock"] = await self._check_stock_status(page)
             return result
 
         # ── Layer 2: Embedded JSON / script data ──
@@ -37,7 +36,8 @@ class PharmEasyScraper(BaseScraper):
         # ── Layer 4: Text-based fallback ──
         result = await self._extract_prices_from_text(page)
         if result and result.get("selling_price"):
-            result["in_stock"] = await self._check_stock_status(page)
+            if "in_stock" not in result:
+                result["in_stock"] = await self._check_stock_status(page)
             logger.info(f"PharmEasy: Extracted via text fallback: {result}")
             return result
 

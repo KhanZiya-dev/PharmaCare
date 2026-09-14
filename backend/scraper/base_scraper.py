@@ -225,20 +225,18 @@ class BaseScraper:
 
     async def _check_stock_status(self, page: Page) -> bool:
         """
-        Check stock status using common text patterns.
+        Check stock status using more targeted DOM queries instead of full body text.
         """
         try:
-            body_text = await page.inner_text("body", timeout=3000)
-            body_text = body_text.lower()
-            out_of_stock_phrases = [
-                "out of stock",
-                "currently unavailable",
-                "not available",
-                "sold out",
-                "notify me",
-            ]
-            for phrase in out_of_stock_phrases:
-                if phrase in body_text:
+            btn_texts = await page.locator("button, a, [role='button']").all_inner_texts()
+            btn_texts = [t.lower().strip() for t in btn_texts if t.strip()]
+            
+            for text in btn_texts:
+                if "add to cart" in text or "add to bag" in text or "buy now" in text:
+                    return True
+                    
+            for text in btn_texts:
+                if "out of stock" in text or "sold out" in text or "currently unavailable" in text:
                     return False
         except Exception:
             pass

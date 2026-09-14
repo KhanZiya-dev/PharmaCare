@@ -18,7 +18,6 @@ class OneMgScraper(BaseScraper):
         result = await self._extract_json_ld(page)
         if result and result.get("selling_price"):
             logger.info(f"1mg: Extracted via JSON-LD: {result}")
-            result["in_stock"] = await self._check_stock_status(page)
             return result
 
         # ── Layer 2: __NEXT_DATA__ ──
@@ -36,7 +35,8 @@ class OneMgScraper(BaseScraper):
         # ── Layer 4: Text-based fallback ──
         result = await self._extract_prices_from_text(page)
         if result and result.get("selling_price"):
-            result["in_stock"] = await self._check_stock_status(page)
+            if "in_stock" not in result:
+                result["in_stock"] = await self._check_stock_status(page)
             logger.info(f"1mg: Extracted via text fallback: {result}")
             return result
 

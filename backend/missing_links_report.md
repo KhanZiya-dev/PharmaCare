@@ -1,0 +1,219 @@
+# Missing Links Report
+
+This report outlines which medicines are missing links for specific platforms.
+
+**Total Products:** 396
+**Products with all 3 links:** 246
+**Products missing 1 link:** 102
+**Products missing 2 links:** 48
+**Products with 0 links:** 0
+
+## Missing on Apollo Pharmacy
+Total: 110
+
+- A Kare Combipack
+- AB-Flo Capsule
+- AF 400 Tablet
+- AZR Tablet
+- Acceclowoc-P Tablet
+- Aceclo Plus Tablet
+- Aceclo Tablet
+- Aceflam P 100mg/325mg Tablet
+- Acenac SP 100mg/325mg/15mg Tablet
+- Acenac-MR Tablet
+- Acitrom 1 Tablet
+- Acitrom 4 Tablet
+- Acivir IV Injection
+- Aclind BP 2.5% Gel
+- Acnesol A Nano Gel
+- Acogut Tablet
+- Acolate Plus Tablet
+- Acton-OR Tablet SR
+- Actrapid 100 IU/ml Flexpen
+- Aculip H 12.5 mg/5 mg Tablet
+- Acuvert Tablet
+- Adalene Nanogel Gel
+- Advent 228.5mg Dry Syrup
+- Advent 625 Tablet
+- Aerodil SF Expectorant
+- Aeromont-B Tablet
+- Afoglip M  500 Tablet ER
+- Air 180 Tablet
+- Ajaduo 25mg/5mg Tablet
+- Akair LC Tablet
+- Alaspan AM Tablet
+- Albendazole 400mg Tablet
+- Alciflox 500mg Tablet
+- Aldactone 50 Tablet
+- Aldactone Tablet
+- Alensol-D Tablet
+- Alerid Tablet
+- Alerid-D Tablet
+- Allegra 180mg Tablet
+- Allegra Suspension Raspberry & Vanilla
+- Allercet-DC Tablet
+- Allercet-M Tablet
+- Almox 500 Capsule
+- Alphadol 0.25mcg Capsule
+- Alprax 0.25 Tablet
+- Alsita-M 100 Tablet ER
+- Althrocin 250 Tablet
+- Althrocin Liquid
+- Altraday Capsule SR
+- Alzil 5 Tablet
+- Alzil-M 5 Tablet
+- Amaryl 2mg Tablet
+- Amaryl M  1mg Tablet PR
+- Amaryl M Forte 1mg Tablet PR
+- Amaryl M Forte 2mg Tablet PR
+- Ambistryn-S 0.75gm Injection
+- Ambrodil-LX Syrup
+- Ambrolite Levo Syrup
+- Amicet 5 mg/60 mg Tablet
+- Amicobal 10mg/1500mcg Tablet
+- Amlip 5 Tablet
+- Amlo 5mg Tablet
+- Amlogard 5mg Tablet
+- Amlokind 2.5 Tablet
+- Amlokind 5 Tablet
+- Amlokind-H Tablet
+- Amlong 10 Tablet
+- Amlong-A Tablet
+- Amlong-H Tablet
+- Amlovas 5 Tablet
+- Amlovas-M 5/50 Tablet PR
+- Amlozaar Tablet
+- Ampilox DS Tablet
+- Ampoxin 500 Capsule
+- Anabel Liquid Gel
+- Anaflam TH  4  Tablet
+- Anafortan 25 mg/300 mg Tablet
+- Anfoe 10000IU Injection
+- AntiD 300mcg/ml Injection
+- Anxiset 0.5 Tablet
+- Anxit 0.25mg Tablet
+- Apidra Solostar 100IU/ml Injection
+- Apigat 2.5 Tablet
+- Apigat 5 Tablet
+- Aptimust Syrup
+- Arbitel-AM Tablet
+- Arbitel-Trio 50 Tablet ER
+- Arkamin Tablet
+- Ascabiol Emulsion
+- Ascoril Plus Expectorant
+- Ascoril SF Expectorant
+- Asthalin 100mcg Inhaler
+- Asthalin Rotacaps
+- Asthalin Syrup
+- Atarax 25mg Injection
+- Atorlip 20 Tablet
+- Augmentin 375 Tablet
+- Augmentin 625 Duo Tablet
+- Augmentin DDS Suspension
+- Augpen -DS Suspension
+- Augpen 625 BID Tablet
+- Aulin 100mg Tablet
+- Azeflo Nasal Spray
+- Azikem 500mg Tablet
+- Azithral 200 Liquid
+- Azithral XL 200 Liquid
+- Azmarda 50mg Tablet
+- Aztolet  10 Tablet
+- Aztor 10 Tablet
+- Azulix 1 Tablet
+
+## Missing on PharmEasy
+Total: 45
+
+- AB Phylline Capsule
+- Abd Plus Tablet
+- Aceclo Spas Tablet
+- Acuvert Tablet
+- Adalene Nanogel Gel
+- Addwize 10mg Tablet
+- Alciflox 500mg Tablet
+- Alensol-D Tablet
+- Allegra Suspension Raspberry & Vanilla
+- Almox 500 Capsule
+- Alphadol 0.25mcg Capsule
+- Alprax 0.25 Tablet
+- Altraday Capsule SR
+- Alzil 5 Tablet
+- Alzil-M 5 Tablet
+- Ambrolite Levo Syrup
+- Amitone Plus Tablet
+- Amlong 2.5 Tablet
+- Amlong-A Tablet
+- Amlopin 5 Tablet
+- Amlopin-M Tablet PR
+- Amlopres AT 25 Tablet
+- Amlosafe 3D Tablet
+- Amlovas 2.5 Tablet
+- Amlovas-AT Tablet
+- Amlovas-M 5/50 Tablet PR
+- Amox 500mg Capsule
+- Amoxy 500mg Capsule
+- Amoxyclav 375 Tablet
+- Anabel Liquid Gel
+- Anaflam TH  4  Tablet
+- Angicam-Beta Tablet
+- Angiwell 2.6mg Tablet
+- Anovate Cream
+- Arachitol 6L Injection
+- Aravon Injection
+- Ascabiol Emulsion
+- Ascoril LS Junior Syrup
+- Asthalin Syrup
+- Augmentin Duo Oral Suspension
+- Azibact LR Readymix 200
+- Azicip 500 Tablet
+- Azithral 200 Liquid
+- Azithral 500 Tablet
+- Pan-D Capsule
+
+## Missing on Tata 1mg
+Total: 43
+
+- AB2 Kit
+- Aceclo Spas Tablet
+- Acivir IV Injection
+- Aculip H 12.5 mg/5 mg Tablet
+- Advent 625 Tablet
+- Aeromont-B Tablet
+- Airz Capsule
+- Ajaduo 25mg/5mg Tablet
+- Akair LC Tablet
+- Aldactone Tablet
+- Alfoo 10mg Tablet PR
+- Alprax Forte 0.5 mg/50 mg Tablet
+- Althrocin Liquid
+- Amicobal 10mg/1500mcg Tablet
+- Amlip 5 Tablet
+- Amlong 10 Tablet
+- Amlong 2.5 Tablet
+- Amlopin-M Tablet PR
+- Amlopres 5 Tablet
+- Amlopres AT 25 Tablet
+- Amlopres TL Tablet
+- Amlosafe 3D Tablet
+- Amlosafe TM 40 Tablet
+- Amlovas 2.5 Tablet
+- Amlovas 5 Tablet
+- Amlozaar-H Tablet
+- Amox 500mg Capsule
+- Amoxclav 500 mg/125 mg Tablet
+- Amoxy 500mg Capsule
+- Amoxycillin 125mg Oral Suspension
+- Anxiset 0.5 Tablet
+- Anxit 0.5 Tablet
+- Apigat 2.5 Tablet
+- Aprezo 10 Tablet
+- Arbitel-AM Tablet
+- Arkamin Tablet
+- Asthalin Rotacaps
+- Atarax 25mg Injection
+- Augmentin 375 Tablet
+- Augpen LB 625 Tablet
+- Azmarda 50mg Tablet
+- Azopt Opthalmic Suspension
+- Azulix 1 Tablet
