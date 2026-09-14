@@ -22,14 +22,14 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
         return []
         
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         img = Image.open(image_path)
         
         prompt = (
-            "You are a medical text extractor. Look at this image (which could be a prescription "
+            "You are a medical text extractor. Look at this image (which could be a handwritten prescription "
             "or a medicine box) and extract only the names of the medicines or drugs present. "
-            "Ignore dosages, instructions, doctor names, or other irrelevant text. "
-            "Return the medicine names as a comma-separated list. If you don't find any, return nothing."
+            "Ignore dosages (like 100mg), instructions (like 1-1), doctor names, or other irrelevant text. "
+            "Just list the medicine names separated by commas. E.g. Paracetamol, Amoxicillin"
         )
         
         response = model.generate_content([prompt, img])

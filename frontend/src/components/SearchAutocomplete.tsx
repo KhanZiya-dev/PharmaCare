@@ -81,7 +81,8 @@ export function SearchAutocomplete() {
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full max-w-2xl mx-auto z-40">
+    <>
+      <div ref={wrapperRef} className="relative w-full max-w-2xl mx-auto z-40">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative flex items-center">
           <Search className="absolute left-4 h-5 w-5 text-gray-400" />
@@ -138,12 +139,13 @@ export function SearchAutocomplete() {
           ) : null}
         </div>
       )}
+      </div>
 
       {/* Lens Search Modal */}
       <LensSearchModal 
         isOpen={isLensOpen} 
         onClose={() => setIsLensOpen(false)} 
       />
-    </div>
+    </>
   );
 }
