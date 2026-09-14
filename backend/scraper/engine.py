@@ -210,8 +210,10 @@ async def run_engine_async():
         
         if mapping_ids:
             try:
-                # We can update all successful mapping_ids in one query
-                supabase.table("platform_product_links").update({"last_scraped": now}).in_("id", mapping_ids).execute()
+                # We chunk mapping_ids to avoid URL length / JSON serialization limits in REST API
+                for i in range(0, len(mapping_ids), chunk_size):
+                    chunk_ids = mapping_ids[i:i+chunk_size]
+                    supabase.table("platform_product_links").update({"last_scraped": now}).in_("id", chunk_ids).execute()
                 logger.info(f"Updated last_scraped timestamp for {len(mapping_ids)} links.")
             except Exception as e:
                 logger.error(f"Failed to batch update last_scraped: {e}")
