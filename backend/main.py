@@ -127,18 +127,23 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
         # Run fuzzy search on all extracted names
         all_matches = []
         seen_ids = set()
+        not_found_names = []
         
         for name in extracted_names:
             # We take the first 3 best matches for each extracted name
             res = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{name}%").limit(3).execute()
-            for product in res.data:
-                if product["id"] not in seen_ids:
-                    seen_ids.add(product["id"])
-                    all_matches.append(product)
+            if not res.data:
+                not_found_names.append(name)
+            else:
+                for product in res.data:
+                    if product["id"] not in seen_ids:
+                        seen_ids.add(product["id"])
+                        all_matches.append(product)
                     
         return {
             "results": all_matches,
-            "extracted_text": extracted_names
+            "extracted_text": extracted_names,
+            "not_found": not_found_names
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

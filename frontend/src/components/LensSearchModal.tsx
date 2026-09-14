@@ -24,6 +24,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [extractedText, setExtractedText] = useState<string[]>([]);
+  const [notFound, setNotFound] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     setError(null);
     setResults([]);
     setExtractedText([]);
+    setNotFound([]);
 
     const formData = new FormData();
     formData.append("file", fileToUpload);
@@ -70,12 +72,11 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       const data = await response.json();
       setResults(data.results || []);
       setExtractedText(data.extracted_text || []);
+      setNotFound(data.not_found || []);
       
-      if (data.results.length === 0) {
+      if (data.results.length === 0 && (data.not_found || []).length === 0) {
         if (data.extracted_text.length === 0) {
           setError("Could not find any recognizable medicine names in the image.");
-        } else {
-          setError(`Scanned: ${data.extracted_text.join(", ")}. However, we don't have these in our database yet.`);
         }
       }
     } catch (err: any) {
@@ -92,6 +93,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     setPreview(null);
     setResults([]);
     setExtractedText([]);
+    setNotFound([]);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -189,45 +191,75 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           )}
 
           {/* Results State */}
-          {!isScanning && results.length > 0 && (
-            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Matched Medicines</h4>
-                <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-1 rounded-md">
-                  Found: {extractedText.join(", ")}
-                </span>
-              </div>
+          {!isScanning && (results.length > 0 || notFound.length > 0) && !error && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
-              <div className="space-y-2">
-                {results.map((product) => (
-                  <Link 
-                    key={product.id} 
-                    href={`/product/${product.slug}`}
-                    onClick={() => {
-                      resetState();
-                      onClose();
-                    }}
-                    className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all group"
-                  >
-                    <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} className="w-10 h-10 object-contain mix-blend-multiply" />
-                      ) : (
-                        <div className="text-xs text-gray-400 font-medium">Rx</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 truncate group-hover:text-indigo-600 transition-colors">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate capitalize">{product.category}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              {results.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Matched Medicines</h4>
+                    <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-1 rounded-md">
+                      {results.length} Found
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {results.map((product) => (
+                      <Link 
+                        key={product.id} 
+                        href={`/product/${product.slug}`}
+                        onClick={() => {
+                          resetState();
+                          onClose();
+                        }}
+                        className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all group"
+                      >
+                        <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-10 h-10 object-contain mix-blend-multiply" />
+                          ) : (
+                            <div className="text-xs text-gray-400 font-medium">Rx</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-800 truncate group-hover:text-indigo-600 transition-colors">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate capitalize">{product.category}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {notFound.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Not in Database</h4>
+                    <span className="text-xs text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded-md">
+                      {notFound.length} Unmatched
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {notFound.map((name, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 shrink-0">
+                          <X className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-600 truncate">{name}</p>
+                          <p className="text-xs text-gray-400">Currently unavailable</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
-              <div className="pt-2 text-center">
-                <button onClick={resetState} className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">
+              <div className="pt-2 text-center border-t border-gray-100">
+                <button onClick={resetState} className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors mt-2">
                   Scan another image
                 </button>
               </div>
