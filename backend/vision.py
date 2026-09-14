@@ -53,7 +53,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
         response = model.generate_content(
             [prompt, img],
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=1024,
+                max_output_tokens=250,
                 response_mime_type="application/json"
             )
         )
