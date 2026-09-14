@@ -113,24 +113,22 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           
           {/* Upload Area */}
           {!preview ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-indigo-200 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group"
+            <label 
+              className="border-2 border-dashed border-indigo-200 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95"
             >
               <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Upload className="w-8 h-8" />
               </div>
-              <p className="font-medium text-gray-800 mb-1">Take Photo or Upload Image</p>
-              <p className="text-sm text-gray-500 max-w-xs">Scan a doctor's prescription or medicine box to find it instantly.</p>
+              <p className="font-semibold text-indigo-700 mb-1 text-lg">Tap to Scan</p>
+              <p className="text-sm text-gray-500 max-w-xs">Upload from gallery or take a new photo.</p>
               <input 
                 type="file" 
-                ref={fileInputRef}
                 accept="image/*"
                 capture="environment" 
                 className="hidden" 
                 onChange={handleFileSelect}
               />
-            </div>
+            </label>
           ) : (
             <div className="relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200 aspect-video flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
