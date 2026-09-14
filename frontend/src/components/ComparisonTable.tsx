@@ -49,7 +49,8 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
               const hasPrice = !!platform.latest_price;
               const sellingPrice = platform.latest_price?.selling_price;
               // If we have a price object but the actual selling_price is 0 or null, it's usually restricted/not for online sale
-              const isNotForSale = hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined);
+              // We also check the explicit is_restricted flag from the backend
+              const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || (platform.latest_price as any)?.is_restricted === true;
               const isLowest = index === 0 && hasPrice && !isNotForSale;
               const inStock = platform.latest_price?.in_stock ?? false;
               const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;

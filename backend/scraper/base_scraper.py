@@ -31,8 +31,16 @@ class BaseScraper:
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_timeout(3000) # Give SPAs time to render pricing
             data = await self.extract_data(page)
-            if data and not data.get("image_url"):
-                data["image_url"] = await self._extract_og_image(page)
+            if data:
+                if not data.get("image_url"):
+                    data["image_url"] = await self._extract_og_image(page)
+                    
+                # Add is_restricted globally
+                html_content = await page.content()
+                html_lower = html_content.lower()
+                is_restricted = "not for online sale" in html_lower or ">not for sale<" in html_lower or "prescription required" in html_lower
+                data["is_restricted"] = is_restricted
+                
             return data
         except Exception as e:
             logger.error(f"Failed to scrape {url}: {str(e)}")

@@ -71,18 +71,19 @@ async def worker(name, queue: asyncio.Queue, browser, results_list):
                 
                 data = await scraper.scrape_page(page, scrape_url)
                 
-                if data and data.get("selling_price"):
+                if data and (data.get("selling_price") or data.get("is_restricted")):
                     now = datetime.now(timezone.utc).isoformat()
                     
-                    mrp = data.get("mrp") or data["selling_price"]
-                    selling = data["selling_price"]
+                    mrp = data.get("mrp") or data.get("selling_price") or 0
+                    selling = data.get("selling_price") or 0
                     discount_pct = round(((mrp - selling) / mrp) * 100, 2) if mrp and mrp > 0 else 0
                     
                     record = {
                         "mapping_id": link_id,
-                        "selling_price": selling,
-                        "mrp": mrp,
+                        "selling_price": selling if selling > 0 else None,
+                        "mrp": mrp if mrp > 0 else None,
                         "in_stock": data.get("in_stock", True),
+                        "is_restricted": data.get("is_restricted", False),
                         "discount_pct": discount_pct,
                         "scraped_at": now,
                     }
