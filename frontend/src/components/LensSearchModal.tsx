@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
-import { Search, Upload, X, Loader2, Camera } from "lucide-react";
+import { Search, Upload, X, Loader2, Camera, Image as ImageIcon } from "lucide-react";
 
 interface LensSearchModalProps {
   isOpen: boolean;
@@ -117,21 +117,42 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           
           {/* Upload Area */}
           {!preview ? (
-            <label 
-              className="border-2 border-dashed border-indigo-200 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95"
-            >
-              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Upload className="w-8 h-8" />
-              </div>
-              <p className="font-semibold text-indigo-700 mb-1 text-lg">Tap to Scan</p>
-              <p className="text-sm text-gray-500 max-w-xs">Upload from gallery or take a new photo.</p>
-              <input 
-                type="file" 
-                accept="image/*"
-                className="hidden" 
-                onChange={handleFileSelect}
-              />
-            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Camera Button */}
+              <label 
+                className="border-2 border-dashed border-indigo-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95 bg-white shadow-sm"
+              >
+                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Camera className="w-6 h-6" />
+                </div>
+                <p className="font-semibold text-indigo-700 mb-1 text-sm sm:text-base">Take Photo</p>
+                <p className="text-xs text-gray-500">Open camera</p>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden" 
+                  onChange={handleFileSelect}
+                />
+              </label>
+
+              {/* Gallery Button */}
+              <label 
+                className="border-2 border-dashed border-indigo-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95 bg-white shadow-sm"
+              >
+                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <p className="font-semibold text-indigo-700 mb-1 text-sm sm:text-base">Gallery</p>
+                <p className="text-xs text-gray-500">Upload image</p>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  className="hidden" 
+                  onChange={handleFileSelect}
+                />
+              </label>
+            </div>
           ) : (
             <div className="relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200 aspect-video flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
