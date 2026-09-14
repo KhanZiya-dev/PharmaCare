@@ -47,7 +47,10 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
           <tbody>
             {sortedPlatforms.map((platform, index) => {
               const hasPrice = !!platform.latest_price;
-              const isLowest = index === 0 && hasPrice;
+              const sellingPrice = platform.latest_price?.selling_price;
+              // If we have a price object but the actual selling_price is 0 or null, it's usually restricted/not for online sale
+              const isNotForSale = hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined);
+              const isLowest = index === 0 && hasPrice && !isNotForSale;
               const inStock = platform.latest_price?.in_stock ?? false;
               const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
 
@@ -73,7 +76,11 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   
                   <td className="p-4">
                     {hasPrice ? (
-                      inStock ? (
+                      isNotForSale ? (
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-600">
+                          <XCircle className="h-4 w-4" /> Not for Online Sale
+                        </span>
+                      ) : inStock ? (
                         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700">
                           <CheckCircle2 className="h-4 w-4" /> In Stock
                         </span>
@@ -89,6 +96,9 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   
                   <td className="p-4">
                     {hasPrice ? (
+                      isNotForSale ? (
+                        <span className="text-gray-400 font-medium">Restricted</span>
+                      ) : (
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-primary">
@@ -106,6 +116,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                           </span>
                         )}
                       </div>
+                      )
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
@@ -117,12 +128,14 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
-                        isLowest 
-                          ? "bg-primary text-white hover:bg-primary/90" 
-                          : "bg-white border border-accent text-primary hover:bg-accent/20"
+                        isNotForSale
+                          ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          : isLowest 
+                            ? "bg-primary text-white hover:bg-primary/90" 
+                            : "bg-white border border-accent text-primary hover:bg-accent/20"
                       }`}
                     >
-                      Buy Now
+                      {isNotForSale ? "View Details" : "Buy Now"}
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </td>
