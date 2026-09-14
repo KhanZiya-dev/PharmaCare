@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Search, Upload, X, Loader2, Camera, Image as ImageIcon } from "lucide-react";
 
@@ -28,7 +28,11 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -81,6 +85,8 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     }
   };
 
+  if (!isOpen || !mounted) return null;
+
   const resetState = () => {
     setFile(null);
     setPreview(null);
@@ -91,14 +97,6 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       fileInputRef.current.value = "";
     }
   };
-
-  const [mounted, setMounted] = useState(false);
-  
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
 
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
@@ -250,5 +248,5 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     </div>
   );
 
-  return ReactDOM.createPortal(modalContent, document.body);
+  return createPortal(modalContent, document.body);
 }
