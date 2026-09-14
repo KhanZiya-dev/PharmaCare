@@ -54,28 +54,21 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
             [prompt, img],
             generation_config=genai.types.GenerationConfig(
                 max_output_tokens=1024,
+                response_mime_type="application/json"
             )
         )
         
         if not response.text:
             return []
             
-        # Use regex to find the JSON array in case Gemini adds conversational text
-        raw_text = response.text.strip()
-        match = re.search(r'\[.*\]', raw_text, re.DOTALL)
-        
-        if not match:
-            logger.error(f"No JSON array found in Gemini response: {raw_text}")
-            return []
-            
-        json_str = match.group(0)
-        
         try:
-            parsed_list = json.loads(json_str)
-            medicines = [str(m).strip() for m in parsed_list if str(m).strip().upper() != "UNCLEAR" and str(m).strip()]
-            return medicines
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse JSON from Gemini: {json_str}")
+            parsed_list = json.loads(response.text.strip())
+            if isinstance(parsed_list, list):
+                medicines = [str(m).strip() for m in parsed_list if str(m).strip().upper() != "UNCLEAR" and str(m).strip()]
+                return medicines
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from Gemini: {response.text} Error: {e}")
             return []
     except Exception as e:
         logger.error(f"Error calling Gemini API: {e}")
