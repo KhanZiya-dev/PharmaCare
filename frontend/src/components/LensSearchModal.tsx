@@ -66,8 +66,12 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       setResults(data.results || []);
       setExtractedText(data.extracted_text || []);
       
-      if (data.results.length === 0 && data.extracted_text.length === 0) {
-        setError("Could not find any recognizable medicine names in the image.");
+      if (data.results.length === 0) {
+        if (data.extracted_text.length === 0) {
+          setError("Could not find any recognizable medicine names in the image.");
+        } else {
+          setError(`Scanned: ${data.extracted_text.join(", ")}. However, we don't have these in our database yet.`);
+        }
       }
     } catch (err: any) {
       setError(err.message || "An error occurred while scanning.");
