@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, Depends, HTTPException, Query, Request, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, Query, Request, BackgroundTasks, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
@@ -9,6 +9,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import os
+import shutil
+import tempfile
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -96,6 +98,50 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
     # or ilike for basic operations)
     response = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{q}%").limit(10).execute()
     return response.data
+
+@app.post("/api/vision-search")
+@limiter.limit("20/minute")
+async def vision_search(request: Request, file: UploadFile = File(...), supabase: Client = Depends(get_supabase)):
+    """
+    Accepts an image file, uses Gemini API to extract medicine names,
+    and returns matching products from the database using fuzzy search.
+    """
+    from vision import extract_medicines_from_image
+    
+    # Save uploaded file to a temporary location
+    try:
+        suffix = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = tmp.name
+            
+        # Extract medicines
+        extracted_names = extract_medicines_from_image(tmp_path)
+        
+        # Clean up temp file
+        os.unlink(tmp_path)
+        
+        if not extracted_names:
+            return {"results": [], "extracted_text": []}
+            
+        # Run fuzzy search on all extracted names
+        all_matches = []
+        seen_ids = set()
+        
+        for name in extracted_names:
+            # We take the first 3 best matches for each extracted name
+            res = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{name}%").limit(3).execute()
+            for product in res.data:
+                if product["id"] not in seen_ids:
+                    seen_ids.add(product["id"])
+                    all_matches.append(product)
+                    
+        return {
+            "results": all_matches,
+            "extracted_text": extracted_names
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/products")
 @limiter.limit("60/minute")

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Camera } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import LensSearchModal from "./LensSearchModal";
 
 // Define the shape of search results based on backend schema
 interface SearchResult {
@@ -18,6 +19,7 @@ export function SearchAutocomplete() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLensOpen, setIsLensOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -85,7 +87,7 @@ export function SearchAutocomplete() {
           <Search className="absolute left-4 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            className="w-full pl-12 pr-4 py-4 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-lg shadow-sm transition-colors outline-none"
+            className="w-full pl-12 pr-14 py-4 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-lg shadow-sm transition-colors outline-none"
             placeholder="Search for medicines or lab tests..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -93,9 +95,17 @@ export function SearchAutocomplete() {
               if (query.length >= 2) setIsOpen(true);
             }}
           />
-          {isLoading && (
-            <Loader2 className="absolute right-4 h-5 w-5 text-primary animate-spin" />
-          )}
+          {isLoading ? (
+            <Loader2 className="absolute right-14 h-5 w-5 text-primary animate-spin" />
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setIsLensOpen(true)}
+            className="absolute right-3 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+            title="Search by Image"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
         </div>
       </form>
 
@@ -128,6 +138,12 @@ export function SearchAutocomplete() {
           ) : null}
         </div>
       )}
+
+      {/* Lens Search Modal */}
+      <LensSearchModal 
+        isOpen={isLensOpen} 
+        onClose={() => setIsLensOpen(false)} 
+      />
     </div>
   );
 }
