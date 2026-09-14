@@ -39,7 +39,12 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
             "Example: [\"Paracetamol\", \"UNCLEAR\"]"
         )
         
-        response = model.generate_content([prompt, img])
+        response = model.generate_content(
+            [prompt, img],
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=150,
+            )
+        )
         
         if not response.text:
             return []
