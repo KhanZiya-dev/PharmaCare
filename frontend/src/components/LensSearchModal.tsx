@@ -124,7 +124,6 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
               <input 
                 type="file" 
                 accept="image/*"
-                capture="environment" 
                 className="hidden" 
                 onChange={handleFileSelect}
               />
