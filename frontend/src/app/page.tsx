@@ -10,7 +10,7 @@ export default function Home() {
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col lg:flex-row items-center justify-center py-12 lg:py-24 gap-12">
         {/* Left: Text Content & Search */}
-        <div className="flex-1 w-full text-center lg:text-left z-10">
+        <div className="flex-1 w-full text-center lg:text-left z-40">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-sm font-semibold mb-6">
             <ShieldCheck className="h-4 w-4" />
             <span>100% Verified Price Data</span>
