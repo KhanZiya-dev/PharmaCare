@@ -1,0 +1,46 @@
+name: Automated Medicine Scraper
+
+on:
+  schedule:
+    # Runs at 00:00 (Midnight UTC) and 12:00 (Noon UTC) every day
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  run-scrapers:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        playwright install chromium --with-deps
+
+    - name: Process Missing Searches
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        PYTHONUNBUFFERED: "1"
+      run: |
+        python scripts/process_missing_searches.py
+
+    - name: Run Price Engine
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        PYTHONUNBUFFERED: "1"
+      run: |
+        python -m scraper.engine
