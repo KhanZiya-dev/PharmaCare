@@ -35,11 +35,36 @@ class BaseScraper:
                 if not data.get("image_url"):
                     data["image_url"] = await self._extract_og_image(page)
                     
-                # Add is_restricted globally
+                # Accurately detect if the medicine is marked 'Not for Online Sale' / Store Only.
+                # Even if the site displays an MRP or selling price (e.g. ₹503), some medicines
+                # are restricted from online sale and show banners like "Not for sale" or "Find at your nearest store".
+                # IMPORTANT: "prescription required" is completely normal for Rx medicines and MUST NOT be marked restricted!
                 html_content = await page.content()
                 html_lower = html_content.lower()
-                is_restricted = "not for online sale" in html_lower or ">not for sale<" in html_lower or "prescription required" in html_lower
-                data["is_restricted"] = is_restricted
+
+                restricted_indicators = [
+                    "not for online sale",
+                    "not for sale",
+                    "we do not facilitate sale",
+                    "find at your nearest store",
+                    "find at nearest store",
+                    "not available for online purchase",
+                    "cannot be sold online",
+                    "available in store only",
+                    "available in stores only",
+                    "store pickup only",
+                ]
+
+                data["is_restricted"] = any(indicator in html_lower for indicator in restricted_indicators)
+
+                # Robust stock status verification:
+                # If DOM clearly displays Out of Stock indicators, classes, or Notify Me buttons,
+                # override in_stock to False.
+                is_dom_stock = await self._check_stock_status(page)
+                if not is_dom_stock:
+                    data["in_stock"] = False
+                elif "in_stock" not in data:
+                    data["in_stock"] = is_dom_stock
                 
             return data
         except Exception as e:
@@ -233,19 +258,82 @@ class BaseScraper:
 
     async def _check_stock_status(self, page: Page) -> bool:
         """
-        Check stock status using more targeted DOM queries instead of full body text.
+        Robust, multi-signal stock validation:
+        1. Explicit Out-of-Stock classes (e.g. styles_outOfStock, oos, out-of-stock)
+        2. Exact visible Out-of-Stock badge/label text
+        3. Action buttons (Notify Me, Sold Out, Out of Stock, or disabled cart buttons)
+        4. Enabled Add to Cart / Buy Now buttons
         """
         try:
-            btn_texts = await page.locator("button, a, [role='button']").all_inner_texts()
-            btn_texts = [t.lower().strip() for t in btn_texts if t.strip()]
+            # 1. Check for dedicated Out-of-Stock elements / classes
+            oos_selectors = [
+                '[class*="outOfStock" i]',
+                '[class*="out-of-stock" i]',
+                '[class*="outofstock" i]',
+                '[data-testid*="out-of-stock" i]',
+                '[data-testid*="oos" i]',
+                '[aria-label*="out of stock" i]',
+            ]
+            for sel in oos_selectors:
+                try:
+                    elements = page.locator(sel)
+                    count = await elements.count()
+                    for i in range(count):
+                        el = elements.nth(i)
+                        if await el.is_visible():
+                            logger.info(f"[{self.platform_name}] Visible OOS class element found: {sel}")
+                            return False
+                except Exception:
+                    continue
+
+            # 2. Check for exact visible Out of Stock badge/span/div text
+            # Target exact phrases to prevent false matches from long descriptions or FAQs
+            for phrase in ["out of stock", "currently unavailable", "sold out", "temporarily unavailable"]:
+                try:
+                    matched = page.locator(f"text=/^\\s*{phrase}\\s*$/i")
+                    count = await matched.count()
+                    for i in range(count):
+                        el = matched.nth(i)
+                        if await el.is_visible():
+                            logger.info(f"[{self.platform_name}] Visible OOS text found: '{phrase}'")
+                            return False
+                except Exception:
+                    continue
+
+            # 3. Check interactive button states
+            buttons = await page.locator("button, a[role='button'], [role='button']").all()
+            for btn in buttons:
+                try:
+                    if not await btn.is_visible():
+                        continue
+                    text = (await btn.inner_text()).lower().strip()
+                    if not text:
+                        continue
+                        
+                    # Explicit Out-of-Stock actions
+                    if any(p in text for p in ["notify me", "get notified", "sold out", "currently unavailable"]):
+                        logger.info(f"[{self.platform_name}] OOS button action found: '{text}'")
+                        return False
+
+                    # If an "out of stock" label is inside the button
+                    if "out of stock" in text:
+                        logger.info(f"[{self.platform_name}] OOS button text found: '{text}'")
+                        return False
+                except Exception:
+                    continue
+
+            # 4. Check if Add to Cart is present AND disabled
+            for cart_sel in ["button:has-text('Add to Cart')", "button:has-text('Add to Bag')", "button:has-text('Buy Now')"]:
+                try:
+                    cart_btn = page.locator(cart_sel).first
+                    if await cart_btn.count() > 0 and await cart_btn.is_visible():
+                        if await cart_btn.is_disabled() or (await cart_btn.get_attribute("aria-disabled")) == "true":
+                            logger.info(f"[{self.platform_name}] Add to Cart button is disabled.")
+                            return False
+                except Exception:
+                    continue
+
+        except Exception as e:
+            logger.debug(f"[{self.platform_name}] _check_stock_status exception: {e}")
             
-            for text in btn_texts:
-                if "add to cart" in text or "add to bag" in text or "buy now" in text:
-                    return True
-                    
-            for text in btn_texts:
-                if "out of stock" in text or "sold out" in text or "currently unavailable" in text:
-                    return False
-        except Exception:
-            pass
         return True

@@ -12,7 +12,9 @@ import os
 import tempfile
 from dotenv import load_dotenv
 
-load_dotenv()
+# Ensure backend/.env is properly loaded
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(_env_path if os.path.exists(_env_path) else None)
 
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)

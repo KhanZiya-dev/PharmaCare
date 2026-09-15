@@ -70,7 +70,7 @@ class PharmEasyScraper(BaseScraper):
                     or selling_price
                 )
                 if selling_price:
-                    in_stock = product.get("inStock", product.get("is_in_stock", True))
+                    in_stock = product.get("inStock", product.get("is_in_stock", product.get("isAvailable", True)))
                     return {
                         "selling_price": selling_price,
                         "mrp": mrp or selling_price,
@@ -99,7 +99,7 @@ class PharmEasyScraper(BaseScraper):
                                 return {
                                     "selling_price": price,
                                     "mrp": mrp,
-                                    "in_stock": True,
+                                    "in_stock": await self._check_stock_status(page),
                                 }
                 except Exception:
                     continue

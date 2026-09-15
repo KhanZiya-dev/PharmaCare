@@ -48,9 +48,8 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
             {sortedPlatforms.map((platform, index) => {
               const hasPrice = !!platform.latest_price;
               const sellingPrice = platform.latest_price?.selling_price;
-              // If we have a price object but the actual selling_price is 0 or null, it's usually restricted/not for online sale
-              // We also check the explicit is_restricted flag from the backend
-              const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || (platform.latest_price as any)?.is_restricted === true;
+              const isRestricted = (platform.latest_price as any)?.is_restricted === true;
+              const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || isRestricted;
               const isLowest = index === 0 && hasPrice && !isNotForSale;
               const inStock = platform.latest_price?.in_stock ?? false;
               const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
@@ -96,13 +95,10 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   </td>
                   
                   <td className="p-4">
-                    {hasPrice ? (
-                      isNotForSale ? (
-                        <span className="text-gray-400 font-medium">Restricted</span>
-                      ) : (
+                    {hasPrice && sellingPrice && sellingPrice > 0 ? (
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-primary">
+                          <span className={`text-lg font-bold ${isNotForSale ? "text-gray-600" : "text-primary"}`}>
                             ₹{platform.latest_price!.selling_price}
                           </span>
                           {platform.latest_price!.discount_pct > 0 && (
@@ -117,7 +113,8 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                           </span>
                         )}
                       </div>
-                      )
+                    ) : isNotForSale ? (
+                      <span className="text-gray-400 font-medium">Restricted</span>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
@@ -130,13 +127,13 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                       rel="noopener noreferrer"
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
                         isNotForSale
-                          ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          ? "bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
                           : isLowest 
                             ? "bg-primary text-white hover:bg-primary/90" 
                             : "bg-white border border-accent text-primary hover:bg-accent/20"
                       }`}
                     >
-                      {isNotForSale ? "View Details" : "Buy Now"}
+                      {isNotForSale ? "Find at Store" : "Buy Now"}
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </td>
