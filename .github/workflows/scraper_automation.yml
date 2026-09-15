@@ -6,6 +6,9 @@ on:
     - cron: '0 0,12 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
+permissions:
+  contents: read
+
 jobs:
   run-scrapers:
     runs-on: ubuntu-22.04
