@@ -121,8 +121,8 @@ def search_products(
         response = query.ilike("name", f"%{q}%").limit(10).execute()
         results = response.data or []
 
-    # Log missing search if no results found
-    if not results and len(q) > 3:
+    # Log missing search if no results found (min 5 chars to avoid partial typing fragments)
+    if not results and len(q.strip()) >= 5:
         try:
             existing = supabase.table("missing_searches").select("id").eq("search_query", q).execute()
             if not existing.data:
