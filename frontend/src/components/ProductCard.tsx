@@ -10,6 +10,9 @@ interface ProductCardProps {
   category: string;
   composition?: string;
   image_url?: string;
+  lowestPrice?: number | null;
+  platformCount?: number | null;
+  discountPct?: number | null;
 }
 
 function isValidImageUrl(url?: string): boolean {
@@ -24,14 +27,9 @@ function isValidImageUrl(url?: string): boolean {
   }
 }
 
-export function ProductCard({ name, slug, category, composition, image_url }: ProductCardProps) {
+export function ProductCard({ name, slug, category, composition, image_url, lowestPrice, platformCount, discountPct }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const hasValidImage = isValidImageUrl(image_url) && !imgError;
-
-  // Mock data for UI to look like a price tracker
-  const mockPlatformsCount = Math.floor(Math.random() * 3) + 2; // 2 to 4 platforms
-  const mockLowestPrice = Math.floor(Math.random() * 200) + 50; // 50 to 250
-  const mockDrop = Math.floor(Math.random() * 15) + 5; // 5 to 19%
 
   return (
     <Link
@@ -73,20 +71,36 @@ export function ProductCard({ name, slug, category, composition, image_url }: Pr
 
       {/* Middle Section: Price Tracking Data */}
       <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2 mb-4 border border-gray-100">
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
-            <Store className="w-3.5 h-3.5" />
-            {mockPlatformsCount} Platforms
-          </span>
-          <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <TrendingDown className="w-3 h-3" />
-            {mockDrop}% Drop
-          </span>
+        <div className="flex justify-between items-center h-5">
+          {platformCount && platformCount > 0 ? (
+            <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5" />
+              {platformCount} Platforms
+            </span>
+          ) : (
+            <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5" />
+              Compare platforms
+            </span>
+          )}
+          
+          {discountPct && discountPct > 0 ? (
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <TrendingDown className="w-3 h-3" />
+              {discountPct}% Drop
+            </span>
+          ) : (
+            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+              Price Tracker
+            </span>
+          )}
         </div>
         
-        <div className="flex justify-between items-end mt-1">
+        <div className="flex justify-between items-end mt-1 h-7">
           <span className="text-xs text-gray-400">Lowest Price</span>
-          <span className="text-lg font-bold text-gray-900 tracking-tight">₹{mockLowestPrice}</span>
+          <span className="text-lg font-bold text-gray-900 tracking-tight">
+            {lowestPrice ? `₹${lowestPrice}` : <span className="text-sm font-semibold text-primary">Check Now</span>}
+          </span>
         </div>
       </div>
 
