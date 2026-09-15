@@ -54,7 +54,9 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
               const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || isRestricted;
               const isLowest = index === 0 && hasPrice && !isNotForSale;
               const inStock = platform.latest_price?.in_stock ?? false;
-              const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
+              const redirectUrl = platform.id === "zeno_live" && platform.affiliate_url 
+                ? platform.affiliate_url 
+                : `${apiUrl}/redirect?mapping_id=${platform.id}`;
 
               return (
                 <tr 
@@ -163,7 +165,9 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
           const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || isRestricted;
           const isLowest = index === 0 && hasPrice && !isNotForSale;
           const inStock = platform.latest_price?.in_stock ?? false;
-          const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
+          const redirectUrl = platform.id === "zeno_live" && platform.affiliate_url 
+            ? platform.affiliate_url 
+            : `${apiUrl}/redirect?mapping_id=${platform.id}`;
 
           return (
             <div 

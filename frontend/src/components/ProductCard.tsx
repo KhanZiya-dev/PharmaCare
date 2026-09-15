@@ -33,7 +33,7 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
 
   return (
     <Link
-      href={`/product/${slug}`}
+      href={category === "lab_test" ? `/lab-tests/${slug}` : `/product/${slug}`}
       className="group bg-white rounded-2xl border border-accent shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all hover:-translate-y-1 overflow-hidden flex flex-col p-3 md:p-4 relative"
     >
       {/* Top Section: Identity */}

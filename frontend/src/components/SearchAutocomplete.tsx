@@ -75,7 +75,8 @@ function CategoryBadge({ category }: { category: string }) {
     category?.toLowerCase() === "prescription";
   const isLabTest =
     category?.toLowerCase() === "diagnostic" ||
-    category?.toLowerCase() === "lab test";
+    category?.toLowerCase() === "lab test" ||
+    category?.toLowerCase() === "lab_test";
 
   if (isMedicine) {
     return (
@@ -256,11 +257,13 @@ export function SearchAutocomplete() {
           e.preventDefault();
           if (highlightedIndex >= 0 && results[highlightedIndex]) {
             saveRecentSearch(query.trim());
-            router.push(`/product/${results[highlightedIndex].slug}`);
+            const target = results[highlightedIndex];
+            router.push(target.category === "lab_test" ? `/lab-tests/${target.slug}` : `/product/${target.slug}`);
             setIsOpen(false);
           } else if (results.length > 0) {
             saveRecentSearch(query.trim());
-            router.push(`/product/${results[0].slug}`);
+            const target = results[0];
+            router.push(target.category === "lab_test" ? `/lab-tests/${target.slug}` : `/product/${target.slug}`);
             setIsOpen(false);
           }
           break;
@@ -304,7 +307,7 @@ export function SearchAutocomplete() {
               const target =
                 highlightedIndex >= 0 ? results[highlightedIndex] : results[0];
               saveRecentSearch(query.trim());
-              router.push(`/product/${target.slug}`);
+              router.push(target.category === "lab_test" ? `/lab-tests/${target.slug}` : `/product/${target.slug}`);
               setIsOpen(false);
             }
           }}

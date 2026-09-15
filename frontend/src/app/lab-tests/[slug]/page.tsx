@@ -3,7 +3,7 @@ import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { ProductCard } from "@/components/ProductCard";
-import { AlertCircle, ChevronLeft, Pill, Replace } from "lucide-react";
+import { AlertCircle, ChevronLeft, Microscope, Info } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -13,8 +13,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function getProductData(slug: string) {
   try {
-    const res = await fetch(`${API_URL}/product/${slug}`, {
-      next: { revalidate: 3600 } // Revalidate every 1 hour (3600 seconds)
+    const res = await fetch(`${API_URL}/lab-test/${slug}`, {
+      next: { revalidate: 60 } // Revalidate every minute
     });
     
     if (!res.ok) {
@@ -40,18 +40,18 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: "Product Not Found — PharmaCare",
+      title: "Lab Test Not Found — PharmaCare",
     };
   }
 
   const { product } = data;
   return {
     title: `${product.name} — Compare Prices | PharmaCare`,
-    description: `Compare prices for ${product.name}${product.composition ? ` (${product.composition})` : ""} across top Indian e-pharmacies. View 30-day price history and find the best deal.`,
+    description: `Compare prices for ${product.name} across top Indian diagnostic labs. View 30-day price history and find the best deal.`,
   };
 }
 
-export default async function ProductPage({
+export default async function LabTestPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -63,7 +63,7 @@ export default async function ProductPage({
     notFound();
   }
 
-  const { product, platforms, alternatives, generics } = data;
+  const { product, platforms, alternatives } = data;
 
   const activePlatforms = platforms.filter((p: any) => p.latest_price?.selling_price > 0 && !(p.latest_price as any)?.is_restricted);
   const prices = activePlatforms.map((p: any) => p.latest_price.selling_price);
@@ -101,21 +101,22 @@ export default async function ProductPage({
               <h1 className="font-serif text-2xl md:text-3xl font-bold text-gray-900 truncate">
                 {product.name}
               </h1>
-              {product.requires_rx && (
-                <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
-                  <AlertCircle className="h-3 w-3" />
-                  Rx Required
+              {product.fasting_required && (
+                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-wider">
+                  <Info className="h-3 w-3" />
+                  Fasting Required
                 </span>
               )}
             </div>
             
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
-                {product.category}
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
+                <Microscope className="w-3 h-3" />
+                Lab Test
               </span>
-              {product.composition && (
+              {product.sample_type && (
                 <span className="text-xs text-gray-500 truncate border-l border-gray-200 pl-2">
-                  {product.composition}
+                  Sample: {product.sample_type}
                 </span>
               )}
             </div>
@@ -124,12 +125,12 @@ export default async function ProductPage({
             <div className="flex flex-wrap gap-3 sm:gap-6 pt-4 border-t border-gray-100">
               <div>
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tracked Platforms</p>
-                <p className="text-[clamp(1.5rem,4vw,2.5rem)] font-black text-gray-900">{platforms.length}</p>
+                <p className="text-lg font-bold text-gray-900">{platforms.length}</p>
               </div>
               
               <div className="border-l border-gray-100 pl-3 sm:pl-6">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Current Lowest</p>
-                <p className="text-[clamp(1.5rem,4vw,2.5rem)] font-black text-green-600">
+                <p className="text-lg font-bold text-green-600">
                   {lowestPrice ? `₹${lowestPrice}` : "N/A"}
                 </p>
               </div>
@@ -173,78 +174,7 @@ export default async function ProductPage({
 
         </div>
 
-        {/* Zeno Health Generic Alternatives Section */}
-        {generics && generics.length > 0 && (
-          <div className="mt-12 mb-8 bg-green-50/50 rounded-2xl p-6 border border-green-100">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <Replace className="h-6 w-6 text-green-700" />
-              </div>
-              <div>
-                <h2 className="font-bold text-2xl text-green-900">
-                  Save More with Generics
-                </h2>
-                <p className="text-sm text-green-700 mt-1">Cheaper generic substitutes found by Zeno Health</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {generics.map((alt: any, idx: number) => {
-                const discount = alt.mrp && alt.price ? Math.round(((alt.mrp - alt.price) / alt.mrp) * 100) : 0;
-                return (
-                  <div key={idx} className="bg-white rounded-xl p-4 border border-green-200 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-gray-900 line-clamp-2">{alt.name}</h3>
-                        {discount > 0 && (
-                          <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
-                            {discount}% OFF
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mb-3">{alt.company}</p>
-                      <p className="text-xs text-gray-400 bg-gray-50 p-2 rounded truncate">{alt.pack}</p>
-                    </div>
-                    <div className="mt-4 flex items-end justify-between pt-3 border-t border-gray-100">
-                      <div>
-                        {alt.mrp && (
-                          <p className="text-xs text-gray-400 line-through">₹{alt.mrp}</p>
-                        )}
-                        <p className="text-lg font-black text-green-600">₹{alt.price}</p>
-                      </div>
-                      <a href={alt.url || "https://www.zeno.health"} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
-                        View on Zeno
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* Alternative Medicines Section */}
-        {alternatives && alternatives.length > 0 && (
-          <div className="mt-8 mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Replace className="h-6 w-6 text-primary" />
-              <h2 className="font-bold text-2xl text-foreground">
-                Alternative Medicines <span className="text-sm font-normal text-gray-500 ml-2">(Same Composition)</span>
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {alternatives.map((alt: any) => (
-                <ProductCard
-                  key={alt.id}
-                  name={alt.name}
-                  slug={alt.slug}
-                  category={alt.category}
-                  composition={alt.composition}
-                  image_url={alt.image_url}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
     </main>

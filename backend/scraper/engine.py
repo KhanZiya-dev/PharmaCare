@@ -11,6 +11,7 @@ from fake_useragent import UserAgent
 from .onemg_scraper import OneMgScraper
 from .pharmeasy_scraper import PharmEasyScraper
 from .apollo_scraper import ApolloScraper
+from .lab_test_scraper import GenericLabTestScraper
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -35,6 +36,8 @@ def get_scraper_for_platform(platform_name: str, platform_id: int):
         return PharmEasyScraper(platform_id)
     elif "apollo" in name:
         return ApolloScraper(platform_id)
+    elif "agilus" in name or "metropolis" in name or "general diagnostics" in name or "thyrocare" in name or "lal pathlabs" in name:
+        return GenericLabTestScraper(platform_id, platform_name)
     else:
         logger.warning(f"No specific scraper found for platform: {platform_name}")
         return None
@@ -60,6 +63,7 @@ async def worker(name, queue: asyncio.Queue, browser, results_list):
             platform = link.get("platforms")
             platform_id = platform.get("id")
             platform_name = platform.get("name")
+            link_type = link.get("_link_type")
             
             scraper = get_scraper_for_platform(platform_name, platform_id)
             if scraper:
@@ -86,10 +90,11 @@ async def worker(name, queue: asyncio.Queue, browser, results_list):
                         "is_restricted": data.get("is_restricted", False),
                         "discount_pct": discount_pct,
                         "scraped_at": now,
+                        "_link_type": link_type,
                     }
                     
                     product_id = link.get("product_id")
-                    if data.get("image_url") and product_id:
+                    if data.get("image_url") and product_id and link_type == "product":
                         record["_image_url"] = data.get("image_url")
                         record["_product_id"] = product_id
                         
@@ -127,16 +132,30 @@ async def run_engine_async():
     links_res = supabase.table("platform_product_links").select(
         "id, scrape_url, product_id, platforms(id, name)"
     ).execute()
+    product_links = links_res.data or []
 
-    links = links_res.data
-    if not links:
-        logger.warning("No active product links found to scrape.")
+    logger.info("Fetching platform lab test links...")
+    lab_links_res = supabase.table("platform_lab_test_links").select(
+        "id, scrape_url, lab_test_id, platforms(id, name)"
+    ).execute()
+    lab_links = lab_links_res.data or []
+
+    all_links = []
+    for link in product_links:
+        link["_link_type"] = "product"
+        all_links.append(link)
+    for link in lab_links:
+        link["_link_type"] = "lab_test"
+        all_links.append(link)
+
+    if not all_links:
+        logger.warning("No active links found to scrape.")
         return
 
-    logger.info(f"Found {len(links)} links to scrape.")
+    logger.info(f"Found {len(all_links)} links to scrape.")
 
     queue = asyncio.Queue()
-    for link in links:
+    for link in all_links:
         if link.get("scrape_url") and link.get("platforms"):
             queue.put_nowait(link)
 
@@ -172,15 +191,22 @@ async def run_engine_async():
     logger.info(f"Scraping phase finished. Acquired {len(results)} successful results. Batch updating database...")
     
     if results:
-        # Collect image updates and clean up results for price_history table
+        # Collect image updates and clean up results for history tables
         image_updates = {}
-        cleaned_results = []
+        product_results = []
+        lab_test_results = []
+        
         for res in results:
             if "_image_url" in res and res.get("_product_id") in products_needing_image:
                 image_updates[res["_product_id"]] = res["_image_url"]
             
+            link_type = res.get("_link_type")
             cleaned_res = {k: v for k, v in res.items() if not k.startswith("_")}
-            cleaned_results.append(cleaned_res)
+            
+            if link_type == "product":
+                product_results.append(cleaned_res)
+            elif link_type == "lab_test":
+                lab_test_results.append(cleaned_res)
             
         # Batch update product images
         if image_updates:
@@ -192,31 +218,45 @@ async def run_engine_async():
                     logger.error(f"Failed to update image for product {prod_id}: {e}")
             logger.info("Product images updated successfully.")
             
-        # Batch insert price history in chunks of 100
+        # Batch insert price history for products
         chunk_size = 100
-        for i in range(0, len(cleaned_results), chunk_size):
-            chunk = cleaned_results[i:i+chunk_size]
+        for i in range(0, len(product_results), chunk_size):
+            chunk = product_results[i:i+chunk_size]
             try:
                 supabase.table("price_history").insert(chunk).execute()
-                logger.info(f"Batch inserted {len(chunk)} price history records.")
+                logger.info(f"Batch inserted {len(chunk)} product price history records.")
             except Exception as e:
-                logger.error(f"Batch insert failed: {e}")
+                logger.error(f"Batch insert product history failed: {e}")
+
+        # Batch insert price history for lab tests
+        for i in range(0, len(lab_test_results), chunk_size):
+            chunk = lab_test_results[i:i+chunk_size]
+            try:
+                supabase.table("lab_test_price_history").insert(chunk).execute()
+                logger.info(f"Batch inserted {len(chunk)} lab test price history records.")
+            except Exception as e:
+                logger.error(f"Batch insert lab test history failed: {e}")
                 
         # Update last_scraped timestamps
-        # Note: Supabase doesn't natively support bulk UPDATE via REST with different values.
-        # But we can update them in a quick loop, or just update all matching mapping_ids to 'now'.
         now = datetime.now(timezone.utc).isoformat()
-        mapping_ids = [res["mapping_id"] for res in results]
+        product_mapping_ids = [res["mapping_id"] for res in results if res.get("_link_type") == "product"]
+        lab_test_mapping_ids = [res["mapping_id"] for res in results if res.get("_link_type") == "lab_test"]
         
-        if mapping_ids:
+        if product_mapping_ids:
             try:
-                # We chunk mapping_ids to avoid URL length / JSON serialization limits in REST API
-                for i in range(0, len(mapping_ids), chunk_size):
-                    chunk_ids = mapping_ids[i:i+chunk_size]
+                for i in range(0, len(product_mapping_ids), chunk_size):
+                    chunk_ids = product_mapping_ids[i:i+chunk_size]
                     supabase.table("platform_product_links").update({"last_scraped": now}).in_("id", chunk_ids).execute()
-                logger.info(f"Updated last_scraped timestamp for {len(mapping_ids)} links.")
             except Exception as e:
-                logger.error(f"Failed to batch update last_scraped: {e}")
+                logger.error(f"Failed to batch update product last_scraped: {e}")
+
+        if lab_test_mapping_ids:
+            try:
+                for i in range(0, len(lab_test_mapping_ids), chunk_size):
+                    chunk_ids = lab_test_mapping_ids[i:i+chunk_size]
+                    supabase.table("platform_lab_test_links").update({"last_scraped": now}).in_("id", chunk_ids).execute()
+            except Exception as e:
+                logger.error(f"Failed to batch update lab test last_scraped: {e}")
                 
     logger.info("Async Scraper Engine run complete.")
 
@@ -228,7 +268,6 @@ def run_engine():
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     
     try:
-        # Create a new event loop for this thread to avoid 'There is no current event loop' errors
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(run_engine_async())

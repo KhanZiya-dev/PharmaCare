@@ -21,7 +21,7 @@ export default async function Home() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col lg:flex-row items-center justify-center py-12 lg:py-24 gap-12">
+      <div className="flex-1 max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full flex flex-col lg:flex-row items-center justify-center py-[clamp(3rem,8vw,6rem)] gap-[clamp(2rem,6vw,4rem)]">
         {/* Left: Text Content & Search */}
         <div className="flex-1 w-full text-center lg:text-left z-40">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-sm font-semibold mb-6">
@@ -50,8 +50,8 @@ export default async function Home() {
       </div>
 
       {/* Visual Anchor (Bottom 3-panel Grid) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-0 animate-[fadeUp_1s_ease-out_1.2s_forwards]">
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full pb-[clamp(2rem,6vw,4rem)] z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] opacity-0 animate-[fadeUp_1s_ease-out_1.2s_forwards]">
           
           {/* Panel 1: Top Price Drops */}
           <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">

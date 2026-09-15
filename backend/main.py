@@ -9,7 +9,11 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import os
+import json
+import logging
+import asyncio
 import tempfile
+from scraper.zeno import fetch_zeno_price
 from dotenv import load_dotenv
 
 # Ensure backend/.env is properly loaded
@@ -105,23 +109,24 @@ def search_products(
 
     results = []
 
-    # Try ranked RPC search first
+    # Try ranked RPC search first for products
     try:
         rpc_params = {"query": q}
         if category:
             rpc_params["category_filter"] = category
 
         rpc_res = supabase.rpc("search_products_smart", rpc_params).execute()
-        results = rpc_res.data or []
-
+        results.extend(rpc_res.data or [])
     except Exception:
-        # RPC not deployed yet — fall back to ilike
-        logging.info("search_products_smart RPC not available, falling back to ilike.")
-        query = supabase.table("products").select("id, name, slug, category, composition, image_url")
+        pass
+        
+    # Fallback to ilike if RPC returned nothing or failed
+    if not results:
+        query_b = supabase.table("products").select("id, name, slug, category, composition, image_url")
         if category:
-            query = query.eq("category", category)
-        response = query.ilike("name", f"%{q}%").limit(10).execute()
-        results = response.data or []
+            query_b = query_b.eq("category", category)
+        response = query_b.ilike("name", f"%{q}%").limit(10).execute()
+        results.extend(response.data or [])
 
     # Log missing search if no results found (min 5 chars to avoid partial typing fragments)
     if not results and len(q.strip()) >= 5:
@@ -291,7 +296,7 @@ def list_products(request: Request, category: str = None, limit: int = 40, supab
 
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
-def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
+async def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
     """
     Fetch current prices and 30-day history data for a specific product.
     """
@@ -330,20 +335,72 @@ def get_product(request: Request, slug: str, supabase: Client = Depends(get_supa
         else:
             mapping["latest_price"] = None
     
-    # 4. Fetch alternatives (products with same composition)
+    # Fetch alternatives (products with same composition)
     alternatives = []
     if product.get("composition"):
         try:
             alt_res = supabase.table("products").select("id, name, slug, category, composition, image_url").eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
             alternatives = alt_res.data
         except Exception as e:
-            import logging
-            logging.warning(f"Failed to fetch alternatives: {e}")
-            
+            logging.error(f"Failed to fetch alternatives: {e}")
+
+    # Fetch live Zeno Health Data for medicines only
+    zeno_data = None
+    if product.get("category") != "lab_test":
+        zeno_data = await fetch_zeno_price(product["name"])
+        if zeno_data:
+            if zeno_data.get("price") and zeno_data.get("price") > 0:
+                now = datetime.now(timezone.utc)
+                thirty_days_ago = now - timedelta(days=30)
+                
+                latest_price_obj = {
+                    "selling_price": zeno_data["price"],
+                    "mrp": zeno_data["mrp"],
+                    "in_stock": zeno_data["in_stock"],
+                    "is_restricted": False,
+                    "scraped_at": now.isoformat()
+                }
+                
+                past_price_obj = {
+                    "selling_price": zeno_data["price"],
+                    "mrp": zeno_data["mrp"],
+                    "in_stock": zeno_data["in_stock"],
+                    "is_restricted": False,
+                    "scraped_at": thirty_days_ago.isoformat()
+                }
+                
+                zeno_mapping = {
+                    "id": "zeno_live",
+                    "affiliate_url": zeno_data["url"],
+                    "scrape_url": zeno_data["url"],
+                    "platforms": {
+                        "name": "Zeno Health",
+                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                    },
+                    "history": [past_price_obj, latest_price_obj],
+                    "latest_price": latest_price_obj
+                }
+                mappings.append(zeno_mapping)
+            else:
+                # Add Zeno as an unavailable platform to show explicitly it's not available
+                zeno_mapping = {
+                    "id": "zeno_live",
+                    "affiliate_url": None,
+                    "scrape_url": "https://www.zeno.health",
+                    "platforms": {
+                        "name": "Zeno Health",
+                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                    },
+                    "history": [],
+                    "latest_price": None
+                }
+                mappings.append(zeno_mapping)
+        
     return {
         "product": product,
         "platforms": mappings,
-        "alternatives": alternatives
+        "alternatives": alternatives,
+        "generics": zeno_data.get("generics", []) if zeno_data else []
     }
 
 @app.get("/trends/variance")
@@ -407,11 +464,21 @@ def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = D
     """
     Redirects to the affiliate URL of the platform via HTTP 307.
     """
+    if mapping_id == "zeno_live":
+        return RedirectResponse(url="https://www.zeno.health", status_code=307)
+        
     try:
         mapping_res = supabase.table("platform_product_links").select("affiliate_url, scrape_url").eq("id", mapping_id).single().execute()
         mapping_data = mapping_res.data
     except Exception:
-        raise HTTPException(status_code=404, detail="Mapping not found")
+        mapping_data = None
+        
+    if not mapping_data:
+        try:
+            mapping_res = supabase.table("platform_lab_test_links").select("affiliate_url, scrape_url").eq("id", mapping_id).single().execute()
+            mapping_data = mapping_res.data
+        except Exception:
+            mapping_data = None
     
     if not mapping_data:
         raise HTTPException(status_code=404, detail="Mapping not found")
@@ -421,3 +488,53 @@ def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = D
         raise HTTPException(status_code=404, detail="No redirect URL available")
     
     return RedirectResponse(url=target_url, status_code=307)
+
+@app.get("/lab-test/{slug}")
+@limiter.limit("60/minute")
+def get_lab_test(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
+    """
+    Fetch current prices and 30-day history data for a specific lab test.
+    """
+    # 1. Fetch lab test details
+    try:
+        test_res = supabase.table("lab_tests").select("*").eq("slug", slug).single().execute()
+        lab_test = test_res.data
+    except Exception:
+        raise HTTPException(status_code=404, detail="Lab test not found")
+    
+    if not lab_test:
+        raise HTTPException(status_code=404, detail="Lab test not found")
+    
+    # 2. Fetch platform mappings and latest prices
+    mappings_res = supabase.table("platform_lab_test_links").select(
+        "id, affiliate_url, scrape_url, platforms(name, logo_url)"
+    ).eq("lab_test_id", lab_test["id"]).execute()
+    
+    mappings = mappings_res.data
+    
+    # 3. Fetch price history for these mappings for the last 30 days
+    from datetime import datetime, timedelta, timezone
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    
+    mapping_ids = [m["id"] for m in mappings]
+    history_data = []
+    
+    if mapping_ids:
+        history_res = supabase.table("lab_test_price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", thirty_days_ago).order("scraped_at", desc=False).execute()
+        history_data = history_res.data
+        
+    for mapping in mappings:
+        mapping["history"] = [h for h in history_data if h["mapping_id"] == mapping["id"]]
+        if mapping["history"]:
+            mapping["latest_price"] = mapping["history"][-1]
+        else:
+            mapping["latest_price"] = None
+    
+    # Append category for frontend consistency
+    lab_test["category"] = "lab_test"
+            
+    return {
+        "product": lab_test,
+        "platforms": mappings,
+        "alternatives": []
+    }

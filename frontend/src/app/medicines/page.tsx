@@ -53,7 +53,7 @@ export default function MedicinesPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full py-[clamp(2rem,6vw,3rem)]">
         {/* Page Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-3">
