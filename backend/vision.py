@@ -117,9 +117,8 @@ def _parse_response(raw_text: str) -> list[str]:
 def extract_medicines_from_image(image_path: str) -> list[str]:
     """
     Extracts medicine names from an image using Gemini Flash models.
-    Uses a multi-model fallback chain with retry rounds and smart delays
-    to handle transient quota/503 errors within the frontend's 30-second
-    timeout.
+    Uses a multi-model fallback chain with fast-fail to stay within
+    the frontend's 30-second timeout.
     """
     api_keys = get_api_keys()
 
@@ -134,125 +133,73 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
     total_start = time.time()
     last_error = None
 
-    # Retry the entire model+key matrix up to MAX_ROUNDS times.
-    # Free-tier quota often resets within a few seconds, so a short
-    # pause between rounds recovers from transient 429s.
-    MAX_ROUNDS = 2
-    ROUND_PAUSE = 3  # seconds to wait before retrying after all keys fail
-
-    for round_num in range(MAX_ROUNDS):
-        if round_num > 0:
+    for model_name in MODELS_TO_TRY:
+        for api_key in api_keys:
+            # Budget check: if we've already spent >22s, abort
             elapsed = time.time() - total_start
-            if elapsed + ROUND_PAUSE > 25:
+            if elapsed > 22:
                 logger.warning(
-                    f"No time budget for retry round {round_num + 1} "
-                    f"(elapsed {elapsed:.1f}s), giving up."
-                )
-                break
-            logger.info(
-                f"All keys exhausted in round {round_num}. "
-                f"Waiting {ROUND_PAUSE}s before retry..."
-            )
-            time.sleep(ROUND_PAUSE)
-
-        quota_failures = 0  # track how many 429s we hit this round
-
-        for model_name in MODELS_TO_TRY:
-            # Budget check: if we've already spent >24s, abort
-            elapsed = time.time() - total_start
-            if elapsed > 24:
-                logger.warning(
-                    f"Aborting model loop after {elapsed:.1f}s to avoid "
-                    f"frontend timeout."
+                    f"Aborting model loop after {elapsed:.1f}s to avoid frontend timeout."
                 )
                 break
 
-            for api_key in api_keys:
-                # Budget check per key attempt
-                elapsed = time.time() - total_start
-                if elapsed > 24:
-                    break
-
-                key_hint = (
-                    f"...{api_key[-4:]}" if len(api_key) > 4 else "***"
+            key_hint = f"...{api_key[-4:]}" if len(api_key) > 4 else "***"
+            try:
+                # attempts=1 prevents the SDK from retrying 429/503 internally
+                # (default is 4 retries with exponential backoff = 30-60s wasted)
+                client = genai.Client(
+                    api_key=api_key,
+                    http_options=types.HttpOptions(
+                        retry_options=types.HttpRetryOptions(attempts=1)
+                    ),
                 )
+
                 t0 = time.time()
-                try:
-                    # attempts=1 prevents the SDK from retrying 429/503
-                    # internally (default is 4 retries with exponential
-                    # backoff = 30-60s wasted)
-                    client = genai.Client(
-                        api_key=api_key,
-                        http_options=types.HttpOptions(
-                            retry_options=types.HttpRetryOptions(attempts=1)
-                        ),
-                    )
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[PROMPT, img],
+                    config=types.GenerateContentConfig(
+                        temperature=0.0,
+                        max_output_tokens=1024,
+                        response_mime_type="application/json",
+                    ),
+                )
+                duration = time.time() - t0
+                logger.info(
+                    f"Gemini {model_name} (key {key_hint}) succeeded in {duration:.1f}s"
+                )
 
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=[PROMPT, img],
-                        config=types.GenerateContentConfig(
-                            temperature=0.0,
-                            max_output_tokens=1024,
-                            response_mime_type="application/json",
-                        ),
-                    )
-                    duration = time.time() - t0
-                    logger.info(
-                        f"Gemini {model_name} (key {key_hint}) succeeded "
-                        f"in {duration:.1f}s"
-                    )
+                medicines = _parse_response(response.text)
+                if medicines:
+                    return medicines
+                # If parsing returned empty, still try next combo
+                logger.warning(f"Empty parse result from {model_name}, trying next.")
 
-                    # response.text can be None on some edge cases
-                    raw_text = response.text or ""
-                    if not raw_text.strip():
-                        logger.warning(
-                            f"Empty response from {model_name} "
-                            f"(key {key_hint}), trying next."
-                        )
-                        continue
+            except Exception as e:
+                err_str = str(e).lower()
+                duration = time.time() - t0 if "t0" in dir() else 0
+                logger.warning(
+                    f"Error {model_name} (key {key_hint}) in {duration:.1f}s: "
+                    f"{str(e)[:120]}"
+                )
+                last_error = e
 
-                    medicines = _parse_response(raw_text)
-                    if medicines:
-                        return medicines
-                    # Parsed but got no medicines → try next combo
-                    logger.warning(
-                        f"Empty parse result from {model_name}, "
-                        f"trying next."
-                    )
-
-                except Exception as e:
-                    err_str = str(e).lower()
-                    duration = time.time() - t0
-                    logger.warning(
-                        f"Error {model_name} (key {key_hint}) "
-                        f"in {duration:.1f}s: {str(e)[:120]}"
-                    )
-                    last_error = e
-
-                    # 429 quota exhausted → skip to next key for same
-                    # model, add small delay to ease pressure
-                    if "429" in err_str or "quota" in err_str:
-                        quota_failures += 1
-                        time.sleep(0.5)
-                        continue
-
-                    # 503 unavailable → skip to next model entirely
-                    if "503" in err_str or "unavailable" in err_str:
-                        break
-
-                    # 404 model not found → skip model
-                    if "404" in err_str or "not_found" in err_str:
-                        break
-
-                    # Any other error → try next key
+                # 429 quota exhausted → skip to next key for same model
+                if "429" in err_str or "quota" in err_str:
                     continue
 
-        # If this round had no quota failures, retrying won't help
-        if quota_failures == 0:
-            break
+                # 503 unavailable → skip to next model entirely
+                if "503" in err_str or "unavailable" in err_str:
+                    break
 
-    # All combos and rounds exhausted
+                # 404 model not found → skip model
+                if "404" in err_str or "not_found" in err_str:
+                    break
+
+                # Any other error → try next key
+                continue
+
+    # All combos exhausted
     if last_error:
         raise ValueError(
             "AI service is temporarily unavailable (quota/demand). "
