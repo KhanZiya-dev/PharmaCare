@@ -26,6 +26,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
   const [extractedText, setExtractedText] = useState<string[]>([]);
   const [notFound, setNotFound] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +38,39 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (!selected.type.startsWith("image/")) {
+      setError("Only image files are allowed. Please upload a valid image.");
+      return;
+    }
+
+    setFile(selected);
+    const objectUrl = URL.createObjectURL(selected);
+    setPreview(objectUrl);
+    
+    // Automatically start scanning
+    await handleUpload(selected);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const selected = e.dataTransfer.files?.[0];
     if (!selected) return;
 
     if (!selected.type.startsWith("image/")) {
@@ -151,7 +185,12 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           
           {/* Upload Area */}
           {!preview ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div 
+              className={`grid grid-cols-2 gap-4 p-4 -m-4 rounded-xl transition-colors border-2 border-dashed ${isDragging ? "border-indigo-500 bg-indigo-50/50" : "border-transparent"}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               {/* Camera Button */}
               <label 
                 className="border-2 border-dashed border-indigo-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95 bg-white shadow-sm"
