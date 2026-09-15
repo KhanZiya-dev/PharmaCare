@@ -34,7 +34,9 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-accent overflow-hidden">
-      <div className="overflow-x-auto">
+      
+      {/* Desktop View (Table) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-accent/30 text-gray-600 text-sm border-b border-accent">
@@ -66,7 +68,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                       <div className="font-bold text-foreground flex items-center gap-2">
                         {platform.platforms.name}
                         {isLowest && (
-                          <span className="text-[10px] uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
                             Best Price
                           </span>
                         )}
@@ -102,7 +104,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                             ₹{platform.latest_price!.selling_price}
                           </span>
                           {platform.latest_price!.discount_pct > 0 && (
-                            <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                            <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                               {platform.latest_price!.discount_pct}% OFF
                             </span>
                           )}
@@ -151,6 +153,107 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile View (Stacked Cards) */}
+      <div className="md:hidden flex flex-col">
+        {sortedPlatforms.map((platform, index) => {
+          const hasPrice = !!platform.latest_price;
+          const sellingPrice = platform.latest_price?.selling_price;
+          const isRestricted = (platform.latest_price as any)?.is_restricted === true;
+          const isNotForSale = (hasPrice && (sellingPrice === null || sellingPrice === 0 || sellingPrice === undefined)) || isRestricted;
+          const isLowest = index === 0 && hasPrice && !isNotForSale;
+          const inStock = platform.latest_price?.in_stock ?? false;
+          const redirectUrl = `${apiUrl}/redirect?mapping_id=${platform.id}`;
+
+          return (
+            <div 
+              key={platform.id}
+              className={`p-4 border-b border-accent/50 ${isLowest ? "bg-teal-50/30" : ""}`}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div className="font-bold text-foreground text-base">
+                  {platform.platforms.name}
+                </div>
+                {isLowest && (
+                  <span className="text-[10px] uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-bold">
+                    Best Price
+                  </span>
+                )}
+              </div>
+
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  {hasPrice && sellingPrice && sellingPrice > 0 ? (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xl font-bold tabular-nums tracking-tight ${isNotForSale ? "text-gray-600" : isLowest ? "text-green-600" : "text-gray-900"}`}>
+                          ₹{platform.latest_price!.selling_price}
+                        </span>
+                        {platform.latest_price!.discount_pct > 0 && (
+                          <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                            {platform.latest_price!.discount_pct}% OFF
+                          </span>
+                        )}
+                      </div>
+                      {platform.latest_price!.mrp > platform.latest_price!.selling_price && (
+                        <span className="text-xs text-gray-400 line-through tabular-nums">
+                          MRP ₹{platform.latest_price!.mrp}
+                        </span>
+                      )}
+                    </div>
+                  ) : isNotForSale ? (
+                    <span className="text-gray-400 font-medium">Restricted</span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+
+                <div>
+                  {hasPrice ? (
+                    isNotForSale ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-orange-600">
+                        <XCircle className="h-3 w-3" /> Not for Online Sale
+                      </span>
+                    ) : inStock ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-teal-700">
+                        <CheckCircle2 className="h-3 w-3" /> In Stock
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-red-600">
+                        <XCircle className="h-3 w-3" /> Out of Stock
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-gray-400 text-[11px]">Data unavailable</span>
+                  )}
+                </div>
+              </div>
+
+              <a
+                href={redirectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                  isNotForSale
+                    ? "bg-orange-50 text-orange-700 border border-orange-200"
+                    : isLowest 
+                      ? "bg-primary text-white" 
+                      : "bg-gray-50 border border-gray-200 text-gray-700"
+                }`}
+              >
+                {isNotForSale ? "Check Availability" : "View Deal"}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          );
+        })}
+        {sortedPlatforms.length === 0 && (
+          <div className="p-8 text-center text-gray-500 text-sm">
+            No pricing data available for this product yet.
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

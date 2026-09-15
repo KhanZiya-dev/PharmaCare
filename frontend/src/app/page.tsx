@@ -40,13 +40,13 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16 z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-0 animate-[fadeUp_1s_ease-out_1.2s_forwards]">
           
-          {/* Panel 1: Price Drops */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+          {/* Panel 1: Top Price Drops */}
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-green-50 p-2.5 rounded-xl text-green-600">
                 <TrendingDown className="h-5 w-5" />
               </div>
-              <h3 className="font-bold text-foreground">Top Price Drops Today</h3>
+              <h3 className="font-bold text-foreground">Top Price Drops</h3>
             </div>
             
             <div className="space-y-3 flex-1">
@@ -71,7 +71,7 @@ export default function Home() {
           </div>
           
           {/* Panel 2 (CTA): Scanner */}
-          <div className="bg-primary rounded-2xl p-6 shadow-md border border-primary text-white flex flex-col justify-center items-center text-center transform md:-translate-y-4">
+          <div className="bg-primary rounded-2xl p-4 md:p-6 shadow-md border border-primary text-white flex flex-col justify-center items-center text-center transform md:-translate-y-4">
             <h3 className="font-serif font-bold text-2xl mb-2">Have a Prescription?</h3>
             <p className="text-sm text-blue-100 mb-6 px-2">
               Don't manually search for each medicine. Scan your prescription and we'll compare the entire list at once.
@@ -83,7 +83,7 @@ export default function Home() {
           </div>
           
           {/* Panel 3: Savings Data */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
                 <Activity className="h-5 w-5" />

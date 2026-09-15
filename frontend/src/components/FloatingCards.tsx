@@ -45,11 +45,11 @@ export function FloatingCards() {
   return (
     <div className="relative w-full max-w-2xl mx-auto h-[450px] lg:h-[550px] flex items-center justify-center pointer-events-none">
       
-      {/* Decorative Background Elements to fill empty space */}
+      {/* Decorative Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-teal-500/5 rounded-full blur-3xl -z-10 animate-pulse" style={{ animationDuration: '8s' }} />
 
       {/* Card 1: Price Drop Alert */}
-      <div className="pointer-events-auto absolute top-4 lg:top-12 left-0 lg:-left-8 w-64 lg:w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-green-100 p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '4s' }}>
+      <div className="pointer-events-auto absolute top-0 lg:top-12 left-1/2 -translate-x-1/2 lg:left-[-2rem] lg:translate-x-0 w-[90%] max-w-sm lg:w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-green-100 p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all z-10" style={{ animationDuration: '4s' }}>
         <Link href={`/product/${displayProducts[0].slug}`}>
           <div className="flex items-center gap-2 mb-3">
             <div className="bg-green-100 p-1.5 rounded-full">
@@ -60,41 +60,28 @@ export function FloatingCards() {
           <h3 className="font-bold text-foreground text-sm lg:text-base truncate w-full mb-1" title={displayProducts[0].name}>
             {displayProducts[0].name}
           </h3>
-          
-          <div className="mt-3 bg-gray-50 rounded-lg p-2.5 flex justify-between items-center border border-gray-100">
-            <div>
-              <p className="text-[10px] text-gray-500 font-medium mb-0.5">Lowest across 4 platforms</p>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-bold text-gray-900 tracking-tight">₹142</span>
-                <span className="text-xs text-gray-400 line-through">₹185</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                -23%
-              </span>
-            </div>
-          </div>
-          
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-primary font-semibold group-hover:underline">
-            <Activity className="h-3.5 w-3.5" />
-            Track this medicine
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-black text-green-600 tracking-tight">₹124</span>
+            <span className="text-xs text-gray-400 line-through tabular-nums">₹180</span>
+            <span className="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-auto">
+              31% OFF
+            </span>
           </div>
         </Link>
       </div>
 
-      {/* Card 2: Price Comparison Alert */}
-      <div className="pointer-events-auto absolute bottom-8 lg:bottom-16 right-0 lg:-right-4 w-64 lg:w-80 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-accent p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '5s', animationDelay: '1s' }}>
+      {/* Center Display / Scanner graphic */}
+      <div className="relative w-48 h-48 lg:w-64 lg:h-64 rounded-full border-4 border-dashed border-primary/20 flex items-center justify-center bg-white shadow-2xl mt-24 lg:mt-0 z-0">
+        <div className="absolute inset-2 bg-gradient-to-b from-blue-50 to-indigo-50 rounded-full flex flex-col items-center justify-center p-4 text-center">
+          <Scan className="h-10 w-10 text-primary mb-2 opacity-80" />
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">Scanning Prices</span>
+          <span className="text-sm font-medium text-gray-500 mt-1 leading-tight">Across 10+ Pharmacies</span>
+        </div>
+      </div>
+
+      {/* Card 2: Alternatives / Compare */}
+      <div className="pointer-events-auto absolute bottom-0 lg:bottom-12 right-1/2 translate-x-1/2 lg:right-[-2rem] lg:translate-x-0 w-[90%] max-w-sm lg:w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-indigo-100 p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all z-10" style={{ animationDuration: '5s' }}>
         <Link href={`/product/${displayProducts[1].slug}`}>
-          <div className="flex justify-between items-start mb-3">
-            <div className="flex items-center gap-3">
-              <div className="bg-indigo-50 p-2 rounded-lg">
-                <IndianRupee className="h-5 w-5 text-indigo-500" />
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground text-sm lg:text-base truncate w-40" title={displayProducts[1].name}>
-                  {displayProducts[1].name}
-                </h3>
                 <p className="text-[11px] text-gray-500 mt-0.5">High Price Variance Found</p>
               </div>
             </div>
