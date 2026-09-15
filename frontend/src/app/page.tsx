@@ -3,7 +3,20 @@ import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { FloatingCards } from "@/components/FloatingCards";
 import { ShieldCheck, TrendingDown, Camera, Activity } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  let trends = [];
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const res = await fetch(`${backendUrl}/trends/variance`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      trends = await res.json();
+    }
+  } catch (err) {
+    console.error("Failed to fetch top price drops", err);
+  }
+
+  const topDrops = trends.slice(0, 3);
+
   return (
     <main className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       <Navbar />
@@ -50,18 +63,31 @@ export default function Home() {
             </div>
             
             <div className="space-y-3 flex-1">
-              <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span className="font-medium text-gray-700">Shelcal 500</span>
-                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-18%</span>
-              </div>
-              <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span className="font-medium text-gray-700">Telma 40</span>
-                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-12%</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-medium text-gray-700">Augmentin 625</span>
-                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-9%</span>
-              </div>
+              {topDrops.length > 0 ? (
+                topDrops.map((drop: any, i: number) => (
+                  <div key={drop.id} className={`flex justify-between items-center text-sm ${i < topDrops.length - 1 ? 'border-b border-gray-50 pb-2' : ''}`}>
+                    <span className="font-medium text-gray-700 truncate w-32" title={drop.name}>{drop.name}</span>
+                    <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">
+                      {Math.round(drop.variance_pct || 0)}% OFF
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span className="font-medium text-gray-700">Shelcal 500</span>
+                    <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-18%</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span className="font-medium text-gray-700">Telma 40</span>
+                    <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-12%</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium text-gray-700">Augmentin 625</span>
+                    <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-9%</span>
+                  </div>
+                </>
+              )}
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-400 group-hover:text-primary transition-colors font-medium cursor-pointer">

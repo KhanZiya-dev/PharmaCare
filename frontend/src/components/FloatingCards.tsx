@@ -4,22 +4,25 @@ import { TrendingDown, TrendingUp, Activity, AlertCircle, Loader2, IndianRupee, 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface Product {
+interface TrendProduct {
   id: string;
   name: string;
   slug: string;
   category: string;
+  lowestPrice?: number;
+  highestPrice?: number;
+  variance_pct?: number;
 }
 
 export function FloatingCards() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<TrendProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const res = await fetch(`${backendUrl}/products`);
+        const res = await fetch(`${backendUrl}/trends/variance`);
         if (res.ok) {
           const data = await res.json();
           // Keep only first 2 products for the cards
@@ -35,9 +38,9 @@ export function FloatingCards() {
   }, []);
 
   // Fallback data if API fails or is empty
-  const defaultProducts = [
-    { name: "Pan-D Capsule", category: "medicine", slug: "pan-d-capsule", id: "1" },
-    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2" }
+  const defaultProducts: TrendProduct[] = [
+    { name: "Pan-D Capsule", category: "medicine", slug: "pan-d-capsule", id: "1", lowestPrice: 120, highestPrice: 180, variance_pct: 50 },
+    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 20, highestPrice: 32, variance_pct: 60 }
   ];
 
   const displayProducts = products.length >= 2 ? products : defaultProducts;
@@ -61,10 +64,10 @@ export function FloatingCards() {
             {displayProducts[0].name}
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-black text-green-600 tracking-tight">₹124</span>
-            <span className="text-xs text-gray-400 line-through tabular-nums">₹180</span>
+            <span className="text-lg font-black text-green-600 tracking-tight">₹{displayProducts[0].lowestPrice?.toFixed(2) || 'N/A'}</span>
+            <span className="text-xs text-gray-400 line-through tabular-nums">₹{displayProducts[0].highestPrice?.toFixed(2) || 'N/A'}</span>
             <span className="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-auto">
-              31% OFF
+              {Math.round(displayProducts[0].variance_pct || 0)}% OFF
             </span>
           </div>
         </Link>
@@ -99,11 +102,11 @@ export function FloatingCards() {
           <div className="mt-4 flex flex-col gap-2">
             <div className="flex justify-between items-center text-xs">
               <span className="text-gray-500">Highest Price</span>
-              <span className="font-semibold text-gray-700">₹65.00</span>
+              <span className="font-semibold text-gray-700">₹{displayProducts[1].highestPrice?.toFixed(2) || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-gray-500">Lowest Price</span>
-              <span className="font-bold text-green-600">₹42.50</span>
+              <span className="font-bold text-green-600">₹{displayProducts[1].lowestPrice?.toFixed(2) || 'N/A'}</span>
             </div>
             {/* Visual Bar */}
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1 flex">
@@ -113,7 +116,7 @@ export function FloatingCards() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-accent flex justify-between items-center">
-            <p className="text-[11px] font-semibold text-green-600">Save up to 34%</p>
+            <p className="text-[11px] font-semibold text-green-600">Save up to {Math.round(displayProducts[1].variance_pct || 0)}%</p>
             <button className="bg-primary hover:bg-primary/90 text-white text-[11px] px-3 py-1.5 rounded font-bold transition-colors">
               Compare Now
             </button>
