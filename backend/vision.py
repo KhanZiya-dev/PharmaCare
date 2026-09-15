@@ -1,111 +1,156 @@
 import os
-import google.generativeai as genai
-from PIL import Image
-import logging
-import json
 import re
+import json
+import time
+import logging
+from google import genai
+from google.genai import types
+from PIL import Image
+from dotenv import load_dotenv
+
+# Always resolve .env relative to this file (backend/.env)
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(_env_path if os.path.exists(_env_path) else None)
 
 logger = logging.getLogger(__name__)
+
+# The user explicitly requested gemini-3.6-flash
+MODEL_NAME = 'gemini-3.6-flash'
+
+PROMPT = (
+    "Extract medicine/drug brand names from this image.\n\n"
+    "RULES:\n"
+    "1. Read carefully, letter by letter. Do not guess based on common names.\n"
+    "2. Ignore: dosage (500mg, 10ml), frequency (1-0-1, BD, TDS, SOS), "
+    "doctor names, patient details, dates, diagnosis.\n"
+    "3. Preserve exact spelling as written/printed. Do not auto-correct.\n"
+    "4. Return ONLY a JSON array of medicine name strings.\n"
+    '5. Example output: ["Ubactin", "Rapaflow D"]\n'
+    '6. If nothing is legible, return: ["UNCLEAR"]'
+)
 
 def get_api_keys() -> list[str]:
     """Returns a list of API keys from the environment variable."""
     keys_str = os.getenv("GEMINI_API_KEY")
     if not keys_str:
         return []
-    # Split by comma and remove empty/whitespace keys
     return [k.strip() for k in keys_str.split(",") if k.strip()]
+
+def _parse_response(raw_text: str) -> list[str]:
+    """
+    Robustly parse Gemini response into a list of medicine name strings.
+    """
+    text = raw_text.strip() if raw_text else ""
+
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+        text = text.strip()
+
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\[.*\]", text, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(0))
+            except:
+                return []
+        else:
+            return []
+
+    if isinstance(data, dict):
+        for v in data.values():
+            if isinstance(v, list):
+                data = v
+                break
+        else:
+            return []
+
+    if not isinstance(data, list):
+        return []
+
+    results = []
+    for item in data:
+        name = ""
+        if isinstance(item, str):
+            name = item.strip()
+        elif isinstance(item, dict):
+            name = str(item.get("medicine_name") or item.get("name") or item.get("brand") or item.get("drug") or "").strip()
+        
+        if not name or name.upper() == "UNCLEAR":
+            continue
+
+        clean = re.sub(
+            r"\s+\d+(\.\d+)?\s*(mg|mcg|ml|gm?|g|tablet|tab|cap|capsule)\b.*$",
+            "",
+            name,
+            flags=re.IGNORECASE,
+        ).strip()
+        results.append(clean if clean else name)
+
+    return results
 
 def extract_medicines_from_image(image_path: str) -> list[str]:
     """
-    Extracts medicine names from an image using Gemini Pro Vision.
-    Tries multiple API keys if the quota is exceeded.
-    Returns a list of extracted medicine names.
+    Extracts medicine names from an image using Gemini Flash 3.6.
+    Fast-fails if time exceeds 20s to prevent frontend timeouts.
     """
     api_keys = get_api_keys()
-    
+
     if not api_keys:
         logger.error("Cannot extract text: GEMINI_API_KEY is missing.")
         return []
-        
+
+    img = Image.open(image_path).convert("RGB")
+    img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+
+    total_start = time.time()
     last_error = None
-    
-    # Try each key until one succeeds
+
     for api_key in api_keys:
+        # Prevent 30s timeout on Render by strictly aborting at 20s
+        if time.time() - total_start > 20:
+            logger.warning("Aborting vision API call early to prevent 30s timeout on frontend.")
+            break
+
         try:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-3.5-flash')
-            # Optimize: Downscale image to max 800x800 to save bandwidth and tokens
-            img = Image.open(image_path).convert('RGB')
-            img.thumbnail((800, 800), Image.Resampling.LANCZOS)
-            
-            prompt = (
-                "Extract medicine/drug brand names from this image.\n\n"
-                "RULES:\n"
-                "1. Read carefully, letter by letter. Do not guess based on common names.\n"
-                "2. Ignore: dosage (500mg, 10ml), frequency (1-0-1, BD, TDS, SOS), "
-                "doctor names, patient details, dates, diagnosis.\n"
-                "3. Preserve exact spelling as written/printed. Do not auto-correct.\n"
-                "4. Return a JSON array of strings.\n"
-                "5. If nothing is legible, return: [\"UNCLEAR\"]"
+            # Using attempts=1 disables Google's automatic exponential backoff (which causes timeouts)
+            client = genai.Client(
+                api_key=api_key,
+                http_options=types.HttpOptions(
+                    retry_options=types.HttpRetryOptions(attempts=1)
+                ),
             )
-            
-            response = model.generate_content(
-                [prompt, img],
-                generation_config=genai.types.GenerationConfig(
+
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[PROMPT, img],
+                config=types.GenerateContentConfig(
                     temperature=0.0,
                     max_output_tokens=1024,
-                )
+                    response_mime_type="application/json",
+                ),
             )
+
+            raw_text = response.text or ""
+            medicines = _parse_response(raw_text)
             
-            # Handle successful response parsing
-            logger.debug(f"Finish Reason: {response.candidates[0].finish_reason}")
-            
-            raw_text = response.text.strip()
-            # Strip markdown code fences if present
-            if raw_text.startswith("```"):
-                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-                raw_text = re.sub(r"\s*```$", "", raw_text)
-                raw_text = raw_text.strip()
-            
-            try:
-                parsed_list = json.loads(raw_text)
-            except json.JSONDecodeError:
-                # Fallback: extract the first JSON array via regex
-                match = re.search(r"\[.*\]", raw_text, re.DOTALL)
-                if match:
-                    parsed_list = json.loads(match.group(0))
-                else:
-                    raise json.JSONDecodeError("No JSON array found", raw_text, 0)
-            
-            if isinstance(parsed_list, list):
-                medicines = [str(m).strip() for m in parsed_list if str(m).strip().upper() != "UNCLEAR" and str(m).strip()]
+            if medicines:
                 return medicines
-            return []
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON from Gemini: {response.text} Error: {e}")
-            logger.error(f"Finish Reason: {response.candidates[0].finish_reason}")
-            # If it cut off due to token limits, say so
-            if response.candidates[0].finish_reason == 2:
-                raise ValueError("Response was cut off. Please increase token limit or try a simpler image.")
-            return []
-            
-        except Exception as e:
-            logger.warning(f"Error calling Gemini API with key ending in ...{api_key[-4:] if len(api_key)>4 else ''}: {e}")
-            
-            # If it's a quota error, we continue to the next key
-            if "429" in str(e) or "quota" in str(e).lower():
-                last_error = e
-                logger.info("Quota exceeded for this key. Trying the next key if available...")
-                continue
                 
-            # If it's some other error, just raise or handle it immediately
-            if isinstance(e, ValueError):
-                raise e
-            return []
+        except Exception as e:
+            err_str = str(e).lower()
+            last_error = e
             
-    # If we loop through all keys and fail due to quota:
+            # If 503/404, we just stop entirely as it's a model-wide issue, no point trying other keys
+            if "503" in err_str or "unavailable" in err_str or "404" in err_str or "not_found" in err_str:
+                break
+                
+            # If 429 quota, we try the next key immediately
+            continue
+
     if last_error:
-        raise ValueError("AI API Quota Exceeded (Free Tier) across all provided keys. Please try again later.")
-        
+        raise ValueError("AI service is temporarily unavailable (quota/demand). Please try again in a few seconds.")
+
     return []
