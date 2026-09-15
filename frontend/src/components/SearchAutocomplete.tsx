@@ -332,9 +332,7 @@ export function SearchAutocomplete() {
                 highlightedIndex >= 0 ? `search-result-${highlightedIndex}` : undefined
               }
             />
-            {isLoading ? (
-              <Loader2 className="absolute right-14 h-5 w-5 text-primary animate-spin" />
-            ) : null}
+
             <button
               type="button"
               onClick={() => setIsLensOpen(true)}
