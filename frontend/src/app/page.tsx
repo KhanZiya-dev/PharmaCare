@@ -18,7 +18,7 @@ export default async function Home() {
   const topDrops = trends.slice(0, 3);
 
   return (
-    <main className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col lg:flex-row items-center justify-center py-12 lg:py-24 gap-12">
