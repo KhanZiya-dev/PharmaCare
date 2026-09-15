@@ -57,13 +57,19 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     const formData = new FormData();
     formData.append("file", fileToUpload);
 
+    // 30-second timeout to handle Render cold starts
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
-      // Assuming backend is running on same origin or configured via next.config proxy
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(`${backendUrl}/api/vision-search`, {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error("Failed to scan image. Please try again.");
@@ -80,7 +86,12 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
         }
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred while scanning.");
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError") {
+        setError("Scan timed out. The server may be starting up — please wait 30 seconds and try again.");
+      } else {
+        setError(err.message || "An error occurred while scanning.");
+      }
     } finally {
       setIsScanning(false);
     }
