@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { ProductCard } from "@/components/ProductCard";
 import { TrendingDown, TrendingUp, BarChart3, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -8,7 +9,22 @@ export const metadata: Metadata = {
   description: "Track medicine price trends, discover the best deals, and understand pricing patterns across top Indian e-pharmacies.",
 };
 
-export default function TrendsPage() {
+async function getTrends() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/trends/variance`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch trends:", error);
+    return [];
+  }
+}
+
+export default async function TrendsPage() {
+  const trends = await getTrends();
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -61,6 +77,34 @@ export default function TrendsPage() {
             </p>
           </div>
         </div>
+
+        {/* Top Opportunities Section */}
+        {trends.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="bg-green-50 p-2 rounded-xl">
+                <TrendingDown className="h-6 w-6 text-green-600" />
+              </div>
+              <h2 className="font-bold text-2xl text-foreground">
+                Top Opportunities <span className="text-sm font-normal text-gray-500 ml-2">(High Price Variance)</span>
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {trends.map((item: any) => (
+                <ProductCard
+                  key={item.id}
+                  name={item.name}
+                  slug={item.slug}
+                  category={item.category}
+                  image_url={item.image_url}
+                  lowestPrice={item.lowestPrice}
+                  platformCount={item.platformCount}
+                  discountPct={item.variance_pct > 100 ? 99 : Math.round(item.variance_pct)} // Use the badge field temporarily
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Example Insights Section */}
         <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-accent mb-8">

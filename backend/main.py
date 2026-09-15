@@ -346,6 +346,59 @@ def get_product(request: Request, slug: str, supabase: Client = Depends(get_supa
         "alternatives": alternatives
     }
 
+@app.get("/trends/variance")
+def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
+    """
+    Returns products with the highest price variance across platforms.
+    """
+    # Fetch all products with their latest prices
+    # Note: For a production app with many products, this logic should be a database view or materialized view.
+    # For now, we do a bounded fetch and compute in memory.
+    try:
+        res = supabase.table("products").select(
+            "id, name, slug, category, image_url, platform_product_links(id, price_history(mrp, selling_price))"
+        ).limit(100).execute()
+        
+        variances = []
+        for p in res.data:
+            prices = []
+            for m in p.get("platform_product_links", []):
+                history = m.get("price_history", [])
+                if history:
+                    # Supabase returns related lists, assuming latest is [0] or we just check the first one if sorted
+                    # but actually we can just take the first entry since the scraper runs daily
+                    latest = history[0]
+                    sp = latest.get("selling_price")
+                    if sp and sp > 0:
+                        prices.append(sp)
+            
+            if len(prices) > 1:
+                min_p = min(prices)
+                max_p = max(prices)
+                variance = max_p - min_p
+                var_pct = (variance / min_p) * 100
+                if var_pct > 0:
+                    variances.append({
+                        "id": p["id"],
+                        "name": p["name"],
+                        "slug": p["slug"],
+                        "category": p["category"],
+                        "image_url": p.get("image_url"),
+                        "lowestPrice": min_p,
+                        "highestPrice": max_p,
+                        "variance_pct": round(var_pct, 2),
+                        "platformCount": len(prices)
+                    })
+        
+        # Sort by highest variance percentage
+        variances.sort(key=lambda x: x["variance_pct"], reverse=True)
+        return variances[:12]
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Error computing trends: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch trends")
+
 @app.get("/redirect")
 @limiter.limit("60/minute")
 def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = Depends(get_supabase)):
