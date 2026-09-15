@@ -82,6 +82,15 @@ export function FloatingCards() {
       {/* Card 2: Alternatives / Compare */}
       <div className="pointer-events-auto absolute bottom-0 lg:bottom-12 right-1/2 translate-x-1/2 lg:right-[-2rem] lg:translate-x-0 w-[90%] max-w-sm lg:w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-indigo-100 p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all z-10" style={{ animationDuration: '5s' }}>
         <Link href={`/product/${displayProducts[1].slug}`}>
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-50 p-2 rounded-lg">
+                <IndianRupee className="h-5 w-5 text-indigo-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground text-sm lg:text-base truncate w-40" title={displayProducts[1].name}>
+                  {displayProducts[1].name}
+                </h3>
                 <p className="text-[11px] text-gray-500 mt-0.5">High Price Variance Found</p>
               </div>
             </div>
