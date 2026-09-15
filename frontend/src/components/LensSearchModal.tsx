@@ -59,7 +59,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
 
     // 30-second timeout to handle Render cold starts
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 130000);
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -97,7 +97,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {
-        setError("Scan timed out. The server may be busy — please wait 130 seconds and try again.");
+        setError("Scan timed out. The server may be busy — please wait 180 seconds and try again.");
       } else {
         setError(err.message || "An error occurred while scanning.");
       }
