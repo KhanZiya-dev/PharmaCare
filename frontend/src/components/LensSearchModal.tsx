@@ -39,6 +39,11 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     const selected = e.target.files?.[0];
     if (!selected) return;
 
+    if (!selected.type.startsWith("image/")) {
+      setError("Only image files are allowed. Please upload a valid image.");
+      return;
+    }
+
     setFile(selected);
     const objectUrl = URL.createObjectURL(selected);
     setPreview(objectUrl);
