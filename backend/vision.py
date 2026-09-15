@@ -33,7 +33,7 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
     for api_key in api_keys:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-3.8-flash')
+            model = genai.GenerativeModel('gemini-3.5-flash')
             # Optimize: Downscale image to max 800x800 to save bandwidth and tokens
             img = Image.open(image_path).convert('RGB')
             img.thumbnail((800, 800), Image.Resampling.LANCZOS)
