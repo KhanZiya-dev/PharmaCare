@@ -12,6 +12,7 @@ interface TrendProduct {
   lowestPrice?: number;
   highestPrice?: number;
   variance_pct?: number;
+  discount_pct?: number;
 }
 
 export function FloatingCards() {
@@ -39,8 +40,8 @@ export function FloatingCards() {
 
   // Fallback data if API fails or is empty
   const defaultProducts: TrendProduct[] = [
-    { name: "Pan-D Capsule", category: "medicine", slug: "pan-d-capsule", id: "1", lowestPrice: 120, highestPrice: 180, variance_pct: 50 },
-    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 20, highestPrice: 32, variance_pct: 60 }
+    { name: "Pan-D Capsule", category: "medicine", slug: "pan-d-capsule", id: "1", lowestPrice: 120, highestPrice: 180, variance_pct: 50, discount_pct: 33 },
+    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 20, highestPrice: 32, variance_pct: 60, discount_pct: 37 }
   ];
 
   const displayProducts = products.length >= 2 ? products : defaultProducts;
@@ -67,7 +68,7 @@ export function FloatingCards() {
             <span className="text-lg font-black text-green-600 tracking-tight">₹{displayProducts[0].lowestPrice?.toFixed(2) || 'N/A'}</span>
             <span className="text-xs text-gray-400 line-through tabular-nums">₹{displayProducts[0].highestPrice?.toFixed(2) || 'N/A'}</span>
             <span className="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-auto">
-              {Math.round(displayProducts[0].variance_pct || 0)}% OFF
+              {Math.round(displayProducts[0].discount_pct || 0)}% OFF
             </span>
           </div>
         </Link>
@@ -116,7 +117,7 @@ export function FloatingCards() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-accent flex justify-between items-center">
-            <p className="text-[11px] font-semibold text-green-600">Save up to {Math.round(displayProducts[1].variance_pct || 0)}%</p>
+            <p className="text-[11px] font-semibold text-green-600">Save up to {Math.round(displayProducts[1].discount_pct || 0)}%</p>
             <button className="bg-primary hover:bg-primary/90 text-white text-[11px] px-3 py-1.5 rounded font-bold transition-colors">
               Compare Now
             </button>

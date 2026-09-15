@@ -99,7 +99,7 @@ export default async function TrendsPage() {
                   image_url={item.image_url}
                   lowestPrice={item.lowestPrice}
                   platformCount={item.platformCount}
-                  discountPct={item.variance_pct > 100 ? 99 : Math.round(item.variance_pct)} // Use the badge field temporarily
+                  discountPct={Math.round(item.discount_pct || 0)}
                 />
               ))}
             </div>

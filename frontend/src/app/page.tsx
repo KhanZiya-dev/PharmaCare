@@ -68,7 +68,7 @@ export default async function Home() {
                   <div key={drop.id} className={`flex justify-between items-center text-sm ${i < topDrops.length - 1 ? 'border-b border-gray-50 pb-2' : ''}`}>
                     <span className="font-medium text-gray-700 truncate w-32" title={drop.name}>{drop.name}</span>
                     <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">
-                      {Math.round(drop.variance_pct || 0)}% OFF
+                      {Math.round(drop.discount_pct || 0)}% OFF
                     </span>
                   </div>
                 ))

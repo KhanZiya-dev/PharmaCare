@@ -377,6 +377,7 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
                 max_p = max(prices)
                 variance = max_p - min_p
                 var_pct = (variance / min_p) * 100
+                discount_pct = (variance / max_p) * 100
                 if var_pct > 0:
                     variances.append({
                         "id": p["id"],
@@ -387,6 +388,7 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
                         "lowestPrice": min_p,
                         "highestPrice": max_p,
                         "variance_pct": round(var_pct, 2),
+                        "discount_pct": round(discount_pct, 2),
                         "platformCount": len(prices)
                     })
         
