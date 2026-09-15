@@ -22,7 +22,7 @@ export function MobileTabBar() {
 
   return (
     <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-1 bg-gray-900/95 backdrop-blur-xl p-1.5 rounded-full shadow-2xl border border-gray-800">
+      <div className="flex items-center gap-1 bg-white/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -32,13 +32,13 @@ export function MobileTabBar() {
               key={item.name}
               href={item.href}
               className={`relative flex flex-col items-center justify-center px-4 py-2 min-w-[72px] transition-colors duration-300 ${
-                active ? "text-white" : "text-gray-400 hover:text-gray-200"
+                active ? "text-primary" : "text-gray-400 hover:text-gray-600"
               }`}
             >
               {active && (
                 <motion.div
                   layoutId="mobile-tab-bubble"
-                  className="absolute inset-0 bg-gray-700/60 rounded-full -z-10"
+                  className="absolute inset-0 bg-primary/10 rounded-full -z-10"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
