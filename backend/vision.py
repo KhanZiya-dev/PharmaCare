@@ -3,8 +3,7 @@ import re
 import json
 import time
 import logging
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from PIL import Image
 from dotenv import load_dotenv
 
@@ -93,8 +92,8 @@ def _parse_response(raw_text: str) -> list[str]:
 
 def extract_medicines_from_image(image_path: str) -> list[str]:
     """
-    Extracts medicine names from an image using Gemini Flash 3.6.
-    Fast-fails if time exceeds 20s to prevent frontend timeouts.
+    Extracts medicine names from an image using the older google.generativeai SDK 
+    to prevent hanging/timeouts associated with the new SDK's quota handling.
     """
     api_keys = get_api_keys()
 
@@ -109,28 +108,19 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
     last_error = None
 
     for api_key in api_keys:
-        # Prevent 30s timeout on Render by strictly aborting at 20s
         if time.time() - total_start > 20:
             logger.warning("Aborting vision API call early to prevent 30s timeout on frontend.")
             break
 
         try:
-            # Using attempts=1 disables Google's automatic exponential backoff (which causes timeouts)
-            client = genai.Client(
-                api_key=api_key,
-                http_options=types.HttpOptions(
-                    retry_options=types.HttpRetryOptions(attempts=1)
-                ),
-            )
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(MODEL_NAME)
 
-            response = client.models.generate_content(
-                model=MODEL_NAME,
-                contents=[PROMPT, img],
-                config=types.GenerateContentConfig(
+            response = model.generate_content(
+                [PROMPT, img],
+                generation_config=genai.types.GenerationConfig(
                     temperature=0.0,
-                    max_output_tokens=1024,
-                    response_mime_type="application/json",
-                ),
+                )
             )
 
             raw_text = response.text or ""
@@ -143,14 +133,12 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
             err_str = str(e).lower()
             last_error = e
             
-            # If 503/404, we just stop entirely as it's a model-wide issue, no point trying other keys
             if "503" in err_str or "unavailable" in err_str or "404" in err_str or "not_found" in err_str:
                 break
                 
-            # If 429 quota, we try the next key immediately
             continue
 
     if last_error:
-        raise ValueError("AI service is temporarily unavailable (quota/demand). Please try again in a few seconds.")
+        raise ValueError("AI API Quota Exceeded (Free Tier) across all provided keys. Please try again later.")
 
     return []
