@@ -65,8 +65,16 @@ export default async function ProductPage({
 
   const { product, platforms, alternatives } = data;
 
+  const activePlatforms = platforms.filter((p: any) => p.latest_price?.selling_price > 0 && !(p.latest_price as any)?.is_restricted);
+  const prices = activePlatforms.map((p: any) => p.latest_price.selling_price);
+  const lowestPrice = prices.length > 0 ? Math.min(...prices) : null;
+  const highestPrice = prices.length > 0 ? Math.max(...prices) : null;
+  const savingsPct = lowestPrice && highestPrice && highestPrice > lowestPrice 
+    ? Math.round(((highestPrice - lowestPrice) / highestPrice) * 100) 
+    : 0;
+
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <main className="min-h-screen bg-gray-50/50 flex flex-col">
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
@@ -82,32 +90,56 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {/* Product Header */}
-        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-accent mb-8">
-          <div className="flex flex-col md:flex-row gap-6 items-start">
+        {/* Product Header - Dashboard Style */}
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-accent mb-8 flex flex-col md:flex-row gap-6 items-start md:items-center">
+          <div className="shrink-0 w-24 h-24 bg-gray-50 rounded-xl flex items-center justify-center p-2 border border-gray-100 hidden md:flex">
             <ProductImage imageUrl={product.image_url} name={product.name} />
+          </div>
+          
+          <div className="flex-1 min-w-0 w-full">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h1 className="font-serif text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                {product.name}
+              </h1>
+              {product.requires_rx && (
+                <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
+                  <AlertCircle className="h-3 w-3" />
+                  Rx Required
+                </span>
+              )}
+            </div>
             
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h1 className="font-serif text-3xl md:text-4xl font-bold text-primary">
-                  {product.name}
-                </h1>
-                {product.requires_rx && (
-                  <span className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">
-                    <AlertCircle className="h-3 w-3" />
-                    Prescription Required
-                  </span>
-                )}
-              </div>
-              
-              <div className="text-sm font-semibold uppercase tracking-wider text-teal-700 bg-teal-50 inline-block px-2 py-1 rounded-md mb-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
                 {product.category}
+              </span>
+              {product.composition && (
+                <span className="text-xs text-gray-500 truncate border-l border-gray-200 pl-2">
+                  {product.composition}
+                </span>
+              )}
+            </div>
+            
+            {/* Quick Metrics Bar */}
+            <div className="flex flex-wrap gap-3 sm:gap-6 pt-4 border-t border-gray-100">
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tracked Platforms</p>
+                <p className="text-lg font-bold text-gray-900">{platforms.length}</p>
               </div>
               
-              {product.composition && (
-                <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Composition</h4>
-                  <p className="text-gray-700">{product.composition}</p>
+              <div className="border-l border-gray-100 pl-3 sm:pl-6">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Current Lowest</p>
+                <p className="text-lg font-bold text-green-600">
+                  {lowestPrice ? `₹${lowestPrice}` : "N/A"}
+                </p>
+              </div>
+              
+              {savingsPct > 0 && (
+                <div className="border-l border-gray-100 pl-3 sm:pl-6">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Savings</p>
+                  <p className="text-lg font-bold text-primary">
+                    {savingsPct}%
+                  </p>
                 </div>
               )}
             </div>

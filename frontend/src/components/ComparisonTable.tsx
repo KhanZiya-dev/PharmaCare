@@ -98,7 +98,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                     {hasPrice && sellingPrice && sellingPrice > 0 ? (
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className={`text-lg font-bold ${isNotForSale ? "text-gray-600" : "text-primary"}`}>
+                          <span className={`text-lg font-bold tabular-nums tracking-tight ${isNotForSale ? "text-gray-600" : isLowest ? "text-green-600" : "text-gray-900"}`}>
                             ₹{platform.latest_price!.selling_price}
                           </span>
                           {platform.latest_price!.discount_pct > 0 && (
@@ -108,7 +108,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                           )}
                         </div>
                         {platform.latest_price!.mrp > platform.latest_price!.selling_price && (
-                          <span className="text-xs text-gray-400 line-through">
+                          <span className="text-[11px] text-gray-400 line-through tabular-nums">
                             MRP ₹{platform.latest_price!.mrp}
                           </span>
                         )}
@@ -125,15 +125,15 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                       href={redirectUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+                      className={`inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                         isNotForSale
                           ? "bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
                           : isLowest 
-                            ? "bg-primary text-white hover:bg-primary/90" 
-                            : "bg-white border border-accent text-primary hover:bg-accent/20"
+                            ? "bg-primary text-white hover:bg-primary/90 shadow-sm" 
+                            : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      {isNotForSale ? "Find at Store" : "Buy Now"}
+                      {isNotForSale ? "Check Availability" : "View Deal"}
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </td>
