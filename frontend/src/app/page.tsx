@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { FloatingCards } from "@/components/FloatingCards";
-import { ShieldCheck, Stethoscope, Microscope } from "lucide-react";
+import { ShieldCheck, TrendingDown, Camera, Activity } from "lucide-react";
 
 export default function Home() {
   return (
@@ -40,34 +40,69 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16 z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-0 animate-[fadeUp_1s_ease-out_1.2s_forwards]">
           
-          {/* Panel 1 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex items-start gap-4">
-            <div className="bg-blue-50 p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-              <Stethoscope className="h-6 w-6" />
+          {/* Panel 1: Price Drops */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-green-50 p-2.5 rounded-xl text-green-600">
+                <TrendingDown className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-foreground">Top Price Drops Today</h3>
             </div>
-            <div>
-              <h3 className="font-bold text-foreground mb-1">Medicines</h3>
-              <p className="text-sm text-gray-500">Track prices for chronic medications and save up to 40% monthly.</p>
+            
+            <div className="space-y-3 flex-1">
+              <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                <span className="font-medium text-gray-700">Shelcal 500</span>
+                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-18%</span>
+              </div>
+              <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                <span className="font-medium text-gray-700">Telma 40</span>
+                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-12%</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-gray-700">Augmentin 625</span>
+                <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">-9%</span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-400 group-hover:text-primary transition-colors font-medium cursor-pointer">
+                View all tracking deals &rarr;
+              </p>
             </div>
           </div>
           
-          {/* Panel 2 (CTA) */}
+          {/* Panel 2 (CTA): Scanner */}
           <div className="bg-primary rounded-2xl p-6 shadow-md border border-primary text-white flex flex-col justify-center items-center text-center transform md:-translate-y-4">
-            <h3 className="font-serif font-bold text-2xl mb-2">Ready to save?</h3>
-            <p className="text-sm text-blue-100 mb-4">Start searching for your prescription above.</p>
-            <button className="bg-white text-primary font-bold py-2 px-6 rounded-full w-full hover:bg-gray-100 transition-colors shadow-sm">
-              Search Medicines
-            </button>
+            <h3 className="font-serif font-bold text-2xl mb-2">Have a Prescription?</h3>
+            <p className="text-sm text-blue-100 mb-6 px-2">
+              Don't manually search for each medicine. Scan your prescription and we'll compare the entire list at once.
+            </p>
+            <div className="bg-white/20 text-white font-bold py-2.5 px-6 rounded-full w-full shadow-sm flex items-center justify-center gap-2 border border-white/30">
+              <Camera className="w-4 h-4" />
+              Use the scanner above &uarr;
+            </div>
           </div>
           
-          {/* Panel 3 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex items-start gap-4">
-            <div className="bg-teal-50 p-3 rounded-xl group-hover:bg-secondary group-hover:text-white transition-colors text-secondary">
-              <Microscope className="h-6 w-6" />
+          {/* Panel 3: Savings Data */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
+                <Activity className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-foreground">Why Track Prices?</h3>
             </div>
-            <div>
-              <h3 className="font-bold text-foreground mb-1">Lab Tests</h3>
-              <p className="text-sm text-gray-500">Compare diagnostic packages from trusted labs in your city.</p>
+            
+            <div className="space-y-4 flex-1">
+              <div>
+                <p className="text-2xl font-black text-gray-900">32%</p>
+                <p className="text-xs text-gray-500 font-medium">Average variance between pharmacies for chronic meds.</p>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex">
+                 <div className="h-full bg-blue-500 w-[68%]" />
+                 <div className="h-full bg-gray-300 w-[32%]" />
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Prices fluctuate daily based on pharmacy inventory and promotional offers. We track 5+ platforms to find the lowest cart value.
+              </p>
             </div>
           </div>
 

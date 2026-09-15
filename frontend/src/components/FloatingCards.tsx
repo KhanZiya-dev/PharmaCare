@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingDown, TrendingUp, Activity, Pill, AlertCircle, Loader2 } from "lucide-react";
+import { TrendingDown, TrendingUp, Activity, AlertCircle, Loader2, IndianRupee } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -48,68 +48,89 @@ export function FloatingCards() {
       {/* Decorative Background Elements to fill empty space */}
       <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-teal-500/5 rounded-full blur-3xl -z-10 animate-pulse" style={{ animationDuration: '8s' }} />
 
-      {/* Card 1: Medicine 1 */}
-      <div className="pointer-events-auto absolute top-4 lg:top-12 left-0 lg:-left-8 w-64 lg:w-72 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-accent p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '4s' }}>
+      {/* Card 1: Price Drop Alert */}
+      <div className="pointer-events-auto absolute top-4 lg:top-12 left-0 lg:-left-8 w-64 lg:w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-green-100 p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '4s' }}>
         <Link href={`/product/${displayProducts[0].slug}`}>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h3 className="font-bold text-foreground truncate w-40" title={displayProducts[0].name}>
-                {displayProducts[0].name}
-              </h3>
-              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                <Pill className="h-3 w-3" /> Medicine
-              </p>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="bg-green-100 p-1.5 rounded-full">
+              <TrendingDown className="h-4 w-4 text-green-600" />
             </div>
-            <span className="bg-teal-50 text-teal-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-              <TrendingDown className="h-3 w-3" />
-              HOT
-            </span>
+            <span className="text-xs font-bold text-green-700 tracking-wide uppercase">Price Drop Alert</span>
           </div>
-          <div className="flex justify-between items-end mt-4">
+          <h3 className="font-bold text-foreground text-sm lg:text-base truncate w-full mb-1" title={displayProducts[0].name}>
+            {displayProducts[0].name}
+          </h3>
+          
+          <div className="mt-3 bg-gray-50 rounded-lg p-2.5 flex justify-between items-center border border-gray-100">
             <div>
-              <p className="text-xs text-gray-400 mb-0.5">Track live prices</p>
-              <p className="text-sm font-semibold text-primary group-hover:underline">View Details &rarr;</p>
+              <p className="text-[10px] text-gray-500 font-medium mb-0.5">Lowest across 4 platforms</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-bold text-gray-900 tracking-tight">₹142</span>
+                <span className="text-xs text-gray-400 line-through">₹185</span>
+              </div>
             </div>
-            <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-primary">
-              <Activity className="h-4 w-4" />
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                -23%
+              </span>
             </div>
+          </div>
+          
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-primary font-semibold group-hover:underline">
+            <Activity className="h-3.5 w-3.5" />
+            Track this medicine
           </div>
         </Link>
       </div>
 
-      {/* Card 2: Medicine 2 */}
-      <div className="pointer-events-auto absolute bottom-8 lg:bottom-16 right-0 lg:-right-4 w-64 lg:w-80 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-accent p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '5s', animationDelay: '1s' }}>
+      {/* Card 2: Price Comparison Alert */}
+      <div className="pointer-events-auto absolute bottom-8 lg:bottom-16 right-0 lg:-right-4 w-64 lg:w-80 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-accent p-4 lg:p-5 animate-bounce-slow hover:shadow-2xl hover:scale-105 transition-all" style={{ animationDuration: '5s', animationDelay: '1s' }}>
         <Link href={`/product/${displayProducts[1].slug}`}>
-          <div className="flex justify-between items-start mb-2">
+          <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-3">
-              <div className="bg-indigo-50 p-2 lg:p-3 rounded-lg hidden sm:block">
-                <Pill className="h-5 w-5 text-indigo-500" />
+              <div className="bg-indigo-50 p-2 rounded-lg">
+                <IndianRupee className="h-5 w-5 text-indigo-500" />
               </div>
               <div>
                 <h3 className="font-bold text-foreground text-sm lg:text-base truncate w-40" title={displayProducts[1].name}>
                   {displayProducts[1].name}
                 </h3>
-                <p className="text-xs text-gray-500 mt-0.5">Popular Search</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">High Price Variance Found</p>
               </div>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-accent flex justify-between items-center">
-            <div>
-              <p className="text-xs text-gray-500">Check alternatives</p>
+          
+          <div className="mt-4 flex flex-col gap-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500">Highest Price</span>
+              <span className="font-semibold text-gray-700">₹65.00</span>
             </div>
-            <button className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
-              Compare
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500">Lowest Price</span>
+              <span className="font-bold text-green-600">₹42.50</span>
+            </div>
+            {/* Visual Bar */}
+            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1 flex">
+              <div className="h-full bg-green-500 w-[65%]" />
+              <div className="h-full bg-gray-300 w-[35%]" />
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-accent flex justify-between items-center">
+            <p className="text-[11px] font-semibold text-green-600">Save up to 34%</p>
+            <button className="bg-primary hover:bg-primary/90 text-white text-[11px] px-3 py-1.5 rounded font-bold transition-colors">
+              Compare Now
             </button>
           </div>
         </Link>
       </div>
 
-      {/* Price Trend Mini Card (Desktop Only for better spacing) */}
+      {/* Price Trend Mini Card */}
       <div className="pointer-events-none hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 lg:-right-12 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-accent px-5 py-3 items-center gap-3 animate-bounce-slow" style={{ animationDuration: '3.5s', animationDelay: '2s' }}>
-        <div className="bg-orange-50 rounded-full p-1.5">
-          <TrendingUp className="h-4 w-4 text-orange-500" />
+        <div className="bg-blue-50 rounded-full p-1.5 flex items-center justify-center">
+          <Activity className="h-4 w-4 text-blue-500" />
         </div>
-        <span className="text-sm font-semibold text-gray-700">Prices updated live</span>
+        <span className="text-sm font-semibold text-gray-700 tracking-tight">Real-time Price Tracking</span>
       </div>
       
       {/* Floating Status Icon */}
