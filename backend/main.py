@@ -242,6 +242,9 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
         }
     except HTTPException:
         raise
+    except ValueError as e:
+        # AI service quota/demand errors from vision.py
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:

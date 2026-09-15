@@ -72,7 +72,16 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error("Failed to scan image. Please try again.");
+        let errorMsg = "Failed to scan image. Please try again.";
+        try {
+          const errData = await response.json();
+          if (errData.detail) {
+            errorMsg = typeof errData.detail === "string" ? errData.detail : JSON.stringify(errData.detail);
+          }
+        } catch {
+          // response wasn't JSON, use default message
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
