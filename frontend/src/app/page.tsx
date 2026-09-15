@@ -29,12 +29,12 @@ export default async function Home() {
             <span>100% Verified Price Data</span>
           </div>
           
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold text-primary leading-tight mb-6">
+          <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-primary leading-tight mb-[clamp(1rem,3vw,1.5rem)]">
             <span className="block opacity-0 animate-[fadeUp_1s_ease-out_forwards]">Smart Prices</span>
             <span className="block opacity-0 animate-[fadeUp_1s_ease-out_0.3s_forwards]">For Better Health.</span>
           </h1>
           
-          <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto lg:mx-0">
+          <p className="text-[clamp(1rem,1.5vw,1.25rem)] text-gray-600 mb-[clamp(1.5rem,4vw,2.5rem)] max-w-2xl mx-auto lg:mx-0">
             Compare prices for life-saving medicines and lab tests across top e-pharmacies. Don't fall for fake discounts—check our 30-day price history before you buy.
           </p>
           
