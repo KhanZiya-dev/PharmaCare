@@ -13,8 +13,8 @@ load_dotenv(_env_path if os.path.exists(_env_path) else None)
 
 logger = logging.getLogger(__name__)
 
-# Changed to gemini-1.5-flash because 3.6-flash has a strict 20 request/day limit
-MODEL_NAME = 'gemini-1.5-flash'
+# Changed back to gemini-3.6-flash as per user's preference
+MODEL_NAME = 'gemini-3.6-flash'
 
 PROMPT = (
     "Extract medicine/drug brand names from this image.\n\n"
