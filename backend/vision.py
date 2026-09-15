@@ -54,13 +54,28 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
                 generation_config=genai.types.GenerationConfig(
                     temperature=0.0,
                     max_output_tokens=1024,
-                    response_mime_type="application/json"
                 )
             )
             
             # Handle successful response parsing
             logger.debug(f"Finish Reason: {response.candidates[0].finish_reason}")
-            parsed_list = json.loads(response.text.strip())
+            
+            raw_text = response.text.strip()
+            # Strip markdown code fences if present
+            if raw_text.startswith("```"):
+                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+                raw_text = re.sub(r"\s*```$", "", raw_text)
+                raw_text = raw_text.strip()
+            
+            try:
+                parsed_list = json.loads(raw_text)
+            except json.JSONDecodeError:
+                # Fallback: extract the first JSON array via regex
+                match = re.search(r"\[.*\]", raw_text, re.DOTALL)
+                if match:
+                    parsed_list = json.loads(match.group(0))
+                else:
+                    raise json.JSONDecodeError("No JSON array found", raw_text, 0)
             
             if isinstance(parsed_list, list):
                 medicines = [str(m).strip() for m in parsed_list if str(m).strip().upper() != "UNCLEAR" and str(m).strip()]
