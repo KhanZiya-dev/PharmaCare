@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingDown, TrendingUp, Activity, AlertCircle, Loader2, IndianRupee } from "lucide-react";
+import { TrendingDown, TrendingUp, Activity, AlertCircle, Loader2, IndianRupee, Scan, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
