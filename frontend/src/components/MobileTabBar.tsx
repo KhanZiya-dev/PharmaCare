@@ -21,8 +21,8 @@ export function MobileTabBar() {
   };
 
   return (
-    <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-1 bg-white/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
+    <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[400px]">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -31,7 +31,7 @@ export function MobileTabBar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center px-4 py-2 min-w-[72px] transition-colors duration-300 ${
+              className={`relative flex-1 flex flex-col items-center justify-center h-14 transition-colors duration-300 rounded-full ${
                 active ? "text-primary" : "text-gray-400 hover:text-gray-600"
               }`}
             >
@@ -42,8 +42,8 @@ export function MobileTabBar() {
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
-              <Icon className="h-5 w-5 mb-1" strokeWidth={active ? 2.5 : 2} />
-              <span className="text-[10px] font-medium tracking-wide">
+              <Icon className="h-5 w-5 mb-0.5" strokeWidth={active ? 2.5 : 2} />
+              <span className="text-[10px] font-medium tracking-wide whitespace-nowrap">
                 {item.name}
               </span>
             </Link>
