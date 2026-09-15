@@ -9,7 +9,6 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import os
-import shutil
 import tempfile
 from dotenv import load_dotenv
 
@@ -89,17 +88,41 @@ def cron_update_prices(background_tasks: BackgroundTasks):
 
 @app.get("/search")
 @limiter.limit("60/minute")
-def search_products(request: Request, q: str = Query(..., min_length=2), supabase: Client = Depends(get_supabase)):
+def search_products(
+    request: Request,
+    q: str = Query(..., min_length=2),
+    category: str = Query(None, description="Filter by category: medicine, diagnostic, etc."),
+    supabase: Client = Depends(get_supabase),
+):
     """
-    Fuzzy search implementation for products.
-    Rate limited to 60 requests per minute per IP.
+    Smart search: uses pg_trgm fuzzy matching + composition search with relevance ranking.
+    Supports both medicines and lab tests via optional category filter.
+    Falls back to ilike if RPC hasn't been deployed yet.
     """
-    # Uses Supabase's text search (which leverages pg_trgm in the background if configured via RPC, 
-    # or ilike for basic operations)
-    response = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{q}%").limit(10).execute()
-    
-    # Log if no results found
-    if not response.data and len(q) > 3:
+    import logging
+
+    results = []
+
+    # Try ranked RPC search first
+    try:
+        rpc_params = {"query": q}
+        if category:
+            rpc_params["category_filter"] = category
+
+        rpc_res = supabase.rpc("search_products_smart", rpc_params).execute()
+        results = rpc_res.data or []
+
+    except Exception:
+        # RPC not deployed yet — fall back to ilike
+        logging.info("search_products_smart RPC not available, falling back to ilike.")
+        query = supabase.table("products").select("id, name, slug, category, composition, image_url")
+        if category:
+            query = query.eq("category", category)
+        response = query.ilike("name", f"%{q}%").limit(10).execute()
+        results = response.data or []
+
+    # Log missing search if no results found
+    if not results and len(q) > 3:
         try:
             existing = supabase.table("missing_searches").select("id").eq("search_query", q).execute()
             if not existing.data:
@@ -110,8 +133,8 @@ def search_products(request: Request, q: str = Query(..., min_length=2), supabas
         except Exception as e:
             import logging
             logging.warning(f"Failed to log missing search: {e}")
-            
-    return response.data
+
+    return results
 
 @app.post("/api/vision-search")
 @limiter.limit("20/minute")
@@ -119,61 +142,110 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
     """
     Accepts an image file, uses Gemini API to extract medicine names,
     and returns matching products from the database using fuzzy search.
+    Uses pg_trgm similarity() via RPC for typo-tolerant matching,
+    with ilike fallback if the RPC function hasn't been deployed yet.
     """
     from vision import extract_medicines_from_image
-    
-    # Save uploaded file to a temporary location
+    import logging
+
+    # --- Input Validation ---
+    ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, and WebP images are allowed.")
+
+    contents = await file.read()
+    MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+    if len(contents) > MAX_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="Image too large. Maximum size is 10MB.")
+
+    # --- Process image ---
+    tmp_path = None
     try:
         suffix = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(file.file, tmp)
+            tmp.write(contents)
             tmp_path = tmp.name
-            
-        # Extract medicines
+
         extracted_names = extract_medicines_from_image(tmp_path)
-        
-        # Clean up temp file
-        os.unlink(tmp_path)
-        
+
         if not extracted_names:
-            return {"results": [], "extracted_text": []}
-            
-        # Run fuzzy search on all extracted names
+            return {"results": [], "extracted_text": [], "not_found": []}
+
+        # --- Fuzzy DB search: try pg_trgm RPC, fallback to ilike ---
         all_matches = []
         seen_ids = set()
         not_found_names = []
-        
-        for name in extracted_names:
-            # We take the first 3 best matches for each extracted name
-            res = supabase.table("products").select("id, name, slug, category, image_url").ilike("name", f"%{name}%").limit(3).execute()
-            if not res.data:
-                not_found_names.append(name)
-            else:
-                for product in res.data:
-                    if product["id"] not in seen_ids:
-                        seen_ids.add(product["id"])
-                        all_matches.append(product)
-                    
+
+        try:
+            rpc_res = supabase.rpc(
+                "search_medicines_fuzzy", {"search_names": extracted_names}
+            ).execute()
+
+            matched_terms = set()
+            for row in (rpc_res.data or []):
+                if row.get("product_id"):
+                    matched_terms.add(row["search_term"])
+                    if row["product_id"] not in seen_ids:
+                        seen_ids.add(row["product_id"])
+                        all_matches.append({
+                            "id": row["product_id"],
+                            "name": row["product_name"],
+                            "slug": row["product_slug"],
+                            "category": row["product_category"],
+                            "image_url": row["product_image_url"],
+                        })
+            not_found_names = [n for n in extracted_names if n not in matched_terms]
+
+        except Exception:
+            # RPC not deployed yet — fall back to per-name ilike search
+            logging.info("search_medicines_fuzzy RPC not available, falling back to ilike.")
+            for name in extracted_names:
+                res = (
+                    supabase.table("products")
+                    .select("id, name, slug, category, image_url")
+                    .ilike("name", f"%{name}%")
+                    .limit(3)
+                    .execute()
+                )
+                if not res.data:
+                    not_found_names.append(name)
+                else:
+                    for product in res.data:
+                        if product["id"] not in seen_ids:
+                            seen_ids.add(product["id"])
+                            all_matches.append(product)
+
+        # --- Log missing searches (deduplicated) ---
         if not_found_names:
             try:
-                existing = supabase.table("missing_searches").select("search_query").in_("search_query", not_found_names).execute()
+                existing = (
+                    supabase.table("missing_searches")
+                    .select("search_query")
+                    .in_("search_query", not_found_names)
+                    .execute()
+                )
                 existing_names = {row["search_query"] for row in existing.data}
-                new_names = [name for name in not_found_names if name not in existing_names]
-                
+                new_names = [n for n in not_found_names if n not in existing_names]
+
                 if new_names:
-                    inserts = [{"search_query": name, "search_type": "vision"} for name in new_names]
+                    inserts = [{"search_query": n, "search_type": "vision"} for n in new_names]
                     supabase.table("missing_searches").insert(inserts).execute()
             except Exception as e:
-                import logging
                 logging.warning(f"Failed to log missing vision searches: {e}")
 
         return {
             "results": all_matches,
             "extracted_text": extracted_names,
-            "not_found": not_found_names
+            "not_found": not_found_names,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Always clean up temp file, even on error
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 @app.get("/products")
 @limiter.limit("60/minute")

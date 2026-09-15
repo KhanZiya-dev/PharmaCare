@@ -43,6 +43,19 @@ CREATE TABLE public.price_history (
     scraped_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Table 5: missing_searches (Tracks searches with no DB match)
+CREATE TABLE public.missing_searches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    search_query TEXT NOT NULL,
+    search_type VARCHAR(20) DEFAULT 'text',
+    status VARCHAR(30) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Unique constraint to prevent duplicate missing search entries
+CREATE UNIQUE INDEX idx_missing_searches_query_unique
+ON public.missing_searches (search_query);
+
 -- Indexes for Speed Optimization
 -- GIN Index for typo-tolerant (fuzzy) search
 CREATE INDEX idx_products_name_trgm ON public.products USING GIN (name gin_trgm_ops);
@@ -58,12 +71,14 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.platforms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.platform_product_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.price_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.missing_searches ENABLE ROW LEVEL SECURITY;
 
 -- 1. Frontend (Anon Key) - Read Only
 CREATE POLICY "Enable read access for all users" ON public.products FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON public.platforms FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON public.platform_product_links FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON public.price_history FOR SELECT USING (true);
+CREATE POLICY "Enable read access for all users" ON public.missing_searches FOR SELECT USING (true);
 
 -- Note: The Service Role Key (used by backend/scraper) automatically bypasses RLS,
 -- so we do not need to create explicit INSERT/UPDATE/DELETE policies for the scraper API.

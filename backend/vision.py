@@ -33,26 +33,20 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
     for api_key in api_keys:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-3.6-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             # Optimize: Downscale image to max 800x800 to save bandwidth and tokens
             img = Image.open(image_path).convert('RGB')
             img.thumbnail((800, 800), Image.Resampling.LANCZOS)
             
-            # Optimize: Much shorter prompt to save text tokens while keeping strict rules
             prompt = (
-                "You are a highly accurate medical OCR system specialized in reading "
-                "handwritten prescriptions and medicine box labels.\n\n"
-                "TASK: Extract ONLY the medicine/drug brand or generic names from the image.\n\n"
-                "STRICT RULES:\n"
-                "1. Read every word carefully, letter by letter, before deciding. Do not guess "
-                "based on common medicine names if the handwriting doesn't clearly support it.\n"
-                "2. Ignore: dosage strengths (e.g. 500mg, 10ml), frequency/instructions "
-                "(e.g. 1-0-1, BD, TDS, SOS), doctor names, patient details, dates, and diagnosis text.\n"
-                "3. Preserve the exact spelling as written/printed. Do not auto-correct to a "
-                "correctly spelled medicine if the handwriting/label explicitly spells it differently.\n"
-                "4. Format the output strictly as a JSON array of strings, e.g. [\"MedName1\", \"MedName2\"].\n"
-                "5. If you cannot recognize ANY medicine name clearly, output exactly: [\"UNCLEAR\"]\n"
-                "6. Do not include markdown formatting like ```json in the output, just the raw array."
+                "Extract medicine/drug brand names from this image.\n\n"
+                "RULES:\n"
+                "1. Read carefully, letter by letter. Do not guess based on common names.\n"
+                "2. Ignore: dosage (500mg, 10ml), frequency (1-0-1, BD, TDS, SOS), "
+                "doctor names, patient details, dates, diagnosis.\n"
+                "3. Preserve exact spelling as written/printed. Do not auto-correct.\n"
+                "4. Return a JSON array of strings.\n"
+                "5. If nothing is legible, return: [\"UNCLEAR\"]"
             )
             
             response = model.generate_content(
