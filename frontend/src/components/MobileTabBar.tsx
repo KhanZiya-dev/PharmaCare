@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Pill, FlaskConical, TrendingDown } from "lucide-react";
+import { Home, Pill, Microscope, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
 
 const navItems = [
   { name: "Home", href: "/", icon: Home },
   { name: "Medicines", href: "/medicines", icon: Pill },
-  { name: "Lab Tests", href: "/lab-tests", icon: FlaskConical },
+  { name: "Lab Tests", href: "/lab-tests", icon: Microscope },
   { name: "Trends", href: "/trends", icon: TrendingDown },
 ];
 
