@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -58,58 +57,8 @@ export function Navbar() {
 
 
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-foreground hover:text-primary focus:outline-none"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-accent absolute w-full">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg">
-            <Link
-              href="/"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/medicines"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/medicines") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Medicines
-            </Link>
-            <Link
-              href="/lab-tests"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/lab-tests") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Lab Tests
-            </Link>
-            <Link
-              href="/trends"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${isActive("/trends") ? "text-primary bg-accent/50" : "text-foreground hover:text-primary hover:bg-accent/30"}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Price Trends
-            </Link>
-
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

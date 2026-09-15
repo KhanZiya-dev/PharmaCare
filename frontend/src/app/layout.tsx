@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, DM_Serif_Display } from "next/font/google";
 import { Footer } from "@/components/Footer";
+import { MobileTabBar } from "@/components/MobileTabBar";
 import { MessageCircle } from "lucide-react";
 import "./globals.css";
 
@@ -34,7 +35,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         {children}
         <Footer />
-
+        <MobileTabBar />
 
       </body>
     </html>
