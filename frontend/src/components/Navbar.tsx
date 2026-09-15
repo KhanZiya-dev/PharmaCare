@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -55,10 +56,66 @@ export function Navbar() {
             </Link>
           </div>
 
-
-
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-primary hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-colors"
+            >
+              <span className="sr-only">Open main menu</span>
+              {isMobileMenuOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-accent bg-white/95 backdrop-blur-md absolute w-full shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:text-primary hover:bg-accent/50"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/medicines"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive("/medicines") ? "bg-primary/10 text-primary" : "text-foreground hover:text-primary hover:bg-accent/50"
+              }`}
+            >
+              Medicines
+            </Link>
+            <Link
+              href="/lab-tests"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive("/lab-tests") ? "bg-primary/10 text-primary" : "text-foreground hover:text-primary hover:bg-accent/50"
+              }`}
+            >
+              Lab Tests
+            </Link>
+            <Link
+              href="/trends"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive("/trends") ? "bg-primary/10 text-primary" : "text-foreground hover:text-primary hover:bg-accent/50"
+              }`}
+            >
+              Price Trends
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
