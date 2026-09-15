@@ -254,7 +254,7 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
 
 @app.get("/products")
 @limiter.limit("60/minute")
-def list_products(request: Request, category: str = None, supabase: Client = Depends(get_supabase)):
+def list_products(request: Request, category: str = None, limit: int = 40, supabase: Client = Depends(get_supabase)):
     """
     Fetch a list of recent products, optionally filtered by category.
     Sorted by:
@@ -287,7 +287,7 @@ def list_products(request: Request, category: str = None, supabase: Client = Dep
         p.pop("platform_product_links", None)
         p.pop("created_at", None)
         
-    return sorted_products[:20]
+    return sorted_products[:limit]
 
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")

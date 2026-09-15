@@ -28,8 +28,8 @@ export default function MedicinesPage() {
     async function fetchProducts() {
       setIsLoading(true);
       try {
-        // Fetch products based on search or category default
-        let endpoint = `${apiUrl}/products?category=medicine`;
+        // Fetch products based on search or fetch all categories
+        let endpoint = `${apiUrl}/products?limit=40`;
         if (searchQuery.trim().length >= 2) {
           endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}`;
         }
@@ -107,16 +107,35 @@ export default function MedicinesPage() {
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                name={product.name}
-                slug={product.slug}
-                category={product.category}
-                composition={product.composition}
-                image_url={product.image_url}
-              />
+          <div className="space-y-12">
+            {Object.entries(
+              products.reduce((acc, product) => {
+                const cat = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(product);
+                return acc;
+              }, {} as Record<string, Product[]>)
+            ).map(([category, items]) => (
+              <div key={category} className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                  <h2 className="text-xl font-bold text-gray-900">{category}</h2>
+                  <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded-full">
+                    {items.length}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {items.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      name={product.name}
+                      slug={product.slug}
+                      category={product.category}
+                      composition={product.composition}
+                      image_url={product.image_url}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : (
