@@ -40,6 +40,7 @@ CREATE TABLE public.price_history (
     selling_price DECIMAL(10,2) NOT NULL,
     discount_pct DECIMAL(5,2),
     in_stock BOOLEAN DEFAULT TRUE,
+    is_restricted BOOLEAN DEFAULT FALSE,
     scraped_at TIMESTAMP DEFAULT NOW()
 );
 
