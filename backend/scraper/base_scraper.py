@@ -44,7 +44,6 @@ class BaseScraper:
 
                 restricted_indicators = [
                     "not for online sale",
-                    "not for sale",
                     "we do not facilitate sale",
                     "find at your nearest store",
                     "find at nearest store",
