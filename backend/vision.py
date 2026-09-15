@@ -108,8 +108,8 @@ def extract_medicines_from_image(image_path: str) -> list[str]:
     last_error = None
 
     for api_key in api_keys:
-        if time.time() - total_start > 50:
-            logger.warning("Aborting vision API call early to prevent 60s timeout on frontend.")
+        if time.time() - total_start > 120:
+            logger.warning("Aborting vision API call early to prevent 130s timeout on frontend.")
             break
 
         try:
