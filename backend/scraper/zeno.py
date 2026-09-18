@@ -32,14 +32,32 @@ async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = Non
                 # Get best match
                 results = data["data"]
                 
-                # Try to find a reasonable match
                 match = None
-                query_lower = query.lower()
+                
+                def normalize(name):
+                    import re
+                    # Remove common forms and dosages, and keep only alphanumeric
+                    name = name.lower()
+                    name = re.sub(r'\b(tablet|capsule|syrup|suspension|cream|ointment|gel|drop|drops|injection|mg|ml|gm)\b', '', name)
+                    return re.sub(r'[^a-z0-9]', '', name)
+                    
+                query_norm = normalize(query)
+                
+                # 1. Try exact normalized match or substring
                 for r in results:
-                    drug_name = r.get("drug_name", "").lower()
-                    if query_lower in drug_name or drug_name in query_lower:
+                    drug_norm = normalize(r.get("drug_name", ""))
+                    if query_norm == drug_norm or query_norm in drug_norm or drug_norm in query_norm:
                         match = r
                         break
+                
+                # 2. Fallback: if first word matches, trust Zeno's relevance sorting
+                if not match and results:
+                    query_first = query.lower().split()[0]
+                    for r in results:
+                        drug_first = r.get("drug_name", "").lower().split()[0]
+                        if query_first == drug_first:
+                            match = r
+                            break
                 
                 # If no reasonable match is found, treat as unavailable
                 if not match:
