@@ -28,24 +28,14 @@ export default function LabTestsPage() {
       setIsLoading(true);
       try {
         // Fetch lab tests based on search or category default
-        let endpoint = `${apiUrl}/products?category=diagnostic`;
+        let endpoint = `${apiUrl}/lab-tests`;
         if (searchQuery.trim().length >= 2) {
-          endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}`;
+          endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}&category=lab_test`;
         }
         const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
-          
-          if (searchQuery.trim().length >= 2) {
-            // Filter for diagnostic category if we used generic search
-            const diagnostics = data.filter(
-              (p: Product) => p.category?.toLowerCase() === "diagnostic" || p.category?.toLowerCase() === "lab test"
-            );
-            setProducts(diagnostics.length > 0 ? diagnostics : data);
-          } else {
-            // Already filtered by backend
-            setProducts(data);
-          }
+          setProducts(data);
         }
       } catch (error) {
         console.error("Error fetching lab tests:", error);

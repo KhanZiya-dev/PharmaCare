@@ -137,21 +137,30 @@ def search_products(
     # Try ranked RPC search first for products
     try:
         rpc_params = {"query": q}
-        if category:
+        if category and category != 'lab_test':
             rpc_params["category_filter"] = category
 
-        rpc_res = supabase.rpc("search_products_smart", rpc_params).execute()
-        results.extend(rpc_res.data or [])
+        if category != 'lab_test':
+            rpc_res = supabase.rpc("search_products_smart", rpc_params).execute()
+            results.extend(rpc_res.data or [])
     except Exception:
         pass
         
     # Fallback to ilike if RPC returned nothing or failed
     if not results:
-        query_b = supabase.table("products").select("id, name, slug, category, composition, image_url")
-        if category:
-            query_b = query_b.eq("category", category)
-        response = query_b.ilike("name", f"%{q}%").limit(10).execute()
-        results.extend(response.data or [])
+        if category == 'lab_test':
+            query_b = supabase.table("lab_tests").select("id, name, slug, description, sample_type")
+            response = query_b.ilike("name", f"%{q}%").limit(10).execute()
+            for r in response.data or []:
+                r['category'] = 'lab_test'
+                r['composition'] = r.pop('description', '')
+                results.append(r)
+        else:
+            query_b = supabase.table("products").select("id, name, slug, category, composition, image_url")
+            if category:
+                query_b = query_b.eq("category", category)
+            response = query_b.ilike("name", f"%{q}%").limit(10).execute()
+            results.extend(response.data or [])
 
     # Log missing search if no results found (min 5 chars to avoid partial typing fragments)
     if not results and len(q.strip()) >= 5:
@@ -167,6 +176,28 @@ def search_products(
 
     cache_set(cache_key, results, ttl=300)  # 5 min
     return results
+
+@app.get("/lab-tests")
+@limiter.limit("60/minute")
+def list_lab_tests(request: Request, limit: int = 40, supabase: Client = Depends(get_supabase)):
+    """
+    Fetch a list of lab tests with 10-min cache.
+    """
+    cache_key = f"lab_tests:all:{limit}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    query = supabase.table("lab_tests").select("id, name, slug, description, sample_type")
+    response = query.order("name").limit(limit).execute()
+    result = []
+    for r in response.data or []:
+        r['category'] = 'lab_test'
+        r['composition'] = r.pop('description', '')
+        result.append(r)
+        
+    cache_set(cache_key, result, ttl=600)  # 10 min
+    return result
 
 @app.post("/api/vision-search")
 @limiter.limit("20/minute")
