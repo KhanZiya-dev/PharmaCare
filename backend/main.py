@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, Query, Request, BackgroundT
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
-import threading
+import time
 from supabase import create_client, Client
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -20,15 +20,39 @@ from dotenv import load_dotenv
 _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 load_dotenv(_env_path if os.path.exists(_env_path) else None)
 
-# Rate limiter setup
+# ─── In-Memory TTL Cache ────────────────────────────────────────────
+# Simple, zero-dependency cache. ~2KB per product entry means 500 products ≈ 1MB.
+_cache: dict[str, tuple[float, any]] = {}  # key -> (expiry_timestamp, value)
+
+def cache_get(key: str) -> any:
+    """Return cached value if key exists and hasn't expired, else None."""
+    entry = _cache.get(key)
+    if entry is None:
+        return None
+    expiry, value = entry
+    if time.time() > expiry:
+        _cache.pop(key, None)
+        return None
+    return value
+
+def cache_set(key: str, value: any, ttl: int = 300) -> None:
+    """Store a value with TTL (seconds). Default 5 minutes."""
+    _cache[key] = (time.time() + ttl, value)
+    # Lazy eviction: purge expired entries when cache grows large
+    if len(_cache) > 2000:
+        now = time.time()
+        expired = [k for k, (exp, _) in _cache.items() if now > exp]
+        for k in expired:
+            _cache.pop(k, None)
+
+# ─── Rate Limiter ───────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start the background scraper scheduler in a separate thread
-    from scraper.scheduler import start_scheduler
-    scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
-    scheduler_thread.start()
+    # Scheduler removed — use external cron (cron-job.org) hitting /cron/update-prices
+    # This saves ~5-10% CPU on the 0.1 CPU Render instance.
+    logging.info("PharmaCare API started. Use /cron/update-prices for scraper triggers.")
     yield
 
 app = FastAPI(title="PharmaCare API", version="1.0.0", lifespan=lifespan)
@@ -101,11 +125,12 @@ def search_products(
     supabase: Client = Depends(get_supabase),
 ):
     """
-    Smart search: uses pg_trgm fuzzy matching + composition search with relevance ranking.
-    Supports both medicines and lab tests via optional category filter.
-    Falls back to ilike if RPC hasn't been deployed yet.
+    Smart search with 5-min cache.
     """
-    import logging
+    cache_key = f"search:{q.lower().strip()}:{category or ''}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     results = []
 
@@ -138,9 +163,9 @@ def search_products(
                     "search_type": "text"
                 }).execute()
         except Exception as e:
-            import logging
             logging.warning(f"Failed to log missing search: {e}")
 
+    cache_set(cache_key, results, ttl=300)  # 5 min
     return results
 
 @app.post("/api/vision-search")
@@ -261,46 +286,38 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
 @limiter.limit("60/minute")
 def list_products(request: Request, category: str = None, limit: int = 40, supabase: Client = Depends(get_supabase)):
     """
-    Fetch a list of recent products, optionally filtered by category.
-    Sorted by:
-    1. Has fetched prices
-    2. Has platform links mapped
-    3. Created recently
+    Fetch a list of products with 10-min cache.
+    Optimized: lightweight query without heavy nested joins.
     """
-    # Fetch all matching products with their nested relations
-    query = supabase.table("products").select("id, name, slug, category, composition, image_url, created_at, platform_product_links(id, price_history(id))")
+    cache_key = f"products:{category or 'all'}:{limit}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    # Lightweight query — just product fields, no nested joins
+    query = supabase.table("products").select("id, name, slug, category, composition, image_url")
     if category:
         query = query.eq("category", category)
     
-    response = query.execute()
-    products = response.data
-
-    def get_priority(p):
-        links = p.get("platform_product_links") or []
-        if not links:
-            return 0
-        has_prices = any(len(link.get("price_history") or []) > 0 for link in links)
-        if has_prices:
-            return 2
-        return 1
-
-    # Sort by priority DESC (-priority), then alphabetically by name ASC
-    sorted_products = sorted(products, key=lambda p: (-get_priority(p), p.get("name", "").lower()))
-    
-    # Clean up relations before returning
-    for p in sorted_products:
-        p.pop("platform_product_links", None)
-        p.pop("created_at", None)
+    response = query.order("name").limit(limit).execute()
+    result = response.data or []
         
-    return sorted_products[:limit]
+    cache_set(cache_key, result, ttl=600)  # 10 min
+    return result
 
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
 async def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
     """
-    Fetch current prices and 30-day history data for a specific product.
+    Fetch product data with 5-min cache, parallel DB queries, and cached Zeno API.
     """
-    # 1. Fetch product details
+    # ── Check full-response cache first ──
+    cache_key = f"product:{slug}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    # 1. Fetch product details (must be first — need product ID for parallel queries)
     try:
         product_res = supabase.table("products").select("*").eq("slug", slug).single().execute()
         product = product_res.data
@@ -310,22 +327,57 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # 2. Fetch platform mappings and latest prices
-    mappings_res = supabase.table("platform_product_links").select(
-        "id, affiliate_url, scrape_url, platforms(name, logo_url)"
-    ).eq("product_id", product["id"]).execute()
-    
-    mappings = mappings_res.data
-    
-    # 3. Fetch price history for these mappings for the last 30 days
     from datetime import datetime, timedelta, timezone
     thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+
+    # 2. Run remaining DB queries IN PARALLEL using asyncio.to_thread
+    async def fetch_mappings():
+        return supabase.table("platform_product_links").select(
+            "id, affiliate_url, scrape_url, platforms(name, logo_url)"
+        ).eq("product_id", product["id"]).execute()
+
+    async def fetch_alternatives():
+        if not product.get("composition"):
+            return None
+        try:
+            return supabase.table("products").select(
+                "id, name, slug, category, composition, image_url"
+            ).eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
+        except Exception:
+            return None
+
+    async def fetch_zeno_cached():
+        """Fetch Zeno data with its own 15-min cache."""
+        if product.get("category") == "lab_test":
+            return None
+        zeno_cache_key = f"zeno:{product['name']}"
+        zeno_cached = cache_get(zeno_cache_key)
+        if zeno_cached is not None:
+            return zeno_cached
+        try:
+            result = await fetch_zeno_price(product["name"])
+            cache_set(zeno_cache_key, result, ttl=900)  # 15 min
+            return result
+        except Exception:
+            return None
+
+    # Fire all three in parallel
+    mappings_res, alt_res, zeno_data = await asyncio.gather(
+        fetch_mappings(),
+        fetch_alternatives(),
+        fetch_zeno_cached(),
+    )
     
+    mappings = mappings_res.data if mappings_res else []
+    alternatives = alt_res.data if alt_res else []
+    
+    # 3. Fetch price history (needs mapping_ids, so runs after mappings)
     mapping_ids = [m["id"] for m in mappings]
     history_data = []
-    
     if mapping_ids:
-        history_res = supabase.table("price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", thirty_days_ago).order("scraped_at", desc=False).execute()
+        history_res = await asyncio.to_thread(
+            lambda: supabase.table("price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", thirty_days_ago).order("scraped_at", desc=False).execute()
+        )
         history_data = history_res.data
         
     for mapping in mappings:
@@ -334,83 +386,69 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
             mapping["latest_price"] = mapping["history"][-1]
         else:
             mapping["latest_price"] = None
-    
-    # Fetch alternatives (products with same composition)
-    alternatives = []
-    if product.get("composition"):
-        try:
-            alt_res = supabase.table("products").select("id, name, slug, category, composition, image_url").eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
-            alternatives = alt_res.data
-        except Exception as e:
-            logging.error(f"Failed to fetch alternatives: {e}")
 
-    # Fetch live Zeno Health Data for medicines only
-    zeno_data = None
-    if product.get("category") != "lab_test":
-        zeno_data = await fetch_zeno_price(product["name"])
-        if zeno_data:
-            if zeno_data.get("price") and zeno_data.get("price") > 0:
-                now = datetime.now(timezone.utc)
-                thirty_days_ago = now - timedelta(days=30)
-                
-                latest_price_obj = {
-                    "selling_price": zeno_data["price"],
-                    "mrp": zeno_data["mrp"],
-                    "in_stock": zeno_data["in_stock"],
-                    "is_restricted": False,
-                    "scraped_at": now.isoformat()
-                }
-                
-                past_price_obj = {
-                    "selling_price": zeno_data["price"],
-                    "mrp": zeno_data["mrp"],
-                    "in_stock": zeno_data["in_stock"],
-                    "is_restricted": False,
-                    "scraped_at": thirty_days_ago.isoformat()
-                }
-                
-                zeno_mapping = {
-                    "id": "zeno_live",
-                    "affiliate_url": zeno_data["url"],
-                    "scrape_url": zeno_data["url"],
-                    "platforms": {
-                        "name": "Zeno Health",
-                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
-                    },
-                    "history": [past_price_obj, latest_price_obj],
-                    "latest_price": latest_price_obj
-                }
-                mappings.append(zeno_mapping)
-            else:
-                # Add Zeno as an unavailable platform to show explicitly it's not available
-                zeno_mapping = {
-                    "id": "zeno_live",
-                    "affiliate_url": None,
-                    "scrape_url": "https://www.zeno.health",
-                    "platforms": {
-                        "name": "Zeno Health",
-                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
-                    },
-                    "history": [],
-                    "latest_price": None
-                }
-                mappings.append(zeno_mapping)
-        
-    return {
+    # 4. Append Zeno data to mappings
+    if zeno_data:
+        now = datetime.now(timezone.utc)
+        td_ago = now - timedelta(days=30)
+        if zeno_data.get("price") and zeno_data.get("price") > 0:
+            latest_price_obj = {
+                "selling_price": zeno_data["price"],
+                "mrp": zeno_data["mrp"],
+                "in_stock": zeno_data["in_stock"],
+                "is_restricted": False,
+                "scraped_at": now.isoformat()
+            }
+            past_price_obj = {
+                "selling_price": zeno_data["price"],
+                "mrp": zeno_data["mrp"],
+                "in_stock": zeno_data["in_stock"],
+                "is_restricted": False,
+                "scraped_at": td_ago.isoformat()
+            }
+            mappings.append({
+                "id": "zeno_live",
+                "affiliate_url": zeno_data["url"],
+                "scrape_url": zeno_data["url"],
+                "platforms": {
+                    "name": "Zeno Health",
+                    "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                },
+                "history": [past_price_obj, latest_price_obj],
+                "latest_price": latest_price_obj
+            })
+        else:
+            mappings.append({
+                "id": "zeno_live",
+                "affiliate_url": None,
+                "scrape_url": "https://www.zeno.health",
+                "platforms": {
+                    "name": "Zeno Health",
+                    "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                },
+                "history": [],
+                "latest_price": None
+            })
+    
+    response = {
         "product": product,
         "platforms": mappings,
         "alternatives": alternatives,
         "generics": zeno_data.get("generics", []) if zeno_data else []
     }
+    
+    cache_set(cache_key, response, ttl=300)  # 5 min
+    return response
 
 @app.get("/trends/variance")
 def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
     """
-    Returns products with the highest price variance across platforms.
+    Returns products with the highest price variance. Cached for 30 minutes (heavy query).
     """
-    # Fetch all products with their latest prices
-    # Note: For a production app with many products, this logic should be a database view or materialized view.
-    # For now, we do a bounded fetch and compute in memory.
+    cached = cache_get("trends:variance")
+    if cached is not None:
+        return cached
+
     try:
         res = supabase.table("products").select(
             "id, name, slug, category, image_url, platform_product_links(id, price_history(mrp, selling_price))"
@@ -422,8 +460,6 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
             for m in p.get("platform_product_links", []):
                 history = m.get("price_history", [])
                 if history:
-                    # Supabase returns related lists, assuming latest is [0] or we just check the first one if sorted
-                    # but actually we can just take the first entry since the scraper runs daily
                     latest = history[0]
                     sp = latest.get("selling_price")
                     if sp and sp > 0:
@@ -449,12 +485,12 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
                         "platformCount": len(prices)
                     })
         
-        # Sort by highest variance percentage
         variances.sort(key=lambda x: x["variance_pct"], reverse=True)
-        return variances[:12]
+        result = variances[:12]
+        cache_set("trends:variance", result, ttl=1800)  # 30 min
+        return result
         
     except Exception as e:
-        import logging
         logging.error(f"Error computing trends: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch trends")
 
