@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { TrendingDown, Pill, Activity, Store } from "lucide-react";
+import { TrendingDown, Pill, Activity, Store, Microscope } from "lucide-react";
 
 interface ProductCardProps {
   name: string;
@@ -49,7 +49,11 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
               loading="lazy"
             />
           ) : (
-            <Pill className="h-5 w-5 md:h-6 md:w-6 text-gray-300" />
+            category === "lab_test" ? (
+              <Microscope className="h-5 w-5 md:h-6 md:w-6 text-teal-400" />
+            ) : (
+              <Pill className="h-5 w-5 md:h-6 md:w-6 text-gray-300" />
+            )
           )}
         </div>
         
