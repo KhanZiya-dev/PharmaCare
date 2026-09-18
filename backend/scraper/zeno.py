@@ -32,32 +32,46 @@ async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = Non
                 # Get best match
                 results = data["data"]
                 
-                match = None
-                
-                def normalize(name):
+                def names_match(searched_name: str, found_name: str, threshold: float = 0.6) -> bool:
                     import re
-                    # Remove common forms and dosages, and keep only alphanumeric
-                    name = name.lower()
-                    name = re.sub(r'\b(tablet|capsule|syrup|suspension|cream|ointment|gel|drop|drops|injection|mg|ml|gm)\b', '', name)
-                    return re.sub(r'[^a-z0-9]', '', name)
+                    # Dosage forms and pack patterns to strip
+                    dosage_forms = [
+                        'tablets', 'tablet', 'tab', 'capsules', 'capsule', 'cap',
+                        'syrup', 'suspension', 'solution', 'oral', 'injection', 'inj',
+                        'cream', 'gel', 'ointment', 'lotion', 'spray', 'drops', 'drop',
+                        'inhaler', 'respules', 'rotacaps', 'powder', 'sachet', 'granules',
+                        'patch', 'patches', 'suppository', 'suppositories',
+                        'vial', 'ampoule', 'ampule', 'eye', 'ear', 'nasal', 'topical',
+                        'forte', 'plus', 'ds', 'sr', 'xr', 'er', 'cr', 'mr', 'xl',
+                    ]
+                    pack_patterns = [
+                        r'strip\s*of\s*\d+', r'pack\s*of\s*\d+', r'bottle\s*of\s*\d+\s*(?:ml|tablets?|capsules?)?',
+                        r'box\s*of\s*\d+', r'tube\s*of\s*\d+\s*(?:gm?|g)?', r'\d+\s*(?:ml|gm?|g|mg|mcg|l|kg)\b',
+                        r'\d+\s*(?:s|\'s)\b', r'\(\s*\d+[^)]*\)'
+                    ]
+                    def normalize(n):
+                        n = n.lower().strip()
+                        for p in pack_patterns: n = re.sub(p, '', n, flags=re.IGNORECASE)
+                        for f in dosage_forms: n = re.sub(r'\b' + re.escape(f) + r'\b', '', n, flags=re.IGNORECASE)
+                        n = re.sub(r'(\d+)\s*(?:mg|mcg|ml|g|gm|iu|%)\b', r'\1', n)
+                        return ' '.join(n.split())
                     
-                query_norm = normalize(query)
-                
-                # 1. Try exact normalized match or substring
+                    s_norm = normalize(searched_name)
+                    f_norm = normalize(found_name)
+                    if not s_norm or not f_norm: return False
+                    
+                    s_words = set(re.split(r'[\s\-]+', s_norm))
+                    f_words = set(re.split(r'[\s\-]+', f_norm))
+                    s_words.discard(''); f_words.discard('')
+                    if not s_words: return False
+                    
+                    return (len(s_words & f_words) / len(s_words)) >= threshold
+
+                match = None
                 for r in results:
-                    drug_norm = normalize(r.get("drug_name", ""))
-                    if query_norm == drug_norm or query_norm in drug_norm or drug_norm in query_norm:
+                    if names_match(query, r.get("drug_name", "")):
                         match = r
                         break
-                
-                # 2. Fallback: if first word matches, trust Zeno's relevance sorting
-                if not match and results:
-                    query_first = query.lower().split()[0]
-                    for r in results:
-                        drug_first = r.get("drug_name", "").lower().split()[0]
-                        if query_first == drug_first:
-                            match = r
-                            break
                 
                 # If no reasonable match is found, treat as unavailable
                 if not match:
