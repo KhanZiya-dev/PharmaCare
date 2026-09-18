@@ -56,9 +56,10 @@ async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = Non
                     return {"platform": "Zeno Health", "price": 0.0, "in_stock": False, "url": "https://www.zeno.health"}
                 
                 # Construct main product URL
-                main_slug = match.get("drug_name", "").replace(" ", "-").replace("/", "-")
-                main_id = match.get("id")
-                main_url = f"https://www.zeno.health/product/{main_slug}/{main_id}" if main_slug and main_id else f"https://www.zeno.health/search?query={urllib.parse.quote(query)}"
+                # Zeno Health's web app currently fails on /product/:slug/:id deep links and redirects to home or shows blank.
+                # So we link directly to their search page with the exact drug name.
+                main_name = match.get("drug_name", query)
+                main_url = f"https://www.zeno.health/search?query={urllib.parse.quote(main_name)}"
                 
                 # Check for Generic Alternatives
                 generics = []
@@ -68,12 +69,11 @@ async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = Non
                         if alt_price_details:
                             alt_price = alt_price_details[0].get("selling_rate")
                             alt_mrp = alt_price_details[0].get("mrp")
-                            alt_slug = alt.get("drug_name", "").replace(" ", "-").replace("/", "-")
-                            alt_id = alt.get("id")
-                            alt_url = f"https://www.zeno.health/product/{alt_slug}/{alt_id}" if alt_slug and alt_id else f"https://www.zeno.health/search?query={urllib.parse.quote(alt.get('drug_name', ''))}"
+                            alt_name = alt.get("drug_name", "")
+                            alt_url = f"https://www.zeno.health/search?query={urllib.parse.quote(alt_name)}"
                             
                             generics.append({
-                                "name": alt.get("drug_name"),
+                                "name": alt_name,
                                 "price": alt_price,
                                 "mrp": alt_mrp,
                                 "company": alt.get("company_name"),
