@@ -35,30 +35,16 @@ class BaseScraper:
                 if not data.get("image_url"):
                     data["image_url"] = await self._extract_og_image(page)
                     
-                # Accurately detect if the medicine is marked 'Not for Online Sale' / Store Only.
-                # Even if the site displays an MRP or selling price (e.g. ₹503), some medicines
-                # are restricted from online sale and show banners like "Not for sale" or "Find at your nearest store".
-                # IMPORTANT: "prescription required" is completely normal for Rx medicines and MUST NOT be marked restricted!
-                html_content = await page.content()
-                html_lower = html_content.lower()
+                # ── Accurate restricted detection ──
+                # Check for "Not for Online Sale" ONLY in the product section area,
+                # NOT the full page HTML. The full page contains FAQ, footer, related
+                # medicines, etc. that can trigger false positives.
+                # IMPORTANT: "prescription required" is completely normal for Rx
+                # medicines and MUST NOT be marked restricted!
+                data["is_restricted"] = await self._check_restricted_status(page)
 
-                restricted_indicators = [
-                    "not for online sale",
-                    "we do not facilitate sale",
-                    "find at your nearest store",
-                    "find at nearest store",
-                    "not available for online purchase",
-                    "cannot be sold online",
-                    "available in store only",
-                    "available in stores only",
-                    "store pickup only",
-                ]
-
-                data["is_restricted"] = any(indicator in html_lower for indicator in restricted_indicators)
-
-                # Robust stock status verification:
-                # If DOM clearly displays Out of Stock indicators, classes, or Notify Me buttons,
-                # override in_stock to False.
+                # ── Robust stock status verification ──
+                # Use multi-signal detection: OOS classes, buttons, cart state
                 is_dom_stock = await self._check_stock_status(page)
                 if not is_dom_stock:
                     data["in_stock"] = False
@@ -80,7 +66,7 @@ class BaseScraper:
 
     async def _extract_json_ld(self, page: Page) -> dict | None:
         """
-        Extract price data from JSON-LD (schema.org Product) structured data.
+        Extract price data from JSON-LD (schema.org Product OR Drug) structured data.
         """
         try:
             scripts = await page.locator('script[type="application/ld+json"]').all()
@@ -103,7 +89,7 @@ class BaseScraper:
         return None
 
     def _find_product_in_jsonld(self, obj: dict) -> dict | None:
-        """Recursively search for a Product schema object."""
+        """Recursively search for a Product or Drug schema object."""
         if not isinstance(obj, dict):
             return None
         
@@ -113,7 +99,8 @@ class BaseScraper:
         else:
             type_str = obj_type.lower()
 
-        if "product" in type_str:
+        # Match both Product and Drug schema types — both have "offers"
+        if any(t in type_str for t in ["product", "drug"]):
             return obj
         
         # Check @graph
@@ -123,10 +110,16 @@ class BaseScraper:
                 if result:
                     return result
         
+        # Check mainEntity (used by Apollo's MedicalWebPage)
+        if "mainEntity" in obj:
+            result = self._find_product_in_jsonld(obj["mainEntity"])
+            if result:
+                return result
+        
         return None
 
     def _parse_product_jsonld(self, product: dict) -> dict | None:
-        """Parse a schema.org Product object into our standard format."""
+        """Parse a schema.org Product/Drug object into our standard format."""
         offers = product.get("offers", {})
         
         # offers can be a list or a single object
@@ -138,9 +131,9 @@ class BaseScraper:
         # Try to get MRP from highPrice or from a separate field
         mrp = self._safe_float(offers.get("highPrice")) or selling_price
         
-        # Stock status
+        # Stock status from JSON-LD
         availability = str(offers.get("availability", "")).lower()
-        in_stock = "outofstock" not in availability
+        in_stock = "outofstock" not in availability and "discontinued" not in availability
         
         # Image extraction
         image_url = None
@@ -184,7 +177,7 @@ class BaseScraper:
 
     async def _extract_next_data(self, page: Page) -> dict | None:
         """
-        Extract data from __NEXT_DATA__ script tag (used by Next.js sites like 1mg).
+        Extract data from __NEXT_DATA__ script tag (used by Next.js sites like Apollo).
         """
         try:
             script = page.locator('script#__NEXT_DATA__')
@@ -198,28 +191,64 @@ class BaseScraper:
 
     async def _extract_prices_from_text(self, page: Page) -> dict | None:
         """
-        Fallback: Find all ₹-prefixed prices on the page using semantic text matching.
+        Fallback: Context-aware price extraction from visible page text.
+        Instead of blindly picking smallest/largest prices, we look for:
+        1. Prices near "MRP" labels → that's the MRP
+        2. Prices with strikethrough styling → that's the MRP
+        3. The prominent (non-struck) price → that's the selling price
         """
         try:
+            # Strategy 1: Look for MRP-labeled prices
+            mrp = None
+            selling_price = None
+            
+            # Try to find MRP explicitly labeled
+            mrp_patterns = [
+                r'MRP\s*:?\s*₹\s*([\d,]+(?:\.\d{1,2})?)',
+                r'M\.R\.P\.?\s*:?\s*₹\s*([\d,]+(?:\.\d{1,2})?)',
+                r'mrp\s*:?\s*₹\s*([\d,]+(?:\.\d{1,2})?)',
+            ]
+            
             body_text = await page.inner_text("body", timeout=5000)
-            # Match patterns like ₹185, ₹1,299.50, MRP ₹199 etc.
+            
+            for pattern in mrp_patterns:
+                match = re.search(pattern, body_text, re.IGNORECASE)
+                if match:
+                    mrp = self._safe_float(match.group(1).replace(",", ""))
+                    if mrp and 1 < mrp < 100000:
+                        break
+                    mrp = None
+            
+            # Strategy 2: Find all ₹-prefixed prices on the page
             price_matches = re.findall(r'₹\s*([\d,]+(?:\.\d{1,2})?)', body_text)
             prices = []
             for match in price_matches:
                 val = self._safe_float(match.replace(",", ""))
-                if val and 1 < val < 100000:  # Sane price range filter
+                if val and 5 < val < 50000:  # Stricter range to filter junk
                     prices.append(val)
 
             if not prices:
                 return None
 
-            # Heuristic: MRP is usually the higher price, selling price is the lower one
             # Remove duplicates and sort
             unique_prices = sorted(set(prices))
             
-            if len(unique_prices) >= 2:
+            if mrp:
+                # MRP was found explicitly — selling price is the price that's
+                # less than or equal to MRP and closest to it
+                candidates = [p for p in unique_prices if p <= mrp]
+                if candidates:
+                    selling_price = candidates[0]  # Smallest price ≤ MRP
+                else:
+                    selling_price = mrp
+            elif len(unique_prices) >= 2:
+                # Heuristic: if exactly 2 distinct prices near each other,
+                # the smaller is selling, larger is MRP
                 selling_price = unique_prices[0]
-                mrp = unique_prices[1]
+                mrp = unique_prices[-1]
+                # Sanity check: MRP shouldn't be more than 5x the selling price
+                if mrp > selling_price * 5:
+                    mrp = selling_price
             else:
                 selling_price = unique_prices[0]
                 mrp = selling_price
@@ -228,7 +257,8 @@ class BaseScraper:
             return {
                 "selling_price": selling_price,
                 "mrp": mrp,
-                "in_stock": True,  # Can't determine from text alone
+                # Can't reliably determine stock from text alone — let
+                # _check_stock_status handle it
             }
         except Exception as e:
             logger.debug(f"Text-based extraction failed: {e}")
@@ -255,23 +285,121 @@ class BaseScraper:
         except (ValueError, TypeError):
             return None
 
+    # ── Restricted Status Detection ──────────────────────────────────────
+
+    async def _check_restricted_status(self, page: Page) -> bool:
+        """
+        Accurately detect if a medicine is marked 'Not for Online Sale'.
+        
+        KEY FIX: Instead of searching the FULL page HTML (which contains
+        FAQ, footer, related products, other medicine info that causes
+        false positives), we:
+        1. Only check VISIBLE elements for restricted phrases
+        2. Exclude footer/FAQ/description sections  
+        3. Require the absence of a working "Add to Cart" button as
+           a secondary signal for ambiguous cases
+        
+        IMPORTANT: "prescription required" is NORMAL for Rx medicines
+        and must NOT trigger this.
+        """
+        restricted_phrases = [
+            "not for online sale",
+            "we do not facilitate sale",
+            "not available for online purchase",
+            "cannot be sold online",
+            "available in store only",
+            "available in stores only",
+            "store pickup only",
+        ]
+        
+        store_finder_phrases = [
+            "find at your nearest store",
+            "find at nearest store",
+            "check at nearest store",
+        ]
+        
+        # 1. Check for visible restricted banners — scoped to product area
+        for phrase in restricted_phrases:
+            try:
+                # Use get_by_text for more reliable text matching
+                matches = page.get_by_text(phrase, exact=False)
+                count = await matches.count()
+                for i in range(count):
+                    el = matches.nth(i)
+                    try:
+                        if not await el.is_visible(timeout=1000):
+                            continue
+                    except Exception:
+                        continue
+                    
+                    # Verify it's NOT inside a footer, FAQ, or long-form
+                    # content section (these frequently mention "not for
+                    # online sale" about OTHER medicines or in general info)
+                    is_in_excluded = await el.evaluate("""el => {
+                        const excludeSelectors = [
+                            'footer', '[class*="footer" i]', '[id*="footer" i]',
+                            '[class*="faq" i]', '[id*="faq" i]',
+                            '[class*="description" i]', '[id*="description" i]',
+                            '[class*="content-section" i]',
+                            '[class*="drug-info" i]', '[class*="drugInfo" i]',
+                            '[class*="about-section" i]',
+                            '[class*="information" i]', '[id*="information" i]',
+                            'article',
+                        ];
+                        for (const sel of excludeSelectors) {
+                            if (el.closest(sel)) return true;
+                        }
+                        return false;
+                    }""")
+                    
+                    if not is_in_excluded:
+                        logger.info(f"[{self.platform_name}] Restricted: visible '{phrase}' found in product area")
+                        return True
+            except Exception:
+                continue
+        
+        # 2. Store-finder phrases are only meaningful if there's NO cart button
+        has_cart = await self._has_visible_cart_button(page)
+        if not has_cart:
+            for phrase in store_finder_phrases:
+                try:
+                    matches = page.get_by_text(phrase, exact=False)
+                    count = await matches.count()
+                    for i in range(count):
+                        el = matches.nth(i)
+                        try:
+                            if await el.is_visible(timeout=1000):
+                                logger.info(f"[{self.platform_name}] Restricted: '{phrase}' found + no cart button")
+                                return True
+                        except Exception:
+                            continue
+                except Exception:
+                    continue
+        
+        return False
+
+    # ── Stock Status Detection ───────────────────────────────────────────
+
     async def _check_stock_status(self, page: Page) -> bool:
         """
         Robust, multi-signal stock validation:
-        1. Explicit Out-of-Stock classes (e.g. styles_outOfStock, oos, out-of-stock)
-        2. Exact visible Out-of-Stock badge/label text
-        3. Action buttons (Notify Me, Sold Out, Out of Stock, or disabled cart buttons)
-        4. Enabled Add to Cart / Buy Now buttons
+        1. Explicit Out-of-Stock CSS classes (without broken 'i' flag)
+        2. Visible Out-of-Stock text badges
+        3. Notify Me / Sold Out action buttons
+        4. Enabled Add to Cart / Buy Now buttons (positive signal)
         """
         try:
-            # 1. Check for dedicated Out-of-Stock elements / classes
+            # 1. Check for dedicated Out-of-Stock elements via classes
+            # Note: Playwright attribute selectors do NOT support the CSS 'i' flag
+            # So we check multiple casing variants explicitly
             oos_selectors = [
-                '[class*="outOfStock" i]',
-                '[class*="out-of-stock" i]',
-                '[class*="outofstock" i]',
-                '[data-testid*="out-of-stock" i]',
-                '[data-testid*="oos" i]',
-                '[aria-label*="out of stock" i]',
+                '[class*="outOfStock"]',
+                '[class*="out-of-stock"]',
+                '[class*="outofstock"]',
+                '[class*="OutOfStock"]',
+                '[data-testid*="out-of-stock"]',
+                '[data-testid*="oos"]',
+                '[aria-label*="out of stock"]',
             ]
             for sel in oos_selectors:
                 try:
@@ -279,55 +407,89 @@ class BaseScraper:
                     count = await elements.count()
                     for i in range(count):
                         el = elements.nth(i)
-                        if await el.is_visible():
-                            logger.info(f"[{self.platform_name}] Visible OOS class element found: {sel}")
+                        try:
+                            if not await el.is_visible(timeout=1000):
+                                continue
+                            
+                            # Exclude OOS elements from related/similar products,
+                            # sidebar, footer, etc. — these cause false positives
+                            is_in_excluded = await el.evaluate("""el => {
+                                const excludeSelectors = [
+                                    '[class*="similar" i]', '[class*="related" i]',
+                                    '[class*="recommend" i]', '[class*="alternate" i]',
+                                    '[class*="substitute" i]',
+                                    '[class*="sidebar" i]', '[class*="side-bar" i]',
+                                    'footer', '[class*="footer" i]',
+                                    '[class*="carousel" i]', '[class*="slider" i]',
+                                ];
+                                for (const s of excludeSelectors) {
+                                    if (el.closest(s)) return true;
+                                }
+                                return false;
+                            }""")
+                            if is_in_excluded:
+                                continue
+                            
+                            logger.info(f"[{self.platform_name}] OOS class element found: {sel}")
                             return False
+                        except Exception:
+                            continue
                 except Exception:
                     continue
 
-            # 2. Check for exact visible Out of Stock badge/span/div text
-            # Target exact phrases to prevent false matches from long descriptions or FAQs
-            for phrase in ["out of stock", "currently unavailable", "sold out", "temporarily unavailable"]:
+            # 2. Check for exact visible Out of Stock text using get_by_text
+            # This is more reliable than regex-based text locators
+            oos_phrases = [
+                "out of stock",
+                "currently unavailable",
+                "sold out",
+                "temporarily unavailable",
+            ]
+            for phrase in oos_phrases:
                 try:
-                    matched = page.locator(f"text=/^\\s*{phrase}\\s*$/i")
+                    matched = page.get_by_text(phrase, exact=True)
                     count = await matched.count()
                     for i in range(count):
                         el = matched.nth(i)
-                        if await el.is_visible():
-                            logger.info(f"[{self.platform_name}] Visible OOS text found: '{phrase}'")
+                        try:
+                            if not await el.is_visible(timeout=1000):
+                                continue
+                        except Exception:
+                            continue
+                        
+                        # Make sure it's not inside a FAQ or description
+                        is_in_content = await el.evaluate("""el => {
+                            const p = el.closest('[class*="faq" i], [class*="description" i], article, footer');
+                            return !!p;
+                        }""")
+                        if not is_in_content:
+                            logger.info(f"[{self.platform_name}] OOS text found: '{phrase}'")
                             return False
                 except Exception:
                     continue
 
             # 3. Check interactive button states
-            buttons = await page.locator("button, a[role='button'], [role='button']").all()
-            for btn in buttons:
+            notify_phrases = ["notify me", "get notified", "sold out", "currently unavailable"]
+            for phrase in notify_phrases:
                 try:
-                    if not await btn.is_visible():
-                        continue
-                    text = (await btn.inner_text()).lower().strip()
-                    if not text:
-                        continue
-                        
-                    # Explicit Out-of-Stock actions
-                    if any(p in text for p in ["notify me", "get notified", "sold out", "currently unavailable"]):
-                        logger.info(f"[{self.platform_name}] OOS button action found: '{text}'")
-                        return False
-
-                    # If an "out of stock" label is inside the button
-                    if "out of stock" in text:
-                        logger.info(f"[{self.platform_name}] OOS button text found: '{text}'")
-                        return False
+                    btn = page.get_by_role("button", name=re.compile(phrase, re.IGNORECASE))
+                    if await btn.count() > 0:
+                        if await btn.first.is_visible():
+                            logger.info(f"[{self.platform_name}] OOS button found: '{phrase}'")
+                            return False
                 except Exception:
                     continue
 
             # 4. Check if Add to Cart is present AND disabled
-            for cart_sel in ["button:has-text('Add to Cart')", "button:has-text('Add to Bag')", "button:has-text('Buy Now')"]:
+            cart_phrases = ["Add to Cart", "Add to Bag", "Buy Now", "ADD TO CART"]
+            for phrase in cart_phrases:
                 try:
-                    cart_btn = page.locator(cart_sel).first
+                    cart_btn = page.get_by_role("button", name=re.compile(phrase, re.IGNORECASE)).first
                     if await cart_btn.count() > 0 and await cart_btn.is_visible():
-                        if await cart_btn.is_disabled() or (await cart_btn.get_attribute("aria-disabled")) == "true":
-                            logger.info(f"[{self.platform_name}] Add to Cart button is disabled.")
+                        is_disabled = await cart_btn.is_disabled()
+                        aria_disabled = await cart_btn.get_attribute("aria-disabled")
+                        if is_disabled or aria_disabled == "true":
+                            logger.info(f"[{self.platform_name}] Cart button is disabled → OOS")
                             return False
                 except Exception:
                     continue
@@ -336,3 +498,19 @@ class BaseScraper:
             logger.debug(f"[{self.platform_name}] _check_stock_status exception: {e}")
             
         return True
+
+    # ── Helper: Cart Button Detection ────────────────────────────────────
+
+    async def _has_visible_cart_button(self, page: Page) -> bool:
+        """Check if there's an enabled, visible Add to Cart / Buy Now button."""
+        cart_labels = ["Add to Cart", "Add to Bag", "Buy Now", "ADD TO CART", "Add To Cart"]
+        for label in cart_labels:
+            try:
+                btn = page.get_by_role("button", name=re.compile(label, re.IGNORECASE)).first
+                if await btn.count() > 0:
+                    if await btn.is_visible():
+                        if not await btn.is_disabled():
+                            return True
+            except Exception:
+                continue
+        return False

@@ -3,6 +3,7 @@ import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { ProductCard } from "@/components/ProductCard";
+import { ScannedMedicinesNav } from "@/components/ScannedMedicinesNav";
 import { AlertCircle, ChevronLeft, Pill, Replace } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -89,6 +90,9 @@ export default async function ProductPage({
             <SearchAutocomplete />
           </div>
         </div>
+
+        {/* Scanned Medicines Quick Nav */}
+        <ScannedMedicinesNav />
 
         {/* Product Header - Dashboard Style */}
         <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-accent mb-8 flex flex-col md:flex-row gap-6 items-start md:items-center">

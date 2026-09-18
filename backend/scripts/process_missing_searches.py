@@ -1,9 +1,15 @@
 import os
+import re
 import time
-import urllib.parse
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from playwright.sync_api import sync_playwright
+import logging
+
+from platform_search import search_1mg, search_pharmeasy, search_apollo
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv("d:/BSc.CS/Sem5/Pharmacare/backend/.env")
 
@@ -27,52 +33,7 @@ def get_platform_ids():
     response = supabase.table("platforms").select("id, name").execute()
     return {p["name"]: p["id"] for p in response.data}
 
-def search_1mg(page, product_name):
-    query = urllib.parse.quote(product_name)
-    url = f"https://www.1mg.com/search/all?name={query}"
-    try:
-        page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        time.sleep(2)
-        el = page.locator("a[href*='/drugs/']").first
-        if el.count() > 0:
-            href = el.get_attribute("href")
-            return f"https://www.1mg.com{href}"
-    except:
-        pass
-    return None
-
-def search_pharmeasy(page, product_name):
-    query = urllib.parse.quote(product_name)
-    url = f"https://pharmeasy.in/search/all?name={query}"
-    try:
-        page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        time.sleep(2)
-        for pattern in ["a[href*='/online-medicine-order/']", "a[href*='/otc/']"]:
-            el = page.locator(pattern).first
-            if el.count() > 0:
-                href = el.get_attribute("href")
-                return f"https://pharmeasy.in{href}"
-    except:
-        pass
-    return None
-
-def search_apollo(page, product_name):
-    query = urllib.parse.quote(product_name)
-    url = f"https://www.apollopharmacy.in/search-medicines/{query}"
-    try:
-        page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        time.sleep(2)
-        for pattern in ["a[href*='/medicine/']", "a[href*='/otc/']"]:
-            el = page.locator(pattern).first
-            if el.count() > 0:
-                href = el.get_attribute("href")
-                return f"https://www.apollopharmacy.in{href}"
-    except:
-        pass
-    return None
-
 def generate_slug(name: str):
-    import re
     slug = name.lower()
     slug = re.sub(r'[^a-z0-9]+', '-', slug)
     return slug.strip('-')

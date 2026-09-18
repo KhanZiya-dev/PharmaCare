@@ -18,15 +18,34 @@ interface SearchResult {
   image_url: string | null;
 }
 
+// Module-level cache to persist scan results across page navigations
+let cachedFile: File | null = null;
+let cachedPreview: string | null = null;
+let cachedResults: SearchResult[] = [];
+let cachedExtractedText: string[] = [];
+let cachedNotFound: string[] = [];
+let cachedError: string | null = null;
+
+export const getCachedScanResults = () => cachedResults;
+
+
 export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFileState] = useState<File | null>(cachedFile);
+  const [preview, setPreviewState] = useState<string | null>(cachedPreview);
   const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [extractedText, setExtractedText] = useState<string[]>([]);
-  const [notFound, setNotFound] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [results, setResultsState] = useState<SearchResult[]>(cachedResults);
+  const [extractedText, setExtractedTextState] = useState<string[]>(cachedExtractedText);
+  const [notFound, setNotFoundState] = useState<string[]>(cachedNotFound);
+  const [error, setErrorState] = useState<string | null>(cachedError);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Wrappers to update both local state and module cache
+  const setFile = (val: File | null) => { cachedFile = val; setFileState(val); };
+  const setPreview = (val: string | null) => { cachedPreview = val; setPreviewState(val); };
+  const setResults = (val: SearchResult[]) => { cachedResults = val; setResultsState(val); };
+  const setExtractedText = (val: string[]) => { cachedExtractedText = val; setExtractedTextState(val); };
+  const setNotFound = (val: string[]) => { cachedNotFound = val; setNotFoundState(val); };
+  const setError = (val: string | null) => { cachedError = val; setErrorState(val); };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -273,7 +292,6 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
                         key={product.id} 
                         href={`/product/${product.slug}`}
                         onClick={() => {
-                          resetState();
                           onClose();
                         }}
                         className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all group"
@@ -322,8 +340,18 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
                 </div>
               )}
               
-              <div className="pt-2 text-center border-t border-gray-100">
-                <button onClick={resetState} className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors mt-2">
+              {/* Disclaimer */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2">
+                <div className="text-gray-400 shrink-0 mt-0.5">
+                  <Search className="w-4 h-4" />
+                </div>
+                <p className="text-[11px] leading-tight text-gray-500">
+                  <strong className="text-gray-600">Disclaimer:</strong> The AI may sometimes misread handwritten prescriptions. Please verify the medicine names and consult your doctor before making any purchases.
+                </p>
+              </div>
+
+              <div className="pt-2 text-center">
+                <button onClick={resetState} className="text-sm font-medium text-indigo-500 hover:text-indigo-700 transition-colors">
                   Scan another image
                 </button>
               </div>

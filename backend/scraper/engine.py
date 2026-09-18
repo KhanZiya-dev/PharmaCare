@@ -80,7 +80,29 @@ async def worker(name, queue: asyncio.Queue, browser, results_list):
                     
                     mrp = data.get("mrp") or data.get("selling_price") or 0
                     selling = data.get("selling_price") or 0
-                    discount_pct = round(((mrp - selling) / mrp) * 100, 2) if mrp and mrp > 0 else 0
+                    
+                    # ── Post-scrape validation ──────────────────────────
+                    
+                    # Fix 1: If selling > MRP, swap them (common extraction error)
+                    if selling > 0 and mrp > 0 and selling > mrp:
+                        logger.warning(f"Worker {name}: Selling ({selling}) > MRP ({mrp}) for {scrape_url}, swapping.")
+                        selling, mrp = mrp, selling
+                    
+                    # Fix 2: Reject obviously wrong prices
+                    if selling > 0 and (selling < 1 or selling > 100000):
+                        logger.warning(f"Worker {name}: Suspicious selling price {selling} for {scrape_url}, skipping.")
+                        selling = 0
+                    if mrp > 0 and (mrp < 1 or mrp > 100000):
+                        logger.warning(f"Worker {name}: Suspicious MRP {mrp} for {scrape_url}, resetting to selling.")
+                        mrp = selling
+                    
+                    # Fix 3: Calculate discount safely
+                    discount_pct = round(((mrp - selling) / mrp) * 100, 2) if mrp and mrp > 0 and selling > 0 else 0
+                    # Clamp discount to reasonable range (0-90%)
+                    if discount_pct < 0:
+                        discount_pct = 0
+                    elif discount_pct > 90:
+                        logger.warning(f"Worker {name}: Unusual discount {discount_pct}% for {scrape_url}")
                     
                     record = {
                         "mapping_id": link_id,
