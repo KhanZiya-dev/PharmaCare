@@ -29,7 +29,7 @@ export default function MedicinesPage() {
       setIsLoading(true);
       try {
         // Fetch products based on search or fetch all categories
-        let endpoint = `${apiUrl}/products?limit=40`;
+        let endpoint = `${apiUrl}/products?limit=20`;
         if (searchQuery.trim().length >= 2) {
           endpoint = `${apiUrl}/search?q=${encodeURIComponent(searchQuery)}`;
         }
