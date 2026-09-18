@@ -40,8 +40,8 @@ export function FloatingCards() {
 
   // Fallback data if API fails or is empty
   const defaultProducts: TrendProduct[] = [
-    { name: "Pan-D Capsule", category: "medicine", slug: "pan-d-capsule", id: "1", lowestPrice: 120, highestPrice: 180, variance_pct: 50, discount_pct: 33 },
-    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 20, highestPrice: 32, variance_pct: 60, discount_pct: 37 }
+    { name: "Shelcal 500 Tablet", category: "medicine", slug: "shelcal-500-tablet", id: "1", lowestPrice: 148, highestPrice: 192, variance_pct: 30, discount_pct: 23 },
+    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 24, highestPrice: 32, variance_pct: 33, discount_pct: 25 }
   ];
 
   const displayProducts = products.length >= 2 ? products : defaultProducts;

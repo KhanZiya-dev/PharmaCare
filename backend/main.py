@@ -482,19 +482,31 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
 
     try:
         res = supabase.table("products").select(
-            "id, name, slug, category, image_url, platform_product_links(id, price_history(mrp, selling_price))"
+            "id, name, slug, category, image_url, platform_product_links(id, price_history(mrp, selling_price, in_stock, is_restricted))"
         ).limit(100).execute()
         
         variances = []
         for p in res.data:
             prices = []
+            has_restricted = False
             for m in p.get("platform_product_links", []):
                 history = m.get("price_history", [])
                 if history:
                     latest = history[0]
+                    # Skip restricted/not-for-sale entries
+                    if latest.get("is_restricted"):
+                        has_restricted = True
+                        continue
+                    # Skip out-of-stock entries
+                    if latest.get("in_stock") is False:
+                        continue
                     sp = latest.get("selling_price")
                     if sp and sp > 0:
                         prices.append(sp)
+            
+            # Skip if all platforms are restricted
+            if has_restricted and not prices:
+                continue
             
             if len(prices) > 1:
                 min_p = min(prices)
@@ -502,6 +514,14 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
                 variance = max_p - min_p
                 var_pct = (variance / min_p) * 100
                 discount_pct = (variance / max_p) * 100
+                
+                # Filter out suspicious data:
+                # - Lowest price should be at least ₹10 (not some glitch)
+                # - Highest price should be under ₹50,000
+                # - Variance shouldn't exceed 85% (likely a data error)
+                if min_p < 10 or max_p > 50000 or var_pct > 85:
+                    continue
+                
                 if var_pct > 0:
                     variances.append({
                         "id": p["id"],
