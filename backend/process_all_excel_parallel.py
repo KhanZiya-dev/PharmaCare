@@ -7,48 +7,44 @@ from supabase import create_client
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
 import logging
+import sys
+
+# Allow importing from scripts/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts"))
+from platform_search import search_1mg_async, search_pharmeasy_async, search_apollo_async
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-load_dotenv("d:/BSc.CS/Sem5/Pharmacare/backend/.env")
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
 
 file_path = r'C:\Users\Ziyaurrahman Khan\OneDrive\Desktop\Medicines_PharmEasy_1mg_Apollo_Links.xlsx'
 
-async def search_and_save(page, med_name, search_url, selector, base_url, platform_id, product_id):
+
+async def search_and_save_validated(page, med_name, search_fn, platform_name, platform_id, product_id):
+    """
+    Search for a medicine using validated name-matching search functions.
+    Only saves the link if the found product name actually matches.
+    """
     try:
-        await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
-        await page.wait_for_timeout(2500) # Give it time to load results
-        
-        element = await page.query_selector(selector)
-        if element:
-            href = await element.get_attribute("href")
-            
-            if href.startswith("http"):
-                full_link = href
-            else:
-                if not href.startswith("/"):
-                    href = "/" + href
-                full_link = f"{base_url}{href}"
-                
-            logger.info(f"  [{base_url}] -> Found: {full_link}")
-            
-            # Save to DB
+        found_url = await search_fn(page, med_name)
+        if found_url:
+            logger.info(f"  [{platform_name}] ✓ Validated: {found_url}")
             supabase.table("platform_product_links").insert({
                 "product_id": product_id,
                 "platform_id": platform_id,
-                "scrape_url": full_link
+                "scrape_url": found_url
             }).execute()
             return True
         else:
-            logger.debug(f"  [{base_url}] -> No link found.")
-            
+            logger.debug(f"  [{platform_name}] ✗ No valid match for '{med_name}'")
     except Exception as e:
-        logger.error(f"  [{base_url}] -> Error: {e}")
+        logger.error(f"  [{platform_name}] Error: {e}")
     return False
+
 
 async def main():
     df = pd.read_excel(file_path, skiprows=3)
@@ -87,10 +83,6 @@ async def main():
         await stealth_async(page_apollo)
         await stealth_async(page_pharm)
         
-        found_1mg = 0
-        found_apollo = 0
-        found_pharm = 0
-        
         logger.info(f"Starting to process {len(df)} medicines...")
         for index, row in df.iterrows():
             med_name = str(row['Medicine Name']).strip()
@@ -98,7 +90,6 @@ async def main():
                 continue
                 
             product_id = product_map[med_name.lower()]
-            encoded_name = urllib.parse.quote_plus(med_name)
             
             has_1mg = platform_1mg_id in existing_links.get(product_id, set())
             has_apollo = platform_apollo_id in existing_links.get(product_id, set())
@@ -110,17 +101,22 @@ async def main():
             
             logger.info(f"[{index+1}/{len(df)}] Searching for: {med_name}")
             
-            search_url_1mg = f"https://www.1mg.com/search/all?name={encoded_name}"
-            search_url_apollo = f"https://www.apollopharmacy.in/search-medicines/{encoded_name}"
-            search_url_pharm = f"https://pharmeasy.in/search/all?name={encoded_name}"
-            
             tasks = []
             if not has_1mg:
-                tasks.append(search_and_save(page_1mg, med_name, search_url_1mg, "a[href^='/drugs/']", "https://www.1mg.com", platform_1mg_id, product_id))
+                tasks.append(search_and_save_validated(
+                    page_1mg, med_name, search_1mg_async,
+                    "1mg", platform_1mg_id, product_id
+                ))
             if not has_apollo:
-                tasks.append(search_and_save(page_apollo, med_name, search_url_apollo, "a[href*='/medicine/'], a[href*='/otc/']", "https://www.apollopharmacy.in", platform_apollo_id, product_id))
+                tasks.append(search_and_save_validated(
+                    page_apollo, med_name, search_apollo_async,
+                    "Apollo", platform_apollo_id, product_id
+                ))
             if not has_pharm:
-                tasks.append(search_and_save(page_pharm, med_name, search_url_pharm, "a[href^='/online-medicine-order/']", "https://pharmeasy.in", platform_pharmeasy_id, product_id))
+                tasks.append(search_and_save_validated(
+                    page_pharm, med_name, search_pharmeasy_async,
+                    "PharmEasy", platform_pharmeasy_id, product_id
+                ))
                 
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -132,7 +128,7 @@ async def main():
         logger.info(f"Finished!")
 
 if __name__ == "__main__":
-    import sys
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     asyncio.run(main())
+
