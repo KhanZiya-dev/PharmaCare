@@ -324,7 +324,7 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
               ref={inputRef}
               type="text"
               className={`w-full rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 shadow-sm transition-colors outline-none ${
-                compact ? "py-2 pl-10 pr-4 text-sm" : "pl-12 pr-14 py-4 text-lg"
+                compact ? "py-2.5 pl-10 pr-10 text-sm" : "pl-12 pr-14 py-4 text-lg"
               }`}
               placeholder="Search for medicines or lab tests..."
               value={query}
@@ -343,14 +343,16 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
               }
             />
 
-            {!hideCameraIcon && !compact && (
+            {!hideCameraIcon && (
               <button
                 type="button"
                 onClick={() => setIsLensOpen(true)}
-                className="absolute right-3 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+                className={`absolute bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors flex items-center justify-center ${
+                  compact ? "right-1.5 w-7 h-7" : "right-3 p-2"
+                }`}
                 title="Search by Image"
               >
-                <Camera className="w-5 h-5" />
+                <Camera className={compact ? "w-4 h-4" : "w-5 h-5"} />
               </button>
             )}
           </div>
