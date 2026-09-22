@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 import LensSearchModal from "./LensSearchModal";
 
 // --- Types ---
+interface SearchAutocompleteProps {
+  hideCameraIcon?: boolean;
+  compact?: boolean;
+}
+
 interface SearchResult {
   id: string;
   name: string;
@@ -102,7 +107,7 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 // --- Main Component ---
-export function SearchAutocomplete() {
+export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: SearchAutocompleteProps = {}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -314,11 +319,13 @@ export function SearchAutocomplete() {
           className="relative"
         >
           <div className="relative flex items-center">
-            <Search className="absolute left-4 h-5 w-5 text-gray-400" />
+            <Search className={`absolute left-4 text-gray-400 ${compact ? 'h-4 w-4' : 'h-5 w-5'}`} />
             <input
               ref={inputRef}
               type="text"
-              className="w-full pl-12 pr-14 py-4 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-lg shadow-sm transition-colors outline-none"
+              className={`w-full rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 shadow-sm transition-colors outline-none ${
+                compact ? "py-2 pl-10 pr-4 text-sm" : "pl-12 pr-14 py-4 text-lg"
+              }`}
               placeholder="Search for medicines or lab tests..."
               value={query}
               onChange={(e) => {
@@ -336,14 +343,16 @@ export function SearchAutocomplete() {
               }
             />
 
-            <button
-              type="button"
-              onClick={() => setIsLensOpen(true)}
-              className="absolute right-3 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
-              title="Search by Image"
-            >
-              <Camera className="w-5 h-5" />
-            </button>
+            {!hideCameraIcon && !compact && (
+              <button
+                type="button"
+                onClick={() => setIsLensOpen(true)}
+                className="absolute right-3 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+                title="Search by Image"
+              >
+                <Camera className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </form>
 

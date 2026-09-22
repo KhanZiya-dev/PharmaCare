@@ -3,12 +3,20 @@
 import Link from "next/link";
 import { Pill, Menu, X, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { SearchAutocomplete } from "./SearchAutocomplete";
 
 export function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 300);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -28,6 +36,13 @@ export function Navbar() {
               </span>
             </Link>
           </div>
+
+          {/* Scroll Search Bar */}
+          {scrolled && (
+            <div className="hidden lg:block flex-1 max-w-md mx-8 transition-all duration-300 opacity-100 translate-y-0" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+               <SearchAutocomplete compact hideCameraIcon />
+            </div>
+          )}
 
           {/* Desktop Nav - Floating Pill Container */}
           <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50 relative">

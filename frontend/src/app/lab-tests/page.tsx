@@ -81,14 +81,6 @@ export default function LabTestsPage() {
           {isLoading && (
             <Loader2 className="absolute right-14 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
           )}
-          <button
-            type="button"
-            onClick={() => setIsLensOpen(true)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
-            title="Search by Image"
-          >
-            <Camera className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Product Grid */}
@@ -128,7 +120,6 @@ export default function LabTestsPage() {
           </div>
         )}
       </div>
-      <LensSearchModal isOpen={isLensOpen} onClose={() => setIsLensOpen(false)} />
     </main>
   );
 }
