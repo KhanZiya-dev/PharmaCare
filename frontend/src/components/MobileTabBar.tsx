@@ -77,7 +77,7 @@ export function MobileTabBar() {
                 <motion.div
                   layoutId="mobile-tab-bubble"
                   className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 />
               )}
               <Icon className="h-5 w-5 mb-0.5" strokeWidth={isHighlighted ? 2.5 : 2} />

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Search, Loader2, Camera, AlertCircle, Clock, Pill, Microscope } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import LensSearchModal from "./LensSearchModal";
 
 // --- Types ---
@@ -366,9 +367,16 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
         </form>
 
         {/* Recent Searches Dropdown */}
-        {showRecent && !isOpen && recentSearches.length > 0 && (
-          <div className="absolute mt-2 w-full bg-white rounded-2xl shadow-xl border border-accent overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-gray-100">
+        <AnimatePresence>
+          {showRecent && !isOpen && recentSearches.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="absolute mt-2 w-full bg-white rounded-2xl shadow-xl border border-accent overflow-hidden z-50 origin-top"
+            >
+              <div className="px-4 py-2.5 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Recent Searches
               </span>
@@ -392,13 +400,21 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Autocomplete Results Dropdown */}
-        {isOpen && (
-          <div className="absolute mt-2 w-full bg-white rounded-2xl shadow-xl border border-accent overflow-hidden">
-            {/* Error State */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="absolute mt-2 w-full bg-white rounded-2xl shadow-xl border border-accent overflow-hidden z-50 origin-top"
+            >
+              {/* Error State */}
             {error ? (
               <div className="px-4 py-6 text-center">
                 <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
@@ -477,8 +493,9 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
                 spelling.
               </div>
             ) : null}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Lens Search Modal */}

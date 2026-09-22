@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Search, Upload, X, Loader2, Camera, Image as ImageIcon, Pill, Droplets } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LensSearchModalProps {
   isOpen: boolean;
@@ -201,7 +202,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     }
   };
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   const resetState = () => {
     setFile(null);
@@ -217,9 +218,21 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-      <div className="relative w-[95vw] sm:w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative w-[95vw] sm:w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-2 text-indigo-600">
@@ -450,7 +463,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
       
       {/* Global CSS for scanning animation */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -461,7 +474,9 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           100% { top: 100%; opacity: 0; }
         }
       `}} />
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 
   return createPortal(modalContent, document.body);

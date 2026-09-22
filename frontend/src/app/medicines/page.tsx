@@ -77,9 +77,7 @@ export default function MedicinesPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          {isLoading && (
-            <Loader2 className="absolute right-14 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
-          )}
+
           <button
             type="button"
             onClick={() => setIsLensOpen(true)}

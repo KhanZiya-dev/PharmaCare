@@ -76,9 +76,7 @@ export default function LabTestsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          {isLoading && (
-            <Loader2 className="absolute right-14 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
-          )}
+
         </div>
 
         {/* Product Grid */}
