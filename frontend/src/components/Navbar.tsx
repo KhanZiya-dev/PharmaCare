@@ -13,8 +13,23 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll);
+    let ticking = false;
+    let lastKnownScrolled = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const isScrolled = window.scrollY > 300;
+          if (isScrolled !== lastKnownScrolled) {
+            lastKnownScrolled = isScrolled;
+            setScrolled(isScrolled);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -26,7 +41,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 w-full z-50 py-2">
       {/* Pure Blur fading from 30% opacity at top to 0% at bottom */}
-      <div className="absolute top-0 left-0 right-0 h-[120px] backdrop-blur-md [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_100%)] -z-10 pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[120px] backdrop-blur-md [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_100%)] -z-10 pointer-events-none transform-gpu will-change-transform" />
       
       <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2 relative">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
@@ -41,7 +56,7 @@ export function Navbar() {
           </div>
 
           {/* Scroll Search Bar */}
-          {scrolled && (
+          {scrolled && !pathname?.startsWith('/trends') && (
             <div className="hidden lg:block flex-1 max-w-md mx-8 transition-all duration-300 opacity-100 translate-y-0" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
             </div>

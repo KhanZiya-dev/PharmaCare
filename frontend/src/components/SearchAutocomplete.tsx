@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Search, Loader2, Camera, AlertCircle, Clock, Pill, Microscope } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import LensSearchModal from "./LensSearchModal";
 
 // --- Types ---
@@ -122,6 +122,7 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
   const abortControllerRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   const recentSearches = useMemo(() => getRecentSearches(), [showRecent]);
 
@@ -326,7 +327,13 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
               className={`w-full rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 shadow-sm transition-colors outline-none ${
                 compact ? "py-2.5 pl-10 pr-10 text-sm" : "pl-12 pr-14 py-4 text-lg"
               }`}
-              placeholder="Search for medicines or lab tests..."
+              placeholder={
+                pathname?.startsWith('/lab-tests') 
+                  ? "Search for lab tests..." 
+                  : pathname?.startsWith('/medicines') || pathname?.startsWith('/product')
+                    ? "Search for medicines..."
+                    : "Search for medicines or lab tests..."
+              }
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);

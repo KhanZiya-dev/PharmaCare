@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 async function getTrends() {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/trends/variance`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
+      cache: 'no-store'
     });
     if (!res.ok) return [];
     return await res.json();
