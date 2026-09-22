@@ -16,8 +16,8 @@ export function Navbar() {
   };
 
   return (
-    <nav className="absolute top-0 w-full z-50 bg-transparent">
-      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-4">
+    <nav className="sticky top-0 w-full z-50 bg-transparent py-2">
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
