@@ -15,12 +15,12 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/80 border-b border-accent">
-      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)]">
+    <nav className="absolute top-0 w-full z-50 bg-transparent">
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-4">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link href="/" className="flex items-center gap-2 group bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/40">
               <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-primary group-hover:scale-110 transition-transform" />
               <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-primary tracking-tight">
                 PharmaCare
@@ -28,39 +28,39 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Desktop Nav - Floating Pill Container */}
+          <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50">
             <Link 
               href="/" 
-              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
             >
               Home
             </Link>
             <Link 
               href="/medicines" 
-              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/medicines") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/medicines") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
             >
               Medicines
             </Link>
             <Link 
               href="/lab-tests" 
-              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/lab-tests") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/lab-tests") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
             >
               Lab Tests
             </Link>
             <Link 
               href="/trends" 
-              className={`px-4 py-2 rounded-full transition-all font-medium ${isActive("/trends") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/50 hover:text-primary"}`}
+              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/trends") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
             >
               Price Trends
             </Link>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center bg-white/80 backdrop-blur-md rounded-full shadow-sm border border-white/40 p-1">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-primary hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-colors"
+              className="inline-flex items-center justify-center p-2 rounded-full text-slate-700 hover:text-primary hover:bg-slate-100 focus:outline-none transition-colors"
             >
               <span className="sr-only">Open main menu</span>
               {isMobileMenuOpen ? (
