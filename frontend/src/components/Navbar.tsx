@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Pill, Menu, X, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -29,31 +30,33 @@ export function Navbar() {
           </div>
 
           {/* Desktop Nav - Floating Pill Container */}
-          <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50">
-            <Link 
-              href="/" 
-              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
-            >
-              Home
-            </Link>
-            <Link 
-              href="/medicines" 
-              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/medicines") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
-            >
-              Medicines
-            </Link>
-            <Link 
-              href="/lab-tests" 
-              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/lab-tests") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
-            >
-              Lab Tests
-            </Link>
-            <Link 
-              href="/trends" 
-              className={`px-5 py-2.5 rounded-full transition-all font-bold text-sm ${isActive("/trends") ? "bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% text-white shadow-md shadow-teal-500/20" : "text-slate-600 hover:bg-slate-100 hover:text-primary"}`}
-            >
-              Price Trends
-            </Link>
+          <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50 relative">
+            {[
+              { path: "/", label: "Home" },
+              { path: "/medicines", label: "Medicines" },
+              { path: "/lab-tests", label: "Lab Tests" },
+              { path: "/trends", label: "Price Trends" }
+            ].map((item) => {
+              const active = isActive(item.path);
+              return (
+                <Link 
+                  key={item.path}
+                  href={item.path} 
+                  className={`relative px-5 py-2.5 rounded-full transition-colors font-bold text-sm z-10 ${
+                    active ? "text-white" : "text-slate-600 hover:text-primary hover:bg-slate-50"
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="capsule"
+                      className="absolute inset-0 bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% rounded-full shadow-md shadow-teal-500/20 -z-10"
+                      transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                    />
+                  )}
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Mobile menu button */}
