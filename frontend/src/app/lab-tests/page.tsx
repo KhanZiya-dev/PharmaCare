@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Search, Loader2, Microscope, Camera } from "lucide-react";
 import LensSearchModal from "@/components/LensSearchModal";
@@ -50,7 +49,6 @@ export default function LabTestsPage() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
         {/* Page Header */}

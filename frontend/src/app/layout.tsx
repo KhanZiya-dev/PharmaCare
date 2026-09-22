@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, DM_Serif_Display } from "next/font/google";
+import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MessageCircle } from "lucide-react";
 import "./globals.css";
@@ -32,6 +33,7 @@ export default function RootLayout({
       className={`${inter.variable} ${dmSerifDisplay.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <Navbar />
         {children}
         <Footer />
 

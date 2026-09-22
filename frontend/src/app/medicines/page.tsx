@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Search, Loader2, Stethoscope, Camera } from "lucide-react";
 import LensSearchModal from "@/components/LensSearchModal";
@@ -51,7 +50,6 @@ export default function MedicinesPage() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full py-[clamp(2rem,6vw,3rem)]">
         {/* Page Header */}

@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { FloatingCards } from "@/components/FloatingCards";
 import { ShieldCheck, TrendingDown, Camera, Activity } from "lucide-react";
@@ -19,7 +18,6 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full flex flex-col lg:flex-row items-center justify-center py-[clamp(3rem,8vw,6rem)] gap-[clamp(2rem,6vw,4rem)]">
         {/* Left: Text Content & Search */}
@@ -135,9 +133,6 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Decorative background blur */}
-      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-teal-50/50 rounded-full blur-3xl -z-10" />
     </main>
   );
 }

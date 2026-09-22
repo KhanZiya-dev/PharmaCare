@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { Navbar } from "@/components/Navbar";
 import { SearchX, Home } from "lucide-react";
 
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="text-center max-w-md">

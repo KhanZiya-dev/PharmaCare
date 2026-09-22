@@ -1,9 +1,7 @@
-import { Navbar } from "@/components/Navbar";
 
 export default function ProductLoading() {
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
         {/* Back link skeleton */}

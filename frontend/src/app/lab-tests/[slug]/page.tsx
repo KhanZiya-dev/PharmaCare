@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
@@ -75,7 +74,6 @@ export default async function LabTestPage({
 
   return (
     <main className="min-h-screen bg-gray-50/50 flex flex-col">
-      <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full py-[clamp(1.5rem,5vw,3rem)]">
         

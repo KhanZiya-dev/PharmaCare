@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { TrendingDown, TrendingUp, BarChart3, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +26,6 @@ export default async function TrendsPage() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
         {/* Page Header */}

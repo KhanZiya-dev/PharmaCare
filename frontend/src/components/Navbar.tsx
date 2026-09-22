@@ -24,8 +24,11 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 w-full z-50 bg-transparent py-2">
-      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2">
+    <nav className="sticky top-0 w-full z-50 py-2">
+      {/* Pure Blur fading from 30% opacity at top to 0% at bottom */}
+      <div className="absolute top-0 left-0 right-0 h-[120px] backdrop-blur-md [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_100%)] -z-10 pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2 relative">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -40,7 +43,7 @@ export function Navbar() {
           {/* Scroll Search Bar */}
           {scrolled && (
             <div className="hidden lg:block flex-1 max-w-md mx-8 transition-all duration-300 opacity-100 translate-y-0" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-               <SearchAutocomplete compact hideCameraIcon />
+               <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
             </div>
           )}
 
@@ -57,6 +60,9 @@ export function Navbar() {
                 <Link 
                   key={item.path}
                   href={item.path} 
+                  onClick={(e) => {
+                    if (active) e.preventDefault();
+                  }}
                   className={`relative px-5 py-2.5 rounded-full transition-colors font-bold text-sm z-10 ${
                     active ? "text-white" : "text-slate-600 hover:text-primary hover:bg-slate-50"
                   }`}
@@ -64,7 +70,7 @@ export function Navbar() {
                   {active && (
                     <motion.div
                       layoutId="capsule"
-                      className="absolute inset-0 bg-gradient-to-r from-teal-500 from-50% to-indigo-400 to-50% rounded-full shadow-md shadow-teal-500/20 -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
                       transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
                     />
                   )}
