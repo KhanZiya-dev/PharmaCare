@@ -48,14 +48,12 @@ _DOSAGE_FORMS = [
     'forte', 'plus', 'ds', 'sr', 'xr', 'er', 'cr', 'mr', 'xl',
 ]
 
-# Pack/quantity patterns
 _PACK_PATTERNS = [
     r'strip\s*of\s*\d+',
     r'pack\s*of\s*\d+',
     r'bottle\s*of\s*\d+\s*(?:ml|tablets?|capsules?)?',
     r'box\s*of\s*\d+',
     r'tube\s*of\s*\d+\s*(?:gm?|g)?',
-    r'\d+\s*(?:ml|gm?|g|mg|mcg|l|kg)\b',
     r'\d+\s*(?:s|\'s)\b',  # "15's", "10 s"
     r'\(\s*\d+[^)]*\)',   # anything in parentheses with numbers
 ]

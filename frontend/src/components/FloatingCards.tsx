@@ -41,7 +41,7 @@ export function FloatingCards() {
   // Fallback data if API fails or is empty
   const defaultProducts: TrendProduct[] = [
     { name: "Shelcal 500 Tablet", category: "medicine", slug: "shelcal-500-tablet", id: "1", lowestPrice: 148, highestPrice: 192, variance_pct: 30, discount_pct: 23 },
-    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 24, highestPrice: 32, variance_pct: 33, discount_pct: 25 }
+    { name: "Dolo 650 Tablet", category: "medicine", slug: "dolo-650-tablet", id: "2", lowestPrice: 27, highestPrice: 32, variance_pct: 18, discount_pct: 15 }
   ];
 
   const displayProducts = products.length >= 2 ? products : defaultProducts;
@@ -79,7 +79,7 @@ export function FloatingCards() {
         <div className="absolute inset-2 bg-gradient-to-b from-blue-50 to-indigo-50 rounded-full flex flex-col items-center justify-center p-4 text-center">
           <Scan className="h-10 w-10 text-primary mb-2 opacity-80" />
           <span className="text-xs font-bold text-primary uppercase tracking-widest">Scanning Prices</span>
-          <span className="text-sm font-medium text-gray-500 mt-1 leading-tight">Across 10+ Pharmacies</span>
+          <span className="text-sm font-medium text-gray-500 mt-1 leading-tight">Across 5+ Pharmacies</span>
         </div>
       </div>
 

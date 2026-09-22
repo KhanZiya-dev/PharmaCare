@@ -107,7 +107,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                           </span>
                           {platform.latest_price!.discount_pct > 0 && (
                             <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap">
-                              {platform.latest_price!.discount_pct}% OFF
+                              {Math.round(platform.latest_price!.discount_pct)}% OFF
                             </span>
                           )}
                         </div>
@@ -125,21 +125,27 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                   </td>
                   
                   <td className="p-4 text-right">
-                    <a
-                      href={redirectUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                        isNotForSale
-                          ? "bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
-                          : isLowest 
-                            ? "bg-primary text-white hover:bg-primary/90 shadow-sm" 
-                            : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {isNotForSale ? "Check Availability" : "View Deal"}
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+                    {hasPrice ? (
+                      <a
+                        href={redirectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          isNotForSale
+                            ? "bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
+                            : isLowest 
+                              ? "bg-primary text-white hover:bg-primary/90 shadow-sm" 
+                              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {isNotForSale ? "Check Availability" : "View Deal"}
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-400 cursor-not-allowed">
+                        Unavailable
+                      </span>
+                    )}
                   </td>
                 </tr>
               );
@@ -195,7 +201,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                         </span>
                         {platform.latest_price!.discount_pct > 0 && (
                           <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                            {platform.latest_price!.discount_pct}% OFF
+                            {Math.round(platform.latest_price!.discount_pct)}% OFF
                           </span>
                         )}
                       </div>
@@ -233,21 +239,27 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
                 </div>
               </div>
 
-              <a
-                href={redirectUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                  isNotForSale
-                    ? "bg-orange-50 text-orange-700 border border-orange-200"
-                    : isLowest 
-                      ? "bg-primary text-white" 
-                      : "bg-gray-50 border border-gray-200 text-gray-700"
-                }`}
-              >
-                {isNotForSale ? "Check Availability" : "View Deal"}
-                <ExternalLink className="h-4 w-4" />
-              </a>
+              {hasPrice ? (
+                <a
+                  href={redirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                    isNotForSale
+                      ? "bg-orange-50 text-orange-700 border border-orange-200"
+                      : isLowest 
+                        ? "bg-primary text-white" 
+                        : "bg-gray-50 border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  {isNotForSale ? "Check Availability" : "View Deal"}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : (
+                <span className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-gray-100 text-gray-400 cursor-not-allowed">
+                  Unavailable
+                </span>
+              )}
             </div>
           );
         })}

@@ -14,8 +14,8 @@ load_dotenv(_env_path if os.path.exists(_env_path) else None)
 
 logger = logging.getLogger(__name__)
 
-# Use gemini-3.6-flash for better OCR accuracy (may occasionally hit 503 due to high demand)
-MODEL_NAME = 'gemini-3.6-flash'
+# Use gemini-3.5-flash-lite as it is less prone to high demand 503 errors
+MODEL_NAME = 'gemini-3.5-flash-lite'
 
 PROMPT = (
     "Extract medicine/drug brand names from this image.\n\n"

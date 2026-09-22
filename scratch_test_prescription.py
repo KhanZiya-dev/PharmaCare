@@ -6,12 +6,10 @@ from google import genai
 from google.genai import types
 
 ss_path = r"C:\Users\Ziyaurrahman Khan\.gemini\antigravity-ide\brain\4ed76808-6be7-40f9-a2d9-53784a4d116c\.user_uploaded\media_1789460236550.png"
-img = Image.open(ss_path)
-w, h = img.size
-crop_box = (int(w*0.34), int(h*0.24), int(w*0.66), int(h*0.68))
-cropped = img.crop(crop_box).convert("RGB")
-cropped.save("test_prescription.jpg")
-print("Prescription cropped & saved.")
+img = Image.open(ss_path).convert("RGB")
+img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+cropped = img
+print("Prescription loaded.")
 
 keys = [k.strip() for k in os.getenv("GEMINI_API_KEY", "").split(",") if k.strip()]
 client = genai.Client(api_key=keys[0])
@@ -28,7 +26,7 @@ prompt = (
 
 t0 = time.time()
 res = client.models.generate_content(
-    model="gemini-3.6-flash",
+    model="gemini-3.5-flash",
     contents=[prompt, cropped],
     config=types.GenerateContentConfig(
         temperature=0.0,

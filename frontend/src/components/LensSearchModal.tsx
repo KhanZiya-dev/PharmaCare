@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, Upload, X, Loader2, Camera, Image as ImageIcon } from "lucide-react";
+import { Search, Upload, X, Loader2, Camera, Image as ImageIcon, Pill, Droplets } from "lucide-react";
 
 interface LensSearchModalProps {
   isOpen: boolean;
@@ -18,11 +18,44 @@ interface SearchResult {
   image_url: string | null;
 }
 
+interface ExtractedDetail {
+  name: string;
+  strength: string | null;
+  form: string | null;
+}
+
+// Form icon + color mapping
+const FORM_CONFIG: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+  Tablet:     { icon: "💊", color: "text-blue-700",   bg: "bg-blue-50",   border: "border-blue-200" },
+  Capsule:    { icon: "💊", color: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200" },
+  Syrup:      { icon: "🧪", color: "text-amber-700",  bg: "bg-amber-50",  border: "border-amber-200" },
+  Suspension: { icon: "🧪", color: "text-amber-700",  bg: "bg-amber-50",  border: "border-amber-200" },
+  Cream:      { icon: "🧴", color: "text-pink-700",   bg: "bg-pink-50",   border: "border-pink-200" },
+  Gel:        { icon: "🧴", color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200" },
+  Ointment:   { icon: "🧴", color: "text-pink-700",   bg: "bg-pink-50",   border: "border-pink-200" },
+  Lotion:     { icon: "🧴", color: "text-rose-700",   bg: "bg-rose-50",   border: "border-rose-200" },
+  Injection:  { icon: "💉", color: "text-red-700",    bg: "bg-red-50",    border: "border-red-200" },
+  Drops:      { icon: "💧", color: "text-cyan-700",   bg: "bg-cyan-50",   border: "border-cyan-200" },
+  Inhaler:    { icon: "🌬️", color: "text-teal-700",   bg: "bg-teal-50",   border: "border-teal-200" },
+  Powder:     { icon: "⚗️", color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200" },
+  Spray:      { icon: "💨", color: "text-sky-700",    bg: "bg-sky-50",    border: "border-sky-200" },
+  Respules:   { icon: "🌬️", color: "text-teal-700",   bg: "bg-teal-50",   border: "border-teal-200" },
+  Kit:        { icon: "🧰", color: "text-slate-700",  bg: "bg-slate-50",  border: "border-slate-200" },
+  Sachet:     { icon: "📦", color: "text-emerald-700",bg: "bg-emerald-50",border: "border-emerald-200" },
+};
+const DEFAULT_FORM_CONFIG = { icon: "💊", color: "text-gray-700", bg: "bg-gray-50", border: "border-gray-200" };
+
+function getFormConfig(form: string | null) {
+  if (!form) return DEFAULT_FORM_CONFIG;
+  return FORM_CONFIG[form] || DEFAULT_FORM_CONFIG;
+}
+
 // Module-level cache to persist scan results across page navigations
 let cachedFile: File | null = null;
 let cachedPreview: string | null = null;
 let cachedResults: SearchResult[] = [];
 let cachedExtractedText: string[] = [];
+let cachedExtractedDetails: ExtractedDetail[] = [];
 let cachedNotFound: string[] = [];
 let cachedError: string | null = null;
 
@@ -35,6 +68,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResultsState] = useState<SearchResult[]>(cachedResults);
   const [extractedText, setExtractedTextState] = useState<string[]>(cachedExtractedText);
+  const [extractedDetails, setExtractedDetailsState] = useState<ExtractedDetail[]>(cachedExtractedDetails);
   const [notFound, setNotFoundState] = useState<string[]>(cachedNotFound);
   const [error, setErrorState] = useState<string | null>(cachedError);
   const [isDragging, setIsDragging] = useState(false);
@@ -44,6 +78,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
   const setPreview = (val: string | null) => { cachedPreview = val; setPreviewState(val); };
   const setResults = (val: SearchResult[]) => { cachedResults = val; setResultsState(val); };
   const setExtractedText = (val: string[]) => { cachedExtractedText = val; setExtractedTextState(val); };
+  const setExtractedDetails = (val: ExtractedDetail[]) => { cachedExtractedDetails = val; setExtractedDetailsState(val); };
   const setNotFound = (val: string[]) => { cachedNotFound = val; setNotFoundState(val); };
   const setError = (val: string | null) => { cachedError = val; setErrorState(val); };
 
@@ -110,6 +145,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     setError(null);
     setResults([]);
     setExtractedText([]);
+    setExtractedDetails([]);
     setNotFound([]);
 
     const formData = new FormData();
@@ -145,6 +181,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       const data = await response.json();
       setResults(data.results || []);
       setExtractedText(data.extracted_text || []);
+      setExtractedDetails(data.extracted_details || []);
       setNotFound(data.not_found || []);
       
       if (data.results.length === 0 && (data.not_found || []).length === 0) {
@@ -171,6 +208,7 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     setPreview(null);
     setResults([]);
     setExtractedText([]);
+    setExtractedDetails([]);
     setNotFound([]);
     setError(null);
     if (fileInputRef.current) {
@@ -274,9 +312,63 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           )}
 
           {/* Results State */}
-          {!isScanning && (results.length > 0 || notFound.length > 0) && !error && (
+          {!isScanning && (results.length > 0 || notFound.length > 0 || extractedText.length > 0) && !error && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
+              {/* Raw Extracted Text */}
+              {extractedText.length > 0 && (
+                <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                  <h4 className="text-xs font-semibold text-indigo-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5" /> Scanner Read:
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {extractedText.map((text, idx) => (
+                      <span key={idx} className="text-sm bg-white border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-md shadow-sm font-medium">
+                        {text}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Prescription Detected — Rich Detail Cards */}
+              {extractedDetails.length > 0 && (
+                <div className="p-3 bg-gradient-to-br from-indigo-50/80 to-purple-50/40 border border-indigo-100 rounded-xl">
+                  <h4 className="text-xs font-semibold text-indigo-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Pill className="w-3.5 h-3.5" /> Prescription Detected
+                  </h4>
+                  <div className="space-y-2">
+                    {extractedDetails.map((detail, idx) => {
+                      const fc = getFormConfig(detail.form);
+                      return (
+                        <div key={idx} className={`flex items-center gap-3 p-2.5 bg-white border ${fc.border} rounded-lg shadow-sm`}>
+                          <div className={`w-9 h-9 ${fc.bg} rounded-lg flex items-center justify-center shrink-0 text-lg`}>
+                            {fc.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-800 text-sm truncate">{detail.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {detail.strength && (
+                                <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                  {detail.strength}
+                                </span>
+                              )}
+                              {detail.form && (
+                                <span className={`text-[11px] font-medium ${fc.color} ${fc.bg} px-1.5 py-0.5 rounded`}>
+                                  {detail.form}
+                                </span>
+                              )}
+                              {!detail.strength && !detail.form && (
+                                <span className="text-[11px] text-gray-400 italic">Details not visible</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {results.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">

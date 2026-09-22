@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Quality medicines at the lowest prices & fastest delivery.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="web_app">
+  <meta property="og:title" content="Zeno Health">
+  <meta property="og:description"
+    content="Quality medicines at the lowest prices & fastest delivery.">
+  <meta property="og:image" content="https://d8x2i9uat2lel.cloudfront.net/zeno-website-new/zeno-app-home-page.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:url" content="https://zeno.health">
+  <meta property="og:type" content="website">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://d8x2i9uat2lel.cloudfront.net/zeno-app/zeno-v2/assets/favicon.png" />
+
+  <title>Zeno Health</title>
+  <link rel="manifest" href="manifest.json">
+  <!-- PROD - Google Tag Manager -->
+  <script>(function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({
+        'gtm.start':
+          new Date().getTime(), event: 'gtm.js'
+      }); var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-TDKQQN7W');</script>
+  <!-- PROD - End Google Tag Manager -->
+
+
+  <!-- QA/DEV Google Tag Manager -->
+  <!-- <script>(function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({
+        'gtm.start':
+          new Date().getTime(), event: 'gtm.js'
+      }); var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-N5PQBVPW');</script> -->
+  <!-- QA/DEV End Google Tag Manager -->
+
+</head>
+
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  <script type="application/javascript" src="/assets/packages/flutter_inappwebview_web/assets/web/web_support.js"
+    defer></script>
+  <script src="/assets/packages/clevertap_plugin/assets/clevertap.js"></script>
+  <!-- PROD - Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TDKQQN7W" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- PROD - End Google Tag Manager (noscript) -->
+
+  <!-- QA/DEV Google Tag Manager (noscript) -->
+  <!-- <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N5PQBVPW" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript> -->
+  <!-- QA/DEV End Google Tag Manager (noscript) -->
+  <script>
+    window.nativeCommunication = function (message) {
+      console.log("Message from Flutter:", message);
+    };
+  </script>
+
+  <script>
+(function () {
+  const APP_VERSION = "app-version";
+  const newVersion = "0000000111";
+  const oldVersion = localStorage.getItem(APP_VERSION);
+
+  if (oldVersion !== newVersion) {
+    localStorage.setItem(APP_VERSION, newVersion);
+    window.location.reload(true); // force reload
+  }
+})();
+</script>
+
+  <!-- <script>
+    if (navigator.userAgent.includes("iPhone")) {
+      history.pushState(null, document.title, location.href);
+      window.addEventListener('popstate', function (event) {
+        history.pushState(null, document.title, location.href);
+      });
+    }
+  </script> -->
+</body>
+
+</html>
