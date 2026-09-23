@@ -84,7 +84,7 @@ export default async function ProductPage({
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Search
           </Link>
-          <div className="w-full md:w-96">
+          <div className="w-full md:w-96 page-search-bar transition-opacity duration-500">
             <SearchAutocomplete />
           </div>
         </div>

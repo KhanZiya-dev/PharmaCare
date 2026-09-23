@@ -67,7 +67,7 @@ export default function LabTestsPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-xl mb-8">
+        <div className="relative max-w-xl mb-8 page-search-bar transition-opacity duration-500">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"

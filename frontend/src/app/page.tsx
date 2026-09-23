@@ -38,7 +38,7 @@ export default async function Home() {
             Compare prices for life-saving medicines and lab tests across top e-pharmacies. Don't fall for fake discounts—check our 30-day price history before you buy.
           </p>
           
-          <div id="hero-search-bar" className="w-full max-w-xl mx-auto lg:mx-0 opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards]">
+          <div id="hero-search-bar" className="page-search-bar w-full max-w-xl mx-auto lg:mx-0 opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards] transition-opacity duration-500">
             <SearchAutocomplete />
           </div>
         </div>

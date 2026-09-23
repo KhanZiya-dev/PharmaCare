@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pill, Menu, X, MessageCircle } from "lucide-react";
+import { Pill, Menu, X, MessageCircle, Home, FlaskConical, TrendingUp, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,11 +11,21 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [activePath, setActivePath] = useState(pathname || "/");
 
   useEffect(() => {
     setActivePath(pathname || "/");
   }, [pathname]);
+
+  useEffect(() => {
+    if (isSearchExpanded) {
+      document.body.classList.add('header-search-expanded');
+    } else {
+      document.body.classList.remove('header-search-expanded');
+    }
+    return () => document.body.classList.remove('header-search-expanded');
+  }, [isSearchExpanded]);
 
   useEffect(() => {
     // Watch the hero search bar on the home page using IntersectionObserver
@@ -76,56 +86,98 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Scroll Search Bar */}
-          <AnimatePresence>
-            {scrolled && !pathname?.startsWith('/trends') && (
-              <motion.div
-                initial={{ opacity: 0, y: -20, scale: 0.9, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: -12, scale: 0.95, filter: 'blur(4px)' }}
-                transition={{ type: "spring", stiffness: 400, damping: 25, mass: 0.8 }}
-                className="hidden lg:block flex-1 max-w-md mx-8"
-              >
-                <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Desktop Nav - Floating Pill Container */}
-          <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50 relative">
-            {[
-              { path: "/", label: "Home" },
-              { path: "/medicines", label: "Medicines" },
-              { path: "/lab-tests", label: "Lab Tests" },
-              { path: "/trends", label: "Price Trends" }
-            ].map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link 
-                  key={item.path}
-                  href={item.path} 
-                  onClick={(e) => {
-                    if (active) {
-                      e.preventDefault();
-                    } else {
-                      setActivePath(item.path);
-                    }
-                  }}
-                  className={`relative px-5 py-2.5 rounded-full transition-colors font-bold text-sm z-10 ${
-                    active ? "text-white" : "text-slate-600 hover:text-primary hover:bg-slate-50"
-                  }`}
+          {/* Desktop Right Side: Nav Pill + Expandable Search Icon */}
+          <div className="hidden md:flex items-center space-x-2">
+            
+            {/* Expandable Search Icon Pill (Water Drop Splitting Effect) */}
+            <AnimatePresence>
+              {(scrolled || isSearchExpanded) && !pathname?.startsWith('/trends') && (
+                <motion.div
+                  initial={{ opacity: 0, x: 40, scaleX: 2.5, scaleY: 0.6 }}
+                  animate={{ opacity: 1, x: 0, scaleX: 1, scaleY: 1 }}
+                  exit={{ opacity: 0, x: 40, scaleX: 2, scaleY: 0.7 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 15, mass: 0.8 }}
+                  className="relative z-10 origin-left"
                 >
-                  {active && (
-                    <motion.div
-                      layoutId="capsule"
-                      className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
+                  <motion.div 
+                    layout
+                    className={`bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-white/50 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
+                      isSearchExpanded ? 'w-[450px] p-1.5' : 'w-12 h-12 justify-center hover:bg-white hover:scale-105'
+                    }`}
+                    onClick={() => {
+                      if (!isSearchExpanded) setIsSearchExpanded(true);
+                    }}
+                  >
+                    {!isSearchExpanded ? (
+                      <Search className="w-5 h-5 text-slate-600" />
+                    ) : (
+                      <div className="flex w-full items-center gap-2">
+                        <div className="flex-1">
+                          <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
+                        </div>
+                        <button 
+                          className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors mr-1 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsSearchExpanded(false);
+                          }}
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Desktop Nav - Floating Pill Container */}
+            <motion.div layout className="hidden md:flex items-center space-x-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-white/50 relative z-20">
+              {[
+                { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
+                { path: "/medicines", label: "Medicines", icon: <Pill className="h-5 w-5" /> },
+                { path: "/lab-tests", label: "Lab Tests", icon: <FlaskConical className="h-5 w-5" /> },
+                { path: "/trends", label: "Trends", icon: <TrendingUp className="h-5 w-5" /> }
+              ].map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={(e) => {
+                      if (active) {
+                        e.preventDefault();
+                      } else {
+                        setActivePath(item.path);
+                      }
+                    }}
+                    className={`relative flex items-center justify-center rounded-full transition-colors duration-200 z-10 ${
+                      active 
+                        ? "text-white px-6 py-3" 
+                        : "text-slate-600 hover:text-primary hover:bg-slate-50 px-4 py-3"
+                    }`}
+                  >
+                    {active && (
+                      <motion.div
+                        layoutId="capsule"
+                        className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
+                        transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex-shrink-0">{item.icon}</span>
+                    <div 
+                      className={`overflow-hidden transition-all duration-300 ease-in-out flex items-center ${
+                        active ? "max-w-[120px] opacity-100 ml-2.5" : "max-w-0 opacity-0 ml-0"
+                      }`}
+                    >
+                      <span className="font-bold text-[15px] whitespace-nowrap">
+                        {item.label}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </motion.div>
           </div>
 
           {/* Mobile menu button */}
