@@ -11,31 +11,52 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activePath, setActivePath] = useState(pathname || "/");
 
   useEffect(() => {
-    let ticking = false;
-    let lastKnownScrolled = false;
+    setActivePath(pathname || "/");
+  }, [pathname]);
+
+  useEffect(() => {
+    // Watch the hero search bar on the home page using IntersectionObserver
+    const heroSearchBar = document.getElementById('hero-search-bar');
     
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const isScrolled = window.scrollY > 300;
-          if (isScrolled !== lastKnownScrolled) {
-            lastKnownScrolled = isScrolled;
-            setScrolled(isScrolled);
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    if (heroSearchBar) {
+      // Home page: show navbar search when hero search bar scrolls out of view
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setScrolled(!entry.isIntersecting);
+        },
+        { threshold: 0, rootMargin: '-80px 0px 0px 0px' }
+      );
+      observer.observe(heroSearchBar);
+      return () => observer.disconnect();
+    } else {
+      // Other pages: use scroll position as fallback
+      let ticking = false;
+      let lastKnownScrolled = false;
+      
+      const handleScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const isScrolled = window.scrollY > 300;
+            if (isScrolled !== lastKnownScrolled) {
+              lastKnownScrolled = isScrolled;
+              setScrolled(isScrolled);
+            }
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
+  }, [pathname]);
 
   const isActive = (path: string) => {
-    if (path === "/") return pathname === "/";
-    return pathname?.startsWith(path);
+    if (path === "/") return activePath === "/";
+    return activePath?.startsWith(path);
   };
 
   return (
@@ -47,7 +68,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2 group bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/40">
+            <Link href="/" className="flex items-center gap-2 group bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/40" onClick={() => setActivePath("/")}>
               <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-primary group-hover:scale-110 transition-transform" />
               <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-primary tracking-tight">
                 PharmaCare
@@ -56,11 +77,19 @@ export function Navbar() {
           </div>
 
           {/* Scroll Search Bar */}
-          {scrolled && !pathname?.startsWith('/trends') && (
-            <div className="hidden lg:block flex-1 max-w-md mx-8 transition-all duration-300 opacity-100 translate-y-0" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-               <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
-            </div>
-          )}
+          <AnimatePresence>
+            {scrolled && !pathname?.startsWith('/trends') && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.9, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -12, scale: 0.95, filter: 'blur(4px)' }}
+                transition={{ type: "spring", stiffness: 400, damping: 25, mass: 0.8 }}
+                className="hidden lg:block flex-1 max-w-md mx-8"
+              >
+                <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Desktop Nav - Floating Pill Container */}
           <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-white/50 relative">
@@ -76,7 +105,11 @@ export function Navbar() {
                   key={item.path}
                   href={item.path} 
                   onClick={(e) => {
-                    if (active) e.preventDefault();
+                    if (active) {
+                      e.preventDefault();
+                    } else {
+                      setActivePath(item.path);
+                    }
                   }}
                   className={`relative px-5 py-2.5 rounded-full transition-colors font-bold text-sm z-10 ${
                     active ? "text-white" : "text-slate-600 hover:text-primary hover:bg-slate-50"
@@ -86,10 +119,10 @@ export function Navbar() {
                     <motion.div
                       layoutId="capsule"
                       className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
-                      transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
-                  {item.label}
+                  <span className="relative z-10">{item.label}</span>
                 </Link>
               );
             })}
@@ -120,42 +153,29 @@ export function Navbar() {
                   className="absolute top-full right-0 mt-3 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-accent overflow-hidden z-50 origin-top-right"
                 >
                   <div className="p-2 space-y-1">
-                    <Link
-                      href="/"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                        isActive("/") ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
-                      }`}
-                    >
-                      Home
-                    </Link>
-                    <Link
-                      href="/medicines"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                        isActive("/medicines") ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
-                      }`}
-                    >
-                      Medicines
-                    </Link>
-                    <Link
-                      href="/lab-tests"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                        isActive("/lab-tests") ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
-                      }`}
-                    >
-                      Lab Tests
-                    </Link>
-                    <Link
-                      href="/trends"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                        isActive("/trends") ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
-                      }`}
-                    >
-                      Price Trends
-                    </Link>
+                    {[
+                      { path: "/", label: "Home" },
+                      { path: "/medicines", label: "Medicines" },
+                      { path: "/lab-tests", label: "Lab Tests" },
+                      { path: "/trends", label: "Price Trends" }
+                    ].map((item) => {
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          href={item.path}
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setActivePath(item.path);
+                          }}
+                          className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                            active ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}

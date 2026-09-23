@@ -126,7 +126,7 @@ export function FloatingCards() {
       </div>
 
       {/* Price Trend Mini Card */}
-      <div className="pointer-events-none hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 lg:-right-12 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-accent px-5 py-3 items-center gap-3 animate-bounce-slow" style={{ animationDuration: '3.5s', animationDelay: '2s' }}>
+      <div className="pointer-events-none hidden md:flex absolute top-8 lg:top-12 right-4 lg:-right-4 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-accent px-5 py-3 items-center gap-3 animate-bounce-slow z-20" style={{ animationDuration: '3.5s', animationDelay: '2s' }}>
         <div className="bg-blue-50 rounded-full p-1.5 flex items-center justify-center">
           <Activity className="h-4 w-4 text-blue-500" />
         </div>

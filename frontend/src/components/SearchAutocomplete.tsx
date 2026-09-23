@@ -353,6 +353,7 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
 
             {!hideCameraIcon && (
               <button
+                id="camera-search-button"
                 type="button"
                 onClick={() => setIsLensOpen(true)}
                 className={`absolute bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors flex items-center justify-center ${

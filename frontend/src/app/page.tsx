@@ -1,6 +1,8 @@
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { FloatingCards } from "@/components/FloatingCards";
 import { ShieldCheck, TrendingDown, Camera, Activity } from "lucide-react";
+import Link from "next/link";
+import { ScannerCTA } from "@/components/ScannerCTA";
 
 export default async function Home() {
   let trends = [];
@@ -36,7 +38,7 @@ export default async function Home() {
             Compare prices for life-saving medicines and lab tests across top e-pharmacies. Don't fall for fake discounts—check our 30-day price history before you buy.
           </p>
           
-          <div className="w-full max-w-xl mx-auto lg:mx-0 opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards]">
+          <div id="hero-search-bar" className="w-full max-w-xl mx-auto lg:mx-0 opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards]">
             <SearchAutocomplete />
           </div>
         </div>
@@ -52,7 +54,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] opacity-0 animate-[fadeUp_1s_ease-out_1.2s_forwards]">
           
           {/* Panel 1: Top Price Drops */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+          <Link href="/trends" className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full cursor-pointer block">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-green-50 p-2.5 rounded-xl text-green-600">
                 <TrendingDown className="h-5 w-5" />
@@ -92,22 +94,12 @@ export default async function Home() {
                 View all tracking deals &rarr;
               </p>
             </div>
-          </div>
+          </Link>
           
-          {/* Panel 2 (CTA): Scanner */}
-          <div className="bg-primary rounded-2xl p-4 md:p-6 shadow-md border border-primary text-white flex flex-col justify-center items-center text-center transform md:-translate-y-4">
-            <h3 className="font-serif font-bold text-2xl mb-2">Have a Prescription?</h3>
-            <p className="text-sm text-blue-100 mb-6 px-2">
-              Don't manually search for each medicine. Scan your prescription and we'll compare the entire list at once.
-            </p>
-            <div className="bg-white/20 text-white font-bold py-2.5 px-6 rounded-full w-full shadow-sm flex items-center justify-center gap-2 border border-white/30">
-              <Camera className="w-4 h-4" />
-              Use the scanner above &uarr;
-            </div>
-          </div>
+          <ScannerCTA />
           
           {/* Panel 3: Savings Data */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full">
+          <Link href="/trends" className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-accent hover:shadow-md transition-shadow group flex flex-col h-full cursor-pointer block">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
                 <Activity className="h-5 w-5" />
@@ -128,7 +120,7 @@ export default async function Home() {
                 Prices fluctuate daily based on pharmacy inventory and promotional offers. We track 5+ platforms to find the lowest cart value.
               </p>
             </div>
-          </div>
+          </Link>
 
         </div>
       </div>

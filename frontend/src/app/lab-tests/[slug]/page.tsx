@@ -152,7 +152,7 @@ export default async function LabTestPage({
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h2 className="font-bold text-2xl text-foreground mb-4">Compare Prices</h2>
-              <ComparisonTable platforms={platforms} />
+              <ComparisonTable platforms={activePlatforms} />
             </div>
             
             <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">

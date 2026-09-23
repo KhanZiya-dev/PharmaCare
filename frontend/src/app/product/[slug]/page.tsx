@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 async function getProductData(slug: string) {
   try {
     const res = await fetch(`${API_URL}/product/${slug}`, {
-      cache: 'no-store'
+      next: { revalidate: 60 }
     });
     
     if (!res.ok) {
