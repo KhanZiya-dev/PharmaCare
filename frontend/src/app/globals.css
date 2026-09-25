@@ -122,9 +122,11 @@ html.theme-flash.dark {
 }
 
 /* Explicit class overrides for hardcoded tailwind values */
-html.theme-flash.dark .bg-white,
-html.theme-flash.dark .bg-\[\#ffffff\],
-html.theme-flash.dark .dark\:bg-\[\#111111\] {
+html.theme-flash.dark [class*="bg-white"],
+html.theme-flash.dark [class*="bg-[#ffffff]"],
+html.theme-flash.dark [class*="dark:bg-[#111111]"],
+html.theme-flash.dark [class*="bg-gray-50"],
+html.theme-flash.dark [class*="bg-gray-100"] {
   background-color: #000000 !important;
 }
 
