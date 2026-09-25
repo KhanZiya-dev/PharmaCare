@@ -48,6 +48,8 @@
 .dark {
   --background: #0f172a;
   --foreground: #f8fafc;
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
   --color-accent: #1e293b;
   
   /* Override Tailwind base colors for automatic dark mode */
