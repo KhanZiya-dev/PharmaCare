@@ -48,6 +48,47 @@
 .dark {
   --background: #0f172a;
   --foreground: #f8fafc;
+  --color-accent: #1e293b;
+  
+  /* Override Tailwind base colors for automatic dark mode */
+  --color-white: #1e293b;
+  --color-gray-50: #0f172a;
+  --color-gray-100: #1e293b;
+  --color-gray-200: #334155;
+  --color-gray-300: #475569;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #cbd5e1;
+  --color-gray-700: #e2e8f0;
+  --color-gray-800: #f1f5f9;
+  --color-gray-900: #f8fafc;
+
+  --color-indigo-50: #1e1b4b;
+  --color-indigo-100: #312e81;
+  --color-indigo-200: #4338ca;
+  --color-indigo-600: #818cf8;
+
+  --color-blue-50: #172554;
+  --color-blue-100: #1e3a8a;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #60a5fa;
+  --color-blue-900: #bfdbfe;
+
+  --color-green-50: #052e16;
+  --color-green-100: #14532d;
+  --color-green-200: #166534;
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+
+  --color-red-50: #450a0a;
+  --color-red-100: #7f1d1d;
+  --color-red-700: #fca5a5;
+
+  --color-teal-50: #042f2e;
+  --color-teal-700: #5eead4;
+  
+  --color-primary: #38bdf8;
+  --color-secondary: #2dd4bf;
 }
 
 body {
