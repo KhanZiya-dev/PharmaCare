@@ -136,24 +136,24 @@ export default async function TrendsPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-[#eff6ff] dark:bg-[#111111] border border-[#dbeafe] dark:border-[#222222] rounded-2xl p-8 text-center text-[#00236f] dark:text-[#ffffff]">
+        <div className="bg-primary dark:bg-[#111111] border border-primary dark:border-[#222222] rounded-2xl p-8 text-center text-white dark:text-[#ffffff]">
           <h2 className="font-serif text-2xl md:text-3xl font-bold mb-3">
             Start comparing now
           </h2>
-          <p className="text-gray-600 dark:text-[#a3a3a3] mb-6 max-w-lg mx-auto">
+          <p className="text-blue-100 dark:text-[#a3a3a3] mb-6 max-w-lg mx-auto">
             Search for any medicine and view its price history chart. It&apos;s free, transparent, and always up-to-date.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/medicines"
-              className="inline-flex items-center justify-center gap-2 bg-primary dark:bg-[#ffffff] text-white dark:text-[#000000] px-6 py-3 rounded-full font-semibold hover:bg-primary/90 dark:hover:bg-gray-200 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center gap-2 bg-white dark:bg-[#ffffff] text-primary dark:text-[#000000] px-6 py-3 rounded-full font-semibold hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors shadow-sm"
             >
               Browse Medicines
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/lab-tests"
-              className="inline-flex items-center justify-center gap-2 bg-white dark:bg-[#ffffff]/10 border border-gray-200 dark:border-[#ffffff]/30 text-gray-700 dark:text-[#ffffff] px-6 py-3 rounded-full font-semibold hover:bg-gray-50 dark:hover:bg-[#ffffff]/20 transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 dark:bg-[#ffffff]/10 border border-white/30 dark:border-[#ffffff]/30 text-white dark:text-[#ffffff] px-6 py-3 rounded-full font-semibold hover:bg-white/20 dark:hover:bg-[#ffffff]/20 transition-colors"
             >
               Browse Lab Tests
               <ArrowRight className="h-4 w-4" />
