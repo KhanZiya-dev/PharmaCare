@@ -127,7 +127,8 @@ def search_products(
     """
     Smart search with 5-min cache.
     """
-    cache_key = f"search:{q.lower().strip()}:{category or ''}"
+    ptype = request.query_params.get("type", "")
+    cache_key = f"search:{q.lower().strip()}:{category or ''}:{ptype}"
     cached = cache_get(cache_key)
     if cached is not None:
         return cached
@@ -140,15 +141,19 @@ def search_products(
         if category and category != 'lab_test':
             rpc_params["category_filter"] = category
 
-        if category != 'lab_test':
+        if category != 'lab_test' and ptype != 'lab_test':
             rpc_res = supabase.rpc("search_products_smart", rpc_params).execute()
-            results.extend(rpc_res.data or [])
+            # If type=medicine, filter out lab_tests from RPC results just in case
+            data = rpc_res.data or []
+            if ptype == 'medicine':
+                data = [d for d in data if d.get('category') != 'lab_test']
+            results.extend(data)
     except Exception:
         pass
         
     # Fallback to ilike if RPC returned nothing or failed
     if not results:
-        if category == 'lab_test':
+        if category == 'lab_test' or ptype == 'lab_test':
             query_b = supabase.table("lab_tests").select("id, name, slug, description, sample_type")
             response = query_b.ilike("name", f"%{q}%").limit(10).execute()
             for r in response.data or []:
@@ -159,6 +164,10 @@ def search_products(
             query_b = supabase.table("products").select("id, name, slug, category, composition, image_url")
             if category:
                 query_b = query_b.eq("category", category)
+                
+            if ptype == 'medicine':
+                query_b = query_b.neq("category", "lab_test")
+                
             response = query_b.ilike("name", f"%{q}%").limit(10).execute()
             results.extend(response.data or [])
 
@@ -320,7 +329,8 @@ def list_products(request: Request, category: str = None, limit: int = 40, supab
     Fetch a list of products with 10-min cache.
     Optimized: lightweight query without heavy nested joins.
     """
-    cache_key = f"products:{category or 'all'}:{limit}"
+    ptype = request.query_params.get("type", "all")
+    cache_key = f"products:{category or 'all'}:{ptype}:{limit}"
     cached = cache_get(cache_key)
     if cached is not None:
         return cached
@@ -329,6 +339,11 @@ def list_products(request: Request, category: str = None, limit: int = 40, supab
     query = supabase.table("products").select("id, name, slug, category, composition, image_url")
     if category:
         query = query.eq("category", category)
+    
+    if request.query_params.get("type") == "medicine":
+        query = query.neq("category", "lab_test")
+    elif request.query_params.get("type") == "lab_test":
+        query = query.eq("category", "lab_test")
     
     response = query.order("name").limit(limit).execute()
     result = response.data or []
