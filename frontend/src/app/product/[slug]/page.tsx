@@ -153,16 +153,17 @@ export default async function ProductPage({
           
           {/* Left Column: Comparison Table */}
           <div className="lg:col-span-2 space-y-6">
-            <div>
+            <div id="compare">
               <h2 className="font-bold text-2xl text-foreground mb-4">Compare Prices</h2>
               <ComparisonTable platforms={platforms} />
             </div>
             
             <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-900">
-                <strong>Disclaimer:</strong> PharmaCare is an independent aggregator. We do not sell medications directly. Prices are fetched directly from partner pharmacies and may change based on your location and their stock availability.
-              </p>
+              <div className="text-sm text-blue-900">
+                <p className="font-bold mb-1">100% Verified Prices</p>
+                <p>PharmaCare is an independent aggregator. We do not sell medications directly. Prices are fetched directly from partner pharmacies and may change based on your location and their stock availability.</p>
+              </div>
             </div>
           </div>
 
@@ -242,6 +243,7 @@ export default async function ProductPage({
                   category={alt.category}
                   composition={alt.composition}
                   image_url={alt.image_url}
+                  requires_rx={alt.requires_rx}
                 />
               ))}
             </div>
@@ -249,6 +251,29 @@ export default async function ProductPage({
         )}
 
       </div>
+
+      {/* Sticky Bottom Bar for Mobile */}
+      <div className="fixed bottom-[60px] md:hidden left-0 right-0 bg-white border-t border-accent shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 z-40 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Lowest Price</p>
+          <p className="text-xl font-black text-green-600">
+            {lowestPrice ? `₹${lowestPrice}` : "Out of Stock"}
+          </p>
+        </div>
+        {lowestPrice ? (
+          <a
+            href="#compare"
+            className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
+          >
+            Buy Now
+          </a>
+        ) : (
+          <button disabled className="bg-gray-100 text-gray-400 font-bold px-6 py-2.5 rounded-xl text-sm cursor-not-allowed">
+            Unavailable
+          </button>
+        )}
+      </div>
+
     </main>
   );
 }

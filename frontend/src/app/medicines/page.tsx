@@ -12,6 +12,7 @@ interface Product {
   category: string;
   composition?: string;
   image_url?: string;
+  requires_rx?: boolean;
 }
 
 export default function MedicinesPage() {
@@ -112,16 +113,19 @@ export default function MedicinesPage() {
                 category={product.category}
                 composition={product.composition}
                 image_url={product.image_url}
+                requires_rx={product.requires_rx}
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="bg-gray-50 inline-block p-4 rounded-full mb-4">
-              <Search className="h-8 w-8 text-gray-300" />
+          <div className="text-center py-20 flex flex-col items-center justify-center">
+            <div className="bg-indigo-50/50 p-6 rounded-full mb-6">
+              <Search className="h-12 w-12 text-indigo-200" />
             </div>
-            <h3 className="font-bold text-foreground text-lg mb-1">No medicines found</h3>
-            <p className="text-gray-500 text-sm">Try a different search term or check the spelling.</p>
+            <h3 className="font-bold text-gray-900 text-xl mb-2">No medicines found</h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              We couldn't find any medicines matching "{searchQuery}". Try checking the spelling or use a different search term.
+            </p>
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { TrendingDown, Pill, Activity, Store, Microscope } from "lucide-react";
+import { TrendingDown, Pill, Activity, Store, Microscope, AlertCircle } from "lucide-react";
 
 interface ProductCardProps {
   name: string;
@@ -13,6 +13,7 @@ interface ProductCardProps {
   lowestPrice?: number | null;
   platformCount?: number | null;
   discountPct?: number | null;
+  requires_rx?: boolean;
 }
 
 function isValidImageUrl(url?: string): boolean {
@@ -27,7 +28,7 @@ function isValidImageUrl(url?: string): boolean {
   }
 }
 
-export function ProductCard({ name, slug, category, composition, image_url, lowestPrice, platformCount, discountPct }: ProductCardProps) {
+export function ProductCard({ name, slug, category, composition, image_url, lowestPrice, platformCount, discountPct, requires_rx }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const hasValidImage = isValidImageUrl(image_url) && !imgError;
 
@@ -63,6 +64,11 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
             <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
               {category}
             </span>
+            {requires_rx && (
+              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 px-1.5 py-0.5 rounded-full border border-red-100 flex items-center gap-0.5">
+                <AlertCircle className="w-2.5 h-2.5" /> Rx
+              </span>
+            )}
           </div>
           <h3 className="font-bold text-foreground text-sm md:text-sm group-hover:text-primary transition-colors line-clamp-2 leading-snug">
             {name}
@@ -85,8 +91,8 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
         <div className="flex justify-between items-center h-4 md:h-5">
           <span className="text-[10px] md:text-[11px] text-gray-500 font-medium">Price Drop</span>
           {discountPct && discountPct > 0 ? (
-            <span className="text-[10px] md:text-[11px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
-              {discountPct}% OFF
+            <span className="text-[10px] md:text-[11px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded border border-green-200">
+              SAVE {discountPct}%
             </span>
           ) : (
             <span className="text-[10px] md:text-[11px] font-medium text-gray-400">Stable</span>

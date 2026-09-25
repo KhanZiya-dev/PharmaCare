@@ -161,7 +161,7 @@ def search_products(
                 r['composition'] = r.pop('description', '')
                 results.append(r)
         else:
-            query_b = supabase.table("products").select("id, name, slug, category, composition, image_url")
+            query_b = supabase.table("products").select("id, name, slug, category, composition, image_url, requires_rx")
             if category:
                 query_b = query_b.eq("category", category)
                 
@@ -274,7 +274,7 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
             for name in extracted_names:
                 res = (
                     supabase.table("products")
-                    .select("id, name, slug, category, image_url")
+                    .select("id, name, slug, category, image_url, requires_rx")
                     .ilike("name", f"%{name}%")
                     .limit(3)
                     .execute()
@@ -336,7 +336,7 @@ def list_products(request: Request, category: str = None, limit: int = 40, supab
         return cached
 
     # Lightweight query — just product fields, no nested joins
-    query = supabase.table("products").select("id, name, slug, category, composition, image_url")
+    query = supabase.table("products").select("id, name, slug, category, composition, image_url, requires_rx")
     if category:
         query = query.eq("category", category)
     
@@ -387,7 +387,7 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
             return None
         try:
             return supabase.table("products").select(
-                "id, name, slug, category, composition, image_url"
+                "id, name, slug, category, composition, image_url, requires_rx"
             ).eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
         except Exception:
             return None
