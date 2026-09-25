@@ -127,12 +127,29 @@ html.theme-transition .no-flash *::after {
   transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1), border-color 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Custom flash states for theme toggle bounce effect */
-html.theme-flash.dark {
-  --color-background: #171717 !important; /* Body flashes gray */
+/* Body Background smooth bounce targets (Since CSS variables don't animate) */
+html.theme-flash.dark body,
+html.theme-flash.dark main,
+html.theme-flash.dark .bg-background {
+  background-color: #171717 !important; /* Flash to Gray */
 }
-html.theme-flash:not(.dark) {
-  --color-background: #ffffff !important;
+
+html.theme-transition:not(.theme-flash).dark body,
+html.theme-transition:not(.theme-flash).dark main,
+html.theme-transition:not(.theme-flash).dark .bg-background {
+  background-color: #000000 !important; /* Settle to Black */
+}
+
+html.theme-flash:not(.dark) body,
+html.theme-flash:not(.dark) main,
+html.theme-flash:not(.dark) .bg-background {
+  background-color: #ffffff !important; /* Flash to White */
+}
+
+html.theme-transition:not(.theme-flash):not(.dark) body,
+html.theme-transition:not(.theme-flash):not(.dark) main,
+html.theme-transition:not(.theme-flash):not(.dark) .bg-background {
+  background-color: #f7f9fb !important; /* Settle to Light Theme Background */
 }
 
 /* Custom flash states for normal elements (Bounce Effect) */
