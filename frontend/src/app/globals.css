@@ -46,51 +46,50 @@
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-accent: #1e293b;
+  --background: #000000;
+  --foreground: #ffffff;
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-accent: #262626;
   
-  /* Override Tailwind base colors for automatic dark mode */
-  --color-white: #1e293b;
-  --color-gray-50: #0f172a;
-  --color-gray-100: #1e293b;
-  --color-gray-200: #334155;
-  --color-gray-300: #475569;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #94a3b8;
-  --color-gray-600: #cbd5e1;
-  --color-gray-700: #e2e8f0;
-  --color-gray-800: #f1f5f9;
-  --color-gray-900: #f8fafc;
+  --color-white: #171717;
+  --color-gray-50: #000000;
+  --color-gray-100: #171717;
+  --color-gray-200: #262626;
+  --color-gray-300: #404040;
+  --color-gray-400: #525252;
+  --color-gray-500: #737373;
+  --color-gray-600: #a3a3a3;
+  --color-gray-700: #d4d4d4;
+  --color-gray-800: #e5e5e5;
+  --color-gray-900: #ffffff;
 
-  --color-indigo-50: #1e1b4b;
-  --color-indigo-100: #312e81;
-  --color-indigo-200: #4338ca;
-  --color-indigo-600: #818cf8;
+  --color-indigo-50: #171717;
+  --color-indigo-100: #262626;
+  --color-indigo-200: #404040;
+  --color-indigo-600: #d4d4d4;
 
-  --color-blue-50: #172554;
-  --color-blue-100: #1e3a8a;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #60a5fa;
-  --color-blue-900: #bfdbfe;
+  --color-blue-50: #171717;
+  --color-blue-100: #262626;
+  --color-blue-500: #a3a3a3;
+  --color-blue-600: #d4d4d4;
+  --color-blue-900: #ffffff;
 
-  --color-green-50: #052e16;
-  --color-green-100: #14532d;
-  --color-green-200: #166534;
-  --color-green-600: #4ade80;
-  --color-green-700: #86efac;
+  --color-green-50: #171717;
+  --color-green-100: #262626;
+  --color-green-200: #404040;
+  --color-green-600: #d4d4d4;
+  --color-green-700: #ffffff;
 
-  --color-red-50: #450a0a;
-  --color-red-100: #7f1d1d;
-  --color-red-700: #fca5a5;
+  --color-red-50: #171717;
+  --color-red-100: #262626;
+  --color-red-700: #d4d4d4;
 
-  --color-teal-50: #042f2e;
-  --color-teal-700: #5eead4;
+  --color-teal-50: #171717;
+  --color-teal-700: #d4d4d4;
   
-  --color-primary: #38bdf8;
-  --color-secondary: #2dd4bf;
+  --color-primary: #ffffff;
+  --color-secondary: #e5e5e5;
 }
 
 body {
@@ -104,16 +103,20 @@ body {
   animation: none;
   mix-blend-mode: normal;
 }
-.dark::view-transition-old(root) {
-  z-index: 1;
-}
+
+/* Light -> Dark (New is dark theme, should be on top) */
 .dark::view-transition-new(root) {
   z-index: 9999;
 }
-::view-transition-old(root) {
+.dark::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* Dark -> Light (Old is dark theme, should be on top) */
+html:not(.dark)::view-transition-old(root) {
   z-index: 9999;
 }
-::view-transition-new(root) {
+html:not(.dark)::view-transition-new(root) {
   z-index: 1;
 }
 

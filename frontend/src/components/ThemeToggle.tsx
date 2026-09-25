@@ -15,13 +15,11 @@ export function ThemeToggle() {
     const isDark = theme === "dark";
     const nextTheme = isDark ? "light" : "dark";
 
-    // Fallback for browsers that don't support view transitions
     if (!document.startViewTransition) {
       setTheme(nextTheme);
       return;
     }
 
-    // Get click coordinates for the circular reveal
     const x = e.clientX;
     const y = e.clientY;
     const endRadius = Math.hypot(
@@ -34,16 +32,18 @@ export function ThemeToggle() {
     });
 
     transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+
       document.documentElement.animate(
         {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-          ],
+          clipPath: isDark ? [...clipPath].reverse() : clipPath,
         },
         {
-          duration: 600,
-          easing: "ease-out",
+          duration: 500,
+          easing: "ease-in-out",
           pseudoElement: isDark
             ? "::view-transition-old(root)"
             : "::view-transition-new(root)",
