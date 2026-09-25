@@ -131,7 +131,6 @@ html.theme-flash:not(.dark) {
 
 /* Elements that end up Gray in Dark Mode should flash Black */
 html.theme-flash.dark [class*="bg-white"],
-html.theme-flash.dark [class*="bg-[#ffffff]"],
 html.theme-flash.dark [class*="dark:bg-[#111111]"] {
   background-color: #000000 !important;
 }
