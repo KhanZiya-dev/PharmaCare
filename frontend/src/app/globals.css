@@ -110,7 +110,7 @@ html.theme-flash,
 html.theme-flash *,
 html.theme-flash *::before,
 html.theme-flash *::after {
-  transition: background-color 150ms ease-in, border-color 150ms ease-in !important;
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* 2. Smooth settling into the final state */
@@ -118,7 +118,7 @@ html.theme-transition:not(.theme-flash),
 html.theme-transition:not(.theme-flash) *,
 html.theme-transition:not(.theme-flash) *::before,
 html.theme-transition:not(.theme-flash) *::after {
-  transition: background-color 300ms ease-out, border-color 300ms ease-out !important;
+  transition: background-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1), border-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
 /* Custom flash states for theme toggle bounce effect */

@@ -20,11 +20,11 @@ export function ThemeToggle() {
     
     setTimeout(() => {
       document.documentElement.classList.remove('theme-flash');
-    }, 150);
+    }, 200);
 
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transition');
-    }, 300);
+    }, 600);
   };
 
   if (!mounted) return <div className="w-9 h-9" />;
