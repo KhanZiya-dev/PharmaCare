@@ -12,7 +12,13 @@ export function ThemeToggle() {
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    
+    document.documentElement.classList.add('theme-transition');
     setTheme(theme === "dark" ? "light" : "dark");
+    
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 300);
   };
 
   if (!mounted) return <div className="w-9 h-9" />;

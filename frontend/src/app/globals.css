@@ -104,10 +104,16 @@ body {
   font-family: var(--font-sans);
 }
 
-*, ::before, ::after {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 500ms;
+/* Global smooth theme transition (applied via JS on toggle) */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 300ms ease-in-out, 
+              border-color 300ms ease-in-out, 
+              color 300ms ease-in-out, 
+              fill 300ms ease-in-out, 
+              stroke 300ms ease-in-out !important;
 }
 
 body.header-search-expanded .page-search-bar {
