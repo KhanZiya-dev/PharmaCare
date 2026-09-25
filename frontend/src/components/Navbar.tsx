@@ -132,7 +132,7 @@ export function Navbar() {
             </AnimatePresence>
 
             {/* Desktop Nav - Floating Pill Container */}
-            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 relative z-20">
+            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 dark:border-gray-200 relative z-20">
               {[
                 { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
                 { path: "/medicines", label: "Medicines", icon: <Pill className="h-5 w-5" /> },
@@ -180,13 +180,13 @@ export function Navbar() {
             </motion.div>
             
             {/* Theme Toggle Desktop */}
-            <div className="hidden md:flex bg-white p-1 rounded-full shadow-lg border border-gray-100 relative z-20 dark:bg-slate-900 dark:border-slate-800">
+            <div className="hidden md:flex bg-white p-1 rounded-full shadow-lg border border-gray-100 dark:border-gray-200 relative z-20">
               <ThemeToggle />
             </div>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center bg-white rounded-full shadow-sm border border-gray-100 p-1 relative gap-1 dark:bg-slate-900 dark:border-slate-800">
+          <div className="md:hidden flex items-center bg-white rounded-full shadow-sm border border-gray-100 dark:border-gray-200 p-1 relative gap-1">
             <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
