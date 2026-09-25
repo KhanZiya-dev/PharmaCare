@@ -104,48 +104,10 @@ body {
   font-family: var(--font-sans);
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* Light -> Dark (New is dark theme, should be on top) */
-.dark::view-transition-new(root) {
-  z-index: 9999;
-  animation: reveal 0.5s ease-in-out;
-  clip-path: circle(var(--r) at var(--x) var(--y));
-}
-.dark::view-transition-old(root) {
-  z-index: 1;
-}
-
-/* Dark -> Light (Old is dark theme, should be on top) */
-html:not(.dark)::view-transition-old(root) {
-  z-index: 9999;
-  animation: conceal 0.5s ease-in-out;
-  clip-path: circle(0px at var(--x) var(--y));
-}
-html:not(.dark)::view-transition-new(root) {
-  z-index: 1;
-}
-
-@keyframes reveal {
-  from {
-    clip-path: circle(0px at var(--x) var(--y));
-  }
-  to {
-    clip-path: circle(var(--r) at var(--x) var(--y));
-  }
-}
-
-@keyframes conceal {
-  from {
-    clip-path: circle(var(--r) at var(--x) var(--y));
-  }
-  to {
-    clip-path: circle(0px at var(--x) var(--y));
-  }
+*, ::before, ::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 500ms;
 }
 
 body.header-search-expanded .page-search-bar {

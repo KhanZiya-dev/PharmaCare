@@ -12,28 +12,7 @@ export function ThemeToggle() {
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const isDark = theme === "dark";
-    const nextTheme = isDark ? "light" : "dark";
-
-    if (!document.startViewTransition) {
-      setTheme(nextTheme);
-      return;
-    }
-
-    const x = e.clientX;
-    const y = e.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y)
-    );
-
-    document.documentElement.style.setProperty('--x', `${x}px`);
-    document.documentElement.style.setProperty('--y', `${y}px`);
-    document.documentElement.style.setProperty('--r', `${endRadius}px`);
-
-    document.startViewTransition(() => {
-      setTheme(nextTheme);
-    });
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   if (!mounted) return <div className="w-9 h-9" />;
