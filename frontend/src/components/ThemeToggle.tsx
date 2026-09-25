@@ -16,16 +16,17 @@ export function ThemeToggle() {
     const isDark = theme === "dark";
     const targetTheme = isDark ? "light" : "dark";
     
-    document.documentElement.classList.add('theme-transition');
-    document.documentElement.classList.add(`theme-transitioning-to-${targetTheme}`);
-    
-    setTheme(targetTheme);
-    
-    setTimeout(() => {
-      document.documentElement.classList.remove('theme-transition');
-      document.documentElement.classList.remove('theme-transitioning-to-dark');
-      document.documentElement.classList.remove('theme-transitioning-to-light');
-    }, 800);
+    if ((document as any).startViewTransition) {
+      document.documentElement.classList.add(`vt-going-${targetTheme}`);
+      const transition = (document as any).startViewTransition(() => {
+        setTheme(targetTheme);
+      });
+      transition.finished.finally(() => {
+        document.documentElement.classList.remove(`vt-going-${targetTheme}`);
+      });
+    } else {
+      setTheme(targetTheme);
+    }
   };
 
   if (!mounted) return <div className="w-9 h-9" />;
