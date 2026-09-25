@@ -135,6 +135,7 @@ html.theme-flash:not(.dark) {
   --color-background: #ffffff !important;
 }
 
+/* Custom flash states for normal elements (Bounce Effect) */
 /* Elements that end up Gray in Dark Mode should flash Black */
 html.theme-flash.dark [class*="bg-white"]:not(.no-flash),
 html.theme-flash.dark [class*="dark:bg-[#111111]"]:not(.no-flash) {
@@ -148,6 +149,14 @@ html.theme-flash.dark [class*="dark:bg-black"]:not(.no-flash),
 html.theme-flash.dark [class*="bg-black"]:not(.no-flash) {
   background-color: #171717 !important;
 }
+
+/* Hardcoded smooth transition targets for .no-flash elements */
+/* Needed because CSS variables like var(--color-white) do not interpolate/animate */
+html.theme-transition.dark [class*="bg-white"].no-flash { background-color: #171717 !important; }
+html.theme-transition:not(.dark) [class*="bg-white"].no-flash { background-color: #ffffff !important; }
+
+html.theme-transition.dark [class*="dark:bg-[#111111]"].no-flash { background-color: #111111 !important; }
+html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"].no-flash { background-color: #ffffff !important; }
 
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
