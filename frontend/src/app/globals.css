@@ -104,35 +104,44 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Global smooth theme transition (applied via JS on toggle) */
-html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
-  transition: background-color 300ms ease-in-out, 
-              border-color 300ms ease-in-out !important;
+/* Two-step bounce transition */
+/* 1. Fast transition into the flash state */
+html.theme-flash,
+html.theme-flash *,
+html.theme-flash *::before,
+html.theme-flash *::after {
+  transition: background-color 150ms ease-in, border-color 150ms ease-in !important;
+}
+
+/* 2. Smooth settling into the final state */
+html.theme-transition:not(.theme-flash),
+html.theme-transition:not(.theme-flash) *,
+html.theme-transition:not(.theme-flash) *::before,
+html.theme-transition:not(.theme-flash) *::after {
+  transition: background-color 300ms ease-out, border-color 300ms ease-out !important;
 }
 
 /* Custom flash states for theme toggle bounce effect */
 html.theme-flash.dark {
-  --color-background: #171717 !important;
-  --color-white: #000000 !important;
-  --color-gray-50: #171717 !important;
-  --color-gray-100: #000000 !important;
+  --color-background: #171717 !important; /* Body flashes gray */
+}
+html.theme-flash:not(.dark) {
+  --color-background: #ffffff !important;
 }
 
-/* Explicit class overrides for hardcoded tailwind values */
+/* Elements that end up Gray in Dark Mode should flash Black */
 html.theme-flash.dark [class*="bg-white"],
 html.theme-flash.dark [class*="bg-[#ffffff]"],
-html.theme-flash.dark [class*="dark:bg-[#111111]"],
-html.theme-flash.dark [class*="bg-gray-50"],
-html.theme-flash.dark [class*="bg-gray-100"] {
+html.theme-flash.dark [class*="dark:bg-[#111111]"] {
   background-color: #000000 !important;
 }
 
-html.theme-flash:not(.dark) {
-  --color-background: #ffffff !important;
-  --color-white: #e5e5e5 !important;
+/* Elements that end up Black in Dark Mode should flash Gray */
+html.theme-flash.dark [class*="bg-gray-50"],
+html.theme-flash.dark [class*="bg-gray-100"],
+html.theme-flash.dark [class*="dark:bg-black"],
+html.theme-flash.dark [class*="bg-black"] {
+  background-color: #171717 !important;
 }
 
 body.header-search-expanded .page-search-bar {
