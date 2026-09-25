@@ -455,13 +455,13 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
                       onClick={() => handleResultClick(result.slug)}
                     >
                       {/* Thumbnail */}
-                      <div className="w-10 h-10 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
+                      <div className="w-10 h-10 bg-[#ffffff] rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
                         {result.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={result.image_url}
                             alt=""
-                            className="w-8 h-8 object-contain mix-blend-multiply"
+                            className="w-8 h-8 object-contain"
                             loading="lazy"
                           />
                         ) : (

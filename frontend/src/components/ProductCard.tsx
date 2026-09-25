@@ -40,12 +40,12 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
       {/* Top Section: Identity */}
       <div className="flex gap-3 md:gap-4 items-start mb-3 md:mb-4">
         {/* Thumbnail */}
-        <div className="w-14 h-14 md:w-16 md:h-16 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 shrink-0 p-1">
+        <div className="w-14 h-14 md:w-16 md:h-16 bg-[#ffffff] rounded-xl flex items-center justify-center border border-gray-100 shrink-0 p-1 overflow-hidden">
           {hasValidImage ? (
             <img
               src={image_url!}
               alt={name}
-              className="max-h-full max-w-full object-contain mix-blend-multiply"
+              className="max-h-full max-w-full object-contain"
               onError={() => setImgError(true)}
               loading="lazy"
             />

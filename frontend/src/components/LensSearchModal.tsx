@@ -405,9 +405,9 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
                         }}
                         className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all group"
                       >
-                        <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
+                        <div className="w-12 h-12 bg-[#ffffff] rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shrink-0">
                           {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="w-10 h-10 object-contain mix-blend-multiply" />
+                            <img src={product.image_url} alt={product.name} className="w-10 h-10 object-contain" />
                           ) : (
                             <div className="text-xs text-gray-400 font-medium">Rx</div>
                           )}
