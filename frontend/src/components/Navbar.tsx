@@ -153,8 +153,8 @@ export function Navbar() {
                     }}
                     className={`relative flex items-center justify-center rounded-full transition-colors duration-200 z-10 ${
                       active 
-                        ? "text-white px-6 py-3" 
-                        : "text-slate-600 hover:text-primary hover:bg-slate-50 px-4 py-3"
+                        ? "text-[#ffffff] px-6 py-3" 
+                        : "text-gray-600 hover:text-primary hover:bg-gray-100 px-4 py-3"
                     }`}
                   >
                     {active && (
@@ -190,7 +190,7 @@ export function Navbar() {
             <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-full text-slate-700 hover:text-primary hover:bg-slate-100 focus:outline-none transition-colors"
+              className="inline-flex items-center justify-center p-2 rounded-full text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none transition-colors"
             >
               <span className="sr-only">Open main menu</span>
               {isMobileMenuOpen ? (
@@ -227,7 +227,7 @@ export function Navbar() {
                             setActivePath(item.path);
                           }}
                           className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                            active ? "bg-primary/10 text-primary" : "text-slate-600 hover:text-primary hover:bg-slate-50"
+                            active ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-primary hover:bg-gray-50"
                           }`}
                         >
                           {item.label}
