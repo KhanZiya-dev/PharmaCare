@@ -121,6 +121,13 @@ html.theme-flash.dark {
   --color-gray-100: #000000 !important;
 }
 
+/* Explicit class overrides for hardcoded tailwind values */
+html.theme-flash.dark .bg-white,
+html.theme-flash.dark .bg-\[\#ffffff\],
+html.theme-flash.dark .dark\:bg-\[\#111111\] {
+  background-color: #000000 !important;
+}
+
 html.theme-flash:not(.dark) {
   --color-background: #ffffff !important;
   --color-white: #e5e5e5 !important;
