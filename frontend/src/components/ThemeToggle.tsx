@@ -13,13 +13,16 @@ export function ThemeToggle() {
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     
-    document.documentElement.classList.add('theme-transition');
+    const isDark = theme === "dark";
     
-    setTheme(theme === "dark" ? "light" : "dark");
-    
-    setTimeout(() => {
-      document.documentElement.classList.remove('theme-transition');
-    }, 800);
+    // View Transitions API for perfect smooth crossfade
+    if ((document as any).startViewTransition) {
+      (document as any).startViewTransition(() => {
+        setTheme(isDark ? "light" : "dark");
+      });
+    } else {
+      setTheme(isDark ? "light" : "dark");
+    }
   };
 
   if (!mounted) return <div className="w-9 h-9" />;

@@ -105,99 +105,32 @@ body {
 }
 
 /* =========================================================
-   BUTTER SMOOTH LIQUID THEME TRANSITION (No Flashes)
+   BUTTER SMOOTH VIEW TRANSITIONS (Native API)
    ========================================================= */
 
-:root {
-  --theme-anim-duration: 800ms;
-  --theme-anim-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
-/* Base smooth fade for text, borders, and SVGs (to avoid snapping) */
-html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
-  transition: color var(--theme-anim-duration) var(--theme-anim-easing),
-              border-color var(--theme-anim-duration) var(--theme-anim-easing),
-              fill var(--theme-anim-duration) var(--theme-anim-easing),
-              stroke var(--theme-anim-duration) var(--theme-anim-easing) !important;
+::view-transition-old(root) {
+  animation: fade-out 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 
-  KEYFRAMES FOR THE LIQUID EFFECT 
-  The user requested that elements going to black pass through gray, 
-  and elements going to gray pass through black, BUT smoothly without a flash.
-*/
-
-/* 1. Elements that become BLACK in dark mode (Body, Main, bg-gray-50) */
-@keyframes toDarkBlack {
-  0% { background-color: #f7f9fb; animation-timing-function: ease-in; }
-  40% { background-color: #171717; animation-timing-function: ease-out; }
-  100% { background-color: #000000; }
-}
-@keyframes toLightBg {
-  0% { background-color: #000000; animation-timing-function: ease-in; }
-  40% { background-color: #171717; animation-timing-function: ease-out; }
-  100% { background-color: #f7f9fb; }
+::view-transition-new(root) {
+  animation: fade-in 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 2. Elements that become GRAY in dark mode (Cards, Navbar, bg-white) */
-@keyframes toDarkGray {
-  0% { background-color: #ffffff; animation-timing-function: ease-in; }
-  40% { background-color: #000000; animation-timing-function: ease-out; }
-  100% { background-color: #171717; }
-}
-@keyframes toLightWhite {
-  0% { background-color: #171717; animation-timing-function: ease-in; }
-  40% { background-color: #000000; animation-timing-function: ease-out; }
-  100% { background-color: #ffffff; }
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-/* APPLY ANIMATIONS TO BACKGROUNDS */
-/* Note: We use 'linear' here because the easing is handled seamlessly inside the keyframes */
-
-/* Body/Main Background (Goes to Black) */
-html.theme-transition.dark body,
-html.theme-transition.dark main,
-html.theme-transition.dark .bg-background {
-  animation: toDarkBlack var(--theme-anim-duration) linear forwards !important;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-html.theme-transition:not(.dark) body,
-html.theme-transition:not(.dark) main,
-html.theme-transition:not(.dark) .bg-background {
-  animation: toLightBg var(--theme-anim-duration) linear forwards !important;
-}
-
-/* bg-white elements (Goes to Gray) */
-html.theme-transition.dark [class*="bg-white"] {
-  animation: toDarkGray var(--theme-anim-duration) linear forwards !important;
-}
-html.theme-transition:not(.dark) [class*="bg-white"] {
-  animation: toLightWhite var(--theme-anim-duration) linear forwards !important;
-}
-
-/* bg-gray-50 and similar (Goes to Black) */
-html.theme-transition.dark [class*="bg-gray-50"],
-html.theme-transition.dark [class*="bg-gray-100"] {
-  animation: toDarkBlack var(--theme-anim-duration) linear forwards !important;
-}
-html.theme-transition:not(.dark) [class*="bg-gray-50"] { animation: toLightBg var(--theme-anim-duration) linear forwards !important; }
-html.theme-transition:not(.dark) [class*="bg-gray-100"] { animation: toLightBg var(--theme-anim-duration) linear forwards !important; }
-
-/* dark:bg-[#111111] elements (Goes to Very Dark Gray) */
-@keyframes toVeryDarkGray {
-  0% { background-color: #ffffff; animation-timing-function: ease-in; }
-  40% { background-color: #000000; animation-timing-function: ease-out; }
-  100% { background-color: #111111; }
-}
-@keyframes fromVeryDarkGray {
-  0% { background-color: #111111; animation-timing-function: ease-in; }
-  40% { background-color: #000000; animation-timing-function: ease-out; }
-  100% { background-color: #ffffff; }
-}
-html.theme-transition.dark [class*="dark:bg-[#111111]"] { animation: toVeryDarkGray var(--theme-anim-duration) linear forwards !important; }
-html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"] { animation: fromVeryDarkGray var(--theme-anim-duration) linear forwards !important; }
 
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
