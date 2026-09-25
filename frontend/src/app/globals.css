@@ -132,71 +132,72 @@ html.theme-transition *::after {
 
 /* 1. Elements that become BLACK in dark mode (Body, Main, bg-gray-50) */
 @keyframes toDarkBlack {
-  0% { background-color: #f7f9fb; } /* Light */
-  40% { background-color: #171717; } /* Intermediate Gray */
-  100% { background-color: #000000; } /* Final Black */
+  0% { background-color: #f7f9fb; animation-timing-function: ease-in; }
+  40% { background-color: #171717; animation-timing-function: ease-out; }
+  100% { background-color: #000000; }
 }
 @keyframes toLightBg {
-  0% { background-color: #000000; } /* Black */
-  40% { background-color: #171717; } /* Intermediate Gray */
-  100% { background-color: #f7f9fb; } /* Final Light */
+  0% { background-color: #000000; animation-timing-function: ease-in; }
+  40% { background-color: #171717; animation-timing-function: ease-out; }
+  100% { background-color: #f7f9fb; }
 }
 
 /* 2. Elements that become GRAY in dark mode (Cards, Navbar, bg-white) */
 @keyframes toDarkGray {
-  0% { background-color: #ffffff; } /* Light */
-  40% { background-color: #000000; } /* Intermediate Black */
-  100% { background-color: #171717; } /* Final Gray */
+  0% { background-color: #ffffff; animation-timing-function: ease-in; }
+  40% { background-color: #000000; animation-timing-function: ease-out; }
+  100% { background-color: #171717; }
 }
 @keyframes toLightWhite {
-  0% { background-color: #171717; } /* Gray */
-  40% { background-color: #000000; } /* Intermediate Black */
-  100% { background-color: #ffffff; } /* Final White */
+  0% { background-color: #171717; animation-timing-function: ease-in; }
+  40% { background-color: #000000; animation-timing-function: ease-out; }
+  100% { background-color: #ffffff; }
 }
 
 /* APPLY ANIMATIONS TO BACKGROUNDS */
+/* Note: We use 'linear' here because the easing is handled seamlessly inside the keyframes */
 
 /* Body/Main Background (Goes to Black) */
 html.theme-transition.dark body,
 html.theme-transition.dark main,
 html.theme-transition.dark .bg-background {
-  animation: toDarkBlack var(--theme-anim-duration) var(--theme-anim-easing) forwards !important;
+  animation: toDarkBlack var(--theme-anim-duration) linear forwards !important;
 }
 html.theme-transition:not(.dark) body,
 html.theme-transition:not(.dark) main,
 html.theme-transition:not(.dark) .bg-background {
-  animation: toLightBg var(--theme-anim-duration) var(--theme-anim-easing) forwards !important;
+  animation: toLightBg var(--theme-anim-duration) linear forwards !important;
 }
 
 /* bg-white elements (Goes to Gray) */
 html.theme-transition.dark [class*="bg-white"] {
-  animation: toDarkGray var(--theme-anim-duration) var(--theme-anim-easing) forwards !important;
+  animation: toDarkGray var(--theme-anim-duration) linear forwards !important;
 }
 html.theme-transition:not(.dark) [class*="bg-white"] {
-  animation: toLightWhite var(--theme-anim-duration) var(--theme-anim-easing) forwards !important;
+  animation: toLightWhite var(--theme-anim-duration) linear forwards !important;
 }
 
 /* bg-gray-50 and similar (Goes to Black) */
 html.theme-transition.dark [class*="bg-gray-50"],
 html.theme-transition.dark [class*="bg-gray-100"] {
-  animation: toDarkBlack var(--theme-anim-duration) var(--theme-anim-easing) forwards !important;
+  animation: toDarkBlack var(--theme-anim-duration) linear forwards !important;
 }
-html.theme-transition:not(.dark) [class*="bg-gray-50"] { animation: toLightBg var(--theme-anim-duration) var(--theme-anim-easing) forwards !important; }
-html.theme-transition:not(.dark) [class*="bg-gray-100"] { animation: toLightBg var(--theme-anim-duration) var(--theme-anim-easing) forwards !important; }
+html.theme-transition:not(.dark) [class*="bg-gray-50"] { animation: toLightBg var(--theme-anim-duration) linear forwards !important; }
+html.theme-transition:not(.dark) [class*="bg-gray-100"] { animation: toLightBg var(--theme-anim-duration) linear forwards !important; }
 
 /* dark:bg-[#111111] elements (Goes to Very Dark Gray) */
 @keyframes toVeryDarkGray {
-  0% { background-color: #ffffff; }
-  40% { background-color: #000000; }
+  0% { background-color: #ffffff; animation-timing-function: ease-in; }
+  40% { background-color: #000000; animation-timing-function: ease-out; }
   100% { background-color: #111111; }
 }
 @keyframes fromVeryDarkGray {
-  0% { background-color: #111111; }
-  40% { background-color: #000000; }
+  0% { background-color: #111111; animation-timing-function: ease-in; }
+  40% { background-color: #000000; animation-timing-function: ease-out; }
   100% { background-color: #ffffff; }
 }
-html.theme-transition.dark [class*="dark:bg-[#111111]"] { animation: toVeryDarkGray var(--theme-anim-duration) var(--theme-anim-easing) forwards !important; }
-html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"] { animation: fromVeryDarkGray var(--theme-anim-duration) var(--theme-anim-easing) forwards !important; }
+html.theme-transition.dark [class*="dark:bg-[#111111]"] { animation: toVeryDarkGray var(--theme-anim-duration) linear forwards !important; }
+html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"] { animation: fromVeryDarkGray var(--theme-anim-duration) linear forwards !important; }
 
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
