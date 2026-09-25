@@ -14,8 +14,14 @@ export function ThemeToggle() {
     e.preventDefault();
     
     document.documentElement.classList.add('theme-transition');
+    document.documentElement.classList.add('theme-flash');
+    
     setTheme(theme === "dark" ? "light" : "dark");
     
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-flash');
+    }, 150);
+
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transition');
     }, 300);

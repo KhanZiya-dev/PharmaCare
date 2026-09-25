@@ -113,6 +113,19 @@ html.theme-transition *::after {
               border-color 300ms ease-in-out !important;
 }
 
+/* Custom flash states for theme toggle bounce effect */
+html.theme-flash.dark {
+  --color-background: #171717 !important;
+  --color-white: #000000 !important;
+  --color-gray-50: #171717 !important;
+  --color-gray-100: #000000 !important;
+}
+
+html.theme-flash:not(.dark) {
+  --color-background: #ffffff !important;
+  --color-white: #e5e5e5 !important;
+}
+
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
   pointer-events: none;
