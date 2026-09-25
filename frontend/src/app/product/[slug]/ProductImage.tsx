@@ -29,7 +29,7 @@ export function ProductImage({ imageUrl, name }: ProductImageProps) {
       <img
         src={imageUrl!}
         alt={name}
-        className="w-32 h-32 object-contain bg-gray-50 rounded-xl border border-accent p-2"
+        className="w-32 h-32 object-contain bg-[#ffffff] rounded-xl border border-accent p-2"
         onError={() => setImgError(true)}
         loading="lazy"
       />
@@ -37,7 +37,7 @@ export function ProductImage({ imageUrl, name }: ProductImageProps) {
   }
 
   return (
-    <div className="w-32 h-32 bg-gray-50 rounded-xl border border-accent flex flex-col items-center justify-center gap-1">
+    <div className="w-32 h-32 bg-[#ffffff] rounded-xl border border-accent flex flex-col items-center justify-center gap-1">
       <Pill className="h-8 w-8 text-gray-300" />
       <span className="text-gray-400 text-xs">No Image</span>
     </div>

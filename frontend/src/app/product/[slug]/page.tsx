@@ -94,7 +94,7 @@ export default async function ProductPage({
 
         {/* Product Header - Dashboard Style */}
         <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-accent mb-8 flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="shrink-0 w-24 h-24 bg-gray-50 rounded-xl flex items-center justify-center p-2 border border-gray-100 hidden md:flex">
+          <div className="shrink-0 w-24 h-24 bg-[#ffffff] rounded-xl flex items-center justify-center p-2 border border-gray-100 hidden md:flex">
             <ProductImage imageUrl={product.image_url} name={product.name} />
           </div>
           
