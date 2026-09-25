@@ -3,6 +3,7 @@ import { Inter, DM_Serif_Display } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MessageCircle } from "lucide-react";
+import NextTopLoader from 'nextjs-toploader';
 import "./globals.css";
 
 const inter = Inter({
@@ -33,6 +34,7 @@ export default function RootLayout({
       className={`${inter.variable} ${dmSerifDisplay.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <NextTopLoader color="#00796B" showSpinner={false} height={3} shadow="0 0 10px #00796B,0 0 5px #00796B" />
         <Navbar />
         {children}
         <Footer />
