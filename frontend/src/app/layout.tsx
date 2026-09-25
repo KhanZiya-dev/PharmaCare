@@ -34,8 +34,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${dmSerifDisplay.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
           <NextTopLoader color="#00796B" showSpinner={false} height={3} shadow="0 0 10px #00796B,0 0 5px #00796B" />
           <Navbar />
