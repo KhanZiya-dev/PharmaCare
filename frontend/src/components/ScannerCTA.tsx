@@ -9,9 +9,9 @@ export function ScannerCTA() {
         const btn = document.getElementById('camera-search-button');
         if (btn) btn.click();
       }}
-      className="bg-blue-50 dark:bg-[#111111] rounded-2xl p-4 md:p-6 shadow-md border border-blue-100 dark:border-[#333333] text-primary dark:text-[#ffffff] flex flex-col justify-center items-center text-center transform md:-translate-y-4 cursor-pointer hover:bg-blue-100 dark:hover:bg-[#1a1a1a] transition-colors"
+      className="bg-[#eff6ff] dark:bg-[#111111] rounded-2xl p-4 md:p-6 shadow-md border border-[#dbeafe] dark:border-[#333333] text-[#00236f] dark:text-[#ffffff] flex flex-col justify-center items-center text-center transform md:-translate-y-4 cursor-pointer hover:bg-[#dbeafe] dark:hover:bg-[#1a1a1a] transition-colors"
     >
-      <h3 className="font-serif font-bold text-2xl mb-2">Have a Prescription?</h3>
+      <h3 className="font-serif font-bold text-2xl mb-2">Have a prescription?</h3>
       <p className="text-sm text-gray-600 dark:text-[#a3a3a3] mb-6 px-2">
         Don't manually search for each medicine. Scan your prescription and we'll compare the entire list at once.
       </p>

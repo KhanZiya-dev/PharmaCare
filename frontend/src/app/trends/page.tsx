@@ -136,9 +136,9 @@ export default async function TrendsPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-blue-50 dark:bg-[#111111] border border-blue-100 dark:border-[#222222] rounded-2xl p-8 text-center text-primary dark:text-[#ffffff]">
+        <div className="bg-[#eff6ff] dark:bg-[#111111] border border-[#dbeafe] dark:border-[#222222] rounded-2xl p-8 text-center text-[#00236f] dark:text-[#ffffff]">
           <h2 className="font-serif text-2xl md:text-3xl font-bold mb-3">
-            Start Comparing Now
+            Start comparing now
           </h2>
           <p className="text-gray-600 dark:text-[#a3a3a3] mb-6 max-w-lg mx-auto">
             Search for any medicine and view its price history chart. It&apos;s free, transparent, and always up-to-date.
