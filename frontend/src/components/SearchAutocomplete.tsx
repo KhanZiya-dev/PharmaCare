@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Search, Loader2, Camera, AlertCircle, Clock, Pill, Microscope } from "lucide-react";
+import { Search, Loader2, Camera, AlertCircle, Clock, Pill, Microscope, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,9 +66,9 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-yellow-100 text-inherit rounded-sm px-0.5 font-semibold">
+      <strong className="text-primary font-bold">
         {text.slice(idx, idx + query.length)}
-      </mark>
+      </strong>
       {text.slice(idx + query.length)}
     </>
   );
@@ -489,9 +489,20 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
                 ))}
               </ul>
             ) : query.length >= 2 && !isLoading ? (
-              <div className="px-4 py-6 text-center text-gray-500">
-                No results found for &quot;{query}&quot;. Try checking the
-                spelling.
+              <div className="px-4 py-10 text-center flex flex-col items-center">
+                <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mb-3">
+                  <SearchX className="w-6 h-6 text-indigo-300" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-1">No results found</h3>
+                <p className="text-xs text-gray-500 mb-4 max-w-[200px] mx-auto leading-relaxed">
+                  We couldn&apos;t find &quot;<span className="font-medium text-gray-700">{query}</span>&quot;. Try checking the spelling or searching by salt composition.
+                </p>
+                <button 
+                  onClick={() => setQuery("")}
+                  className="text-xs font-medium text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  Clear Search
+                </button>
               </div>
             ) : null}
             </motion.div>

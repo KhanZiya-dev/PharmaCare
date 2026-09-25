@@ -3,6 +3,7 @@ import { Inter, DM_Serif_Display } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MessageCircle } from "lucide-react";
+import { Toaster } from "sonner";
 import NextTopLoader from 'nextjs-toploader';
 import "./globals.css";
 
@@ -38,7 +39,7 @@ export default function RootLayout({
         <Navbar />
         {children}
         <Footer />
-
+        <Toaster position="bottom-center" toastOptions={{ style: { background: '#333', color: '#fff', border: 'none' } }} />
       </body>
     </html>
   );

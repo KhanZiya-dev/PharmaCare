@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Search, Upload, X, Loader2, Camera, Image as ImageIcon, Pill, Droplets } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface LensSearchModalProps {
   isOpen: boolean;
@@ -184,15 +185,21 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       
       if (data.results.length === 0 && (data.not_found || []).length === 0) {
         if (data.extracted_text.length === 0) {
-          setError("Could not find any recognizable medicine names in the image.");
+          const msg = "Could not find any recognizable medicine names in the image.";
+          setError(msg);
+          toast.error(msg);
         }
       }
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {
-        setError("Scan timed out. Please try again in a few seconds.");
+        const msg = "Scan timed out. Please try again in a few seconds.";
+        setError(msg);
+        toast.error(msg);
       } else {
-        setError(err.message || "An error occurred. Please try again in a few seconds.");
+        const msg = err.message || "An error occurred. Please try again in a few seconds.";
+        setError(msg);
+        toast.error(msg);
       }
     } finally {
       setIsScanning(false);
