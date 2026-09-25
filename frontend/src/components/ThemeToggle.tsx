@@ -14,17 +14,12 @@ export function ThemeToggle() {
     e.preventDefault();
     
     document.documentElement.classList.add('theme-transition');
-    document.documentElement.classList.add('theme-flash');
     
     setTheme(theme === "dark" ? "light" : "dark");
     
     setTimeout(() => {
-      document.documentElement.classList.remove('theme-flash');
-    }, 200);
-
-    setTimeout(() => {
       document.documentElement.classList.remove('theme-transition');
-    }, 600);
+    }, 400);
   };
 
   if (!mounted) return <div className="w-9 h-9" />;

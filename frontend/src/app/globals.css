@@ -104,76 +104,47 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Two-step bounce transition */
-/* 1. Fast transition into the flash state */
-html.theme-flash *:not(.no-flash),
-html.theme-flash *:not(.no-flash)::before,
-html.theme-flash *:not(.no-flash)::after {
-  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* 2. Smooth settling into the final state */
-html.theme-transition:not(.theme-flash) *:not(.no-flash),
-html.theme-transition:not(.theme-flash) *:not(.no-flash)::before,
-html.theme-transition:not(.theme-flash) *:not(.no-flash)::after {
+/* Smooth Theme Transition (No Flash Bounce) */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
   transition: background-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1), border-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
-/* .no-flash elements get a smooth single transition that matches total duration (200 + 400 = 600ms) */
-html.theme-transition .no-flash,
-html.theme-transition .no-flash *,
-html.theme-transition .no-flash *::before,
-html.theme-transition .no-flash *::after {
-  transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1), border-color 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
+/* Explicit color targets during transition since CSS variables cannot be animated directly */
 
-/* Body Background smooth bounce targets (Since CSS variables don't animate) */
-html.theme-flash.dark body,
-html.theme-flash.dark main,
-html.theme-flash.dark .bg-background {
-  background-color: #171717 !important; /* Flash to Gray */
-}
-
-html.theme-transition:not(.theme-flash).dark body,
-html.theme-transition:not(.theme-flash).dark main,
-html.theme-transition:not(.theme-flash).dark .bg-background {
-  background-color: #000000 !important; /* Settle to Black */
-}
-
-html.theme-flash:not(.dark) body,
-html.theme-flash:not(.dark) main,
-html.theme-flash:not(.dark) .bg-background {
-  background-color: #ffffff !important; /* Flash to White */
-}
-
-html.theme-transition:not(.theme-flash):not(.dark) body,
-html.theme-transition:not(.theme-flash):not(.dark) main,
-html.theme-transition:not(.theme-flash):not(.dark) .bg-background {
-  background-color: #f7f9fb !important; /* Settle to Light Theme Background */
-}
-
-/* Custom flash states for normal elements (Bounce Effect) */
-/* Elements that end up Gray in Dark Mode should flash Black */
-html.theme-flash.dark [class*="bg-white"]:not(.no-flash),
-html.theme-flash.dark [class*="dark:bg-[#111111]"]:not(.no-flash) {
+/* Body/Main Background */
+html.theme-transition.dark body,
+html.theme-transition.dark main,
+html.theme-transition.dark .bg-background {
   background-color: #000000 !important;
 }
-
-/* Elements that end up Black in Dark Mode should flash Gray */
-html.theme-flash.dark [class*="bg-gray-50"]:not(.no-flash),
-html.theme-flash.dark [class*="bg-gray-100"]:not(.no-flash),
-html.theme-flash.dark [class*="dark:bg-black"]:not(.no-flash),
-html.theme-flash.dark [class*="bg-black"]:not(.no-flash) {
-  background-color: #171717 !important;
+html.theme-transition:not(.dark) body,
+html.theme-transition:not(.dark) main,
+html.theme-transition:not(.dark) .bg-background {
+  background-color: #f7f9fb !important;
 }
 
-/* Hardcoded smooth transition targets for .no-flash elements */
-/* Needed because CSS variables like var(--color-white) do not interpolate/animate */
-html.theme-transition.dark [class*="bg-white"].no-flash { background-color: #171717 !important; }
-html.theme-transition:not(.dark) [class*="bg-white"].no-flash { background-color: #ffffff !important; }
+/* bg-white elements (Final dark mode color is Gray #171717) */
+html.theme-transition.dark [class*="bg-white"] {
+  background-color: #171717 !important;
+}
+html.theme-transition:not(.dark) [class*="bg-white"] {
+  background-color: #ffffff !important;
+}
 
-html.theme-transition.dark [class*="dark:bg-[#111111]"].no-flash { background-color: #111111 !important; }
-html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"].no-flash { background-color: #ffffff !important; }
+/* bg-gray-50 and similar (Final dark mode color is Black #000000) */
+html.theme-transition.dark [class*="bg-gray-50"],
+html.theme-transition.dark [class*="bg-gray-100"] {
+  background-color: #000000 !important;
+}
+html.theme-transition:not(.dark) [class*="bg-gray-50"] { background-color: #f9fafb !important; }
+html.theme-transition:not(.dark) [class*="bg-gray-100"] { background-color: #f3f4f6 !important; }
+
+/* dark:bg-[#111111] elements (like Logo) */
+html.theme-transition.dark [class*="dark:bg-[#111111]"] { background-color: #111111 !important; }
+html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"] { background-color: #ffffff !important; }
 
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
