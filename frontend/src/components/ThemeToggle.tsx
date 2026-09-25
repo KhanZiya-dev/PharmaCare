@@ -15,14 +15,12 @@ export function ThemeToggle() {
     
     const isDark = theme === "dark";
     
-    // View Transitions API for perfect smooth crossfade
-    if ((document as any).startViewTransition) {
-      (document as any).startViewTransition(() => {
-        setTheme(isDark ? "light" : "dark");
-      });
-    } else {
-      setTheme(isDark ? "light" : "dark");
-    }
+    document.documentElement.classList.add('theme-transition');
+    setTheme(isDark ? "light" : "dark");
+    
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 800);
   };
 
   if (!mounted) return <div className="w-9 h-9" />;

@@ -12,6 +12,16 @@
   --animate-bounce-slow: bounce-float 3s ease-in-out infinite;
 }
 
+@property --background { syntax: '<color>'; initial-value: #f7f9fb; inherits: true; }
+@property --foreground { syntax: '<color>'; initial-value: #171717; inherits: true; }
+@property --color-background { syntax: '<color>'; initial-value: #f7f9fb; inherits: true; }
+@property --color-foreground { syntax: '<color>'; initial-value: #171717; inherits: true; }
+@property --color-white { syntax: '<color>'; initial-value: #ffffff; inherits: true; }
+@property --color-gray-50 { syntax: '<color>'; initial-value: #f9fafb; inherits: true; }
+@property --color-gray-100 { syntax: '<color>'; initial-value: #f3f4f6; inherits: true; }
+@property --color-gray-200 { syntax: '<color>'; initial-value: #e5e7eb; inherits: true; }
+@property --color-accent { syntax: '<color>'; initial-value: #e0e3e5; inherits: true; }
+
 @keyframes bounce-float {
   0%, 100% {
     transform: translateY(0);
@@ -105,31 +115,115 @@ body {
 }
 
 /* =========================================================
-   BUTTER SMOOTH VIEW TRANSITIONS (Native API)
+   BUTTER SMOOTH VARIABLE ANIMATION (No Flashes, with Sequence)
    ========================================================= */
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+@keyframes sequenceToDark {
+  0% {
+    --background: #f7f9fb;
+    --color-background: #f7f9fb;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    
+    --color-white: #ffffff;
+    --color-gray-200: #e5e7eb;
+    
+    --foreground: #171717;
+    --color-foreground: #171717;
+    --color-accent: #e0e3e5;
+    
+    animation-timing-function: ease-in;
+  }
+  40% {
+    /* What becomes black goes to gray */
+    --background: #171717;
+    --color-background: #171717;
+    --color-gray-50: #171717;
+    --color-gray-100: #171717;
+    
+    /* What becomes gray goes to black */
+    --color-white: #000000;
+    --color-gray-200: #000000;
+    
+    /* Crossfade others normally through midpoints */
+    --foreground: #888888;
+    --color-foreground: #888888;
+    --color-accent: #666666;
+    
+    animation-timing-function: ease-out;
+  }
+  100% {
+    /* Final Dark */
+    --background: #000000;
+    --color-background: #000000;
+    --color-gray-50: #000000;
+    --color-gray-100: #171717;
+    
+    --color-white: #171717;
+    --color-gray-200: #262626;
+    
+    --foreground: #ffffff;
+    --color-foreground: #ffffff;
+    --color-accent: #262626;
+  }
 }
 
-::view-transition-old(root) {
-  animation: fade-out 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+@keyframes sequenceToLight {
+  0% {
+    /* Start Dark */
+    --background: #000000;
+    --color-background: #000000;
+    --color-gray-50: #000000;
+    --color-gray-100: #171717;
+    
+    --color-white: #171717;
+    --color-gray-200: #262626;
+    
+    --foreground: #ffffff;
+    --color-foreground: #ffffff;
+    --color-accent: #262626;
+    
+    animation-timing-function: ease-in;
+  }
+  40% {
+    /* What becomes light goes to gray */
+    --background: #171717;
+    --color-background: #171717;
+    --color-gray-50: #171717;
+    --color-gray-100: #171717;
+    
+    /* What becomes white goes to black */
+    --color-white: #000000;
+    --color-gray-200: #000000;
+    
+    /* Crossfade others */
+    --foreground: #888888;
+    --color-foreground: #888888;
+    --color-accent: #666666;
+    
+    animation-timing-function: ease-out;
+  }
+  100% {
+    /* Final Light */
+    --background: #f7f9fb;
+    --color-background: #f7f9fb;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    
+    --color-white: #ffffff;
+    --color-gray-200: #e5e7eb;
+    
+    --foreground: #171717;
+    --color-foreground: #171717;
+    --color-accent: #e0e3e5;
+  }
 }
 
-::view-transition-new(root) {
-  animation: fade-in 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+html.theme-transition.dark {
+  animation: sequenceToDark 800ms linear forwards !important;
 }
-
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+html.theme-transition:not(.dark) {
+  animation: sequenceToLight 800ms linear forwards !important;
 }
 
 body.header-search-expanded .page-search-bar {
