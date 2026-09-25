@@ -123,12 +123,9 @@ html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-  transition: color 800ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 800ms cubic-bezier(0.4, 0, 0.2, 1),
-              fill 800ms cubic-bezier(0.4, 0, 0.2, 1),
-              stroke 800ms cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 800ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 800ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-property: color, border-color, fill, stroke, background-color, box-shadow !important;
+  transition-duration: 800ms !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* 
@@ -169,35 +166,35 @@ html.theme-transition.theme-transitioning-to-dark body,
 html.theme-transition.theme-transitioning-to-dark main,
 html.theme-transition.theme-transitioning-to-dark .bg-background {
   animation: toDarkBlack 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 html.theme-transition.theme-transitioning-to-light body,
 html.theme-transition.theme-transitioning-to-light main,
 html.theme-transition.theme-transitioning-to-light .bg-background {
   animation: toLightBg 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 
 /* bg-white elements (Goes to Gray) */
 html.theme-transition.theme-transitioning-to-dark [class*="bg-white"] {
   animation: toDarkGray 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 html.theme-transition.theme-transitioning-to-light [class*="bg-white"] {
   animation: toLightWhite 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 
 /* bg-gray-50 and similar (Goes to Black) */
 html.theme-transition.theme-transitioning-to-dark [class*="bg-gray-50"],
 html.theme-transition.theme-transitioning-to-dark [class*="bg-gray-100"] {
   animation: toDarkBlack 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 html.theme-transition.theme-transitioning-to-light [class*="bg-gray-50"],
 html.theme-transition.theme-transitioning-to-light [class*="bg-gray-100"] {
   animation: toLightBg 800ms linear forwards !important;
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 
 /* dark:bg-[#111111] elements (Goes to Very Dark Gray) */
@@ -213,11 +210,11 @@ html.theme-transition.theme-transitioning-to-light [class*="bg-gray-100"] {
 }
 html.theme-transition.theme-transitioning-to-dark [class*="dark:bg-[#111111]"] { 
   animation: toVeryDarkGray 800ms linear forwards !important; 
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 html.theme-transition.theme-transitioning-to-light [class*="dark:bg-[#111111]"] { 
   animation: fromVeryDarkGray 800ms linear forwards !important; 
-  transition: background-color 0s !important;
+  transition-property: color, border-color, fill, stroke, box-shadow !important;
 }
 
 body.header-search-expanded .page-search-bar {
