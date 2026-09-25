@@ -14,12 +14,17 @@ export function ThemeToggle() {
     e.preventDefault();
     
     const isDark = theme === "dark";
+    const targetTheme = isDark ? "light" : "dark";
     
     document.documentElement.classList.add('theme-transition');
-    setTheme(isDark ? "light" : "dark");
+    document.documentElement.classList.add(`theme-transitioning-to-${targetTheme}`);
+    
+    setTheme(targetTheme);
     
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transition');
+      document.documentElement.classList.remove('theme-transitioning-to-dark');
+      document.documentElement.classList.remove('theme-transitioning-to-light');
     }, 800);
   };
 

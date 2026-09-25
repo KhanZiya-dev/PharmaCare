@@ -165,32 +165,40 @@ html.theme-transition *::after {
 /* Note: We use 'linear' here because the easing is handled seamlessly inside the keyframes */
 
 /* Body/Main Background (Goes to Black) */
-html.theme-transition.dark body,
-html.theme-transition.dark main,
-html.theme-transition.dark .bg-background {
+html.theme-transition.theme-transitioning-to-dark body,
+html.theme-transition.theme-transitioning-to-dark main,
+html.theme-transition.theme-transitioning-to-dark .bg-background {
   animation: toDarkBlack 800ms linear forwards !important;
+  transition: background-color 0s !important;
 }
-html.theme-transition:not(.dark) body,
-html.theme-transition:not(.dark) main,
-html.theme-transition:not(.dark) .bg-background {
+html.theme-transition.theme-transitioning-to-light body,
+html.theme-transition.theme-transitioning-to-light main,
+html.theme-transition.theme-transitioning-to-light .bg-background {
   animation: toLightBg 800ms linear forwards !important;
+  transition: background-color 0s !important;
 }
 
 /* bg-white elements (Goes to Gray) */
-html.theme-transition.dark [class*="bg-white"] {
+html.theme-transition.theme-transitioning-to-dark [class*="bg-white"] {
   animation: toDarkGray 800ms linear forwards !important;
+  transition: background-color 0s !important;
 }
-html.theme-transition:not(.dark) [class*="bg-white"] {
+html.theme-transition.theme-transitioning-to-light [class*="bg-white"] {
   animation: toLightWhite 800ms linear forwards !important;
+  transition: background-color 0s !important;
 }
 
 /* bg-gray-50 and similar (Goes to Black) */
-html.theme-transition.dark [class*="bg-gray-50"],
-html.theme-transition.dark [class*="bg-gray-100"] {
+html.theme-transition.theme-transitioning-to-dark [class*="bg-gray-50"],
+html.theme-transition.theme-transitioning-to-dark [class*="bg-gray-100"] {
   animation: toDarkBlack 800ms linear forwards !important;
+  transition: background-color 0s !important;
 }
-html.theme-transition:not(.dark) [class*="bg-gray-50"] { animation: toLightBg 800ms linear forwards !important; }
-html.theme-transition:not(.dark) [class*="bg-gray-100"] { animation: toLightBg 800ms linear forwards !important; }
+html.theme-transition.theme-transitioning-to-light [class*="bg-gray-50"],
+html.theme-transition.theme-transitioning-to-light [class*="bg-gray-100"] {
+  animation: toLightBg 800ms linear forwards !important;
+  transition: background-color 0s !important;
+}
 
 /* dark:bg-[#111111] elements (Goes to Very Dark Gray) */
 @keyframes toVeryDarkGray {
@@ -203,8 +211,14 @@ html.theme-transition:not(.dark) [class*="bg-gray-100"] { animation: toLightBg 8
   40% { background-color: #000000; animation-timing-function: ease-out; }
   100% { background-color: #ffffff; }
 }
-html.theme-transition.dark [class*="dark:bg-[#111111]"] { animation: toVeryDarkGray 800ms linear forwards !important; }
-html.theme-transition:not(.dark) [class*="dark:bg-[#111111]"] { animation: fromVeryDarkGray 800ms linear forwards !important; }
+html.theme-transition.theme-transitioning-to-dark [class*="dark:bg-[#111111]"] { 
+  animation: toVeryDarkGray 800ms linear forwards !important; 
+  transition: background-color 0s !important;
+}
+html.theme-transition.theme-transitioning-to-light [class*="dark:bg-[#111111]"] { 
+  animation: fromVeryDarkGray 800ms linear forwards !important; 
+  transition: background-color 0s !important;
+}
 
 body.header-search-expanded .page-search-bar {
   opacity: 0 !important;
