@@ -97,10 +97,14 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
       {/* Bottom Section: CTA */}
       <div className="mt-auto flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-[9px] md:text-[10px] text-gray-400 font-medium mb-0.5">Starting from</span>
-          <span className="text-sm md:text-base font-black text-gray-900 tracking-tight">
-            {lowestPrice ? `₹${lowestPrice}` : <span className="text-sm font-semibold text-primary">Check Now</span>}
-          </span>
+          {lowestPrice ? (
+            <>
+              <span className="text-[9px] md:text-[10px] text-gray-400 font-medium mb-0.5">Starting from</span>
+              <span className="text-sm md:text-base font-black text-gray-900 tracking-tight">
+                ₹{lowestPrice}
+              </span>
+            </>
+          ) : null}
         </div>
         <span className="text-xs font-bold text-primary group-hover:bg-primary group-hover:text-white px-3 py-1.5 rounded-lg transition-colors">
           Compare Prices &rarr;
