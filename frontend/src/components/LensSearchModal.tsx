@@ -167,16 +167,13 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        let errorMsg = "Failed to scan image. Please try again.";
         try {
           const errData = await response.json();
-          if (errData.detail) {
-            errorMsg = typeof errData.detail === "string" ? errData.detail : JSON.stringify(errData.detail);
-          }
+          if (errData.detail) console.error("Scanner error:", errData.detail);
         } catch {
-          // response wasn't JSON, use default message
+          // ignore
         }
-        throw new Error(errorMsg);
+        throw new Error("Unable to process this image right now. Please try again in a few seconds.");
       }
 
       const data = await response.json();
@@ -193,9 +190,9 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {
-        setError("Scan timed out. The server may be busy — please wait 180 seconds and try again.");
+        setError("Scan timed out. Please try again in a few seconds.");
       } else {
-        setError(err.message || "An error occurred while scanning.");
+        setError(err.message || "An error occurred. Please try again in a few seconds.");
       }
     } finally {
       setIsScanning(false);

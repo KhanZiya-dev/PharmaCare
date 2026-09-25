@@ -208,7 +208,7 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
         if (err.name === "AbortError") return; // Request was cancelled, ignore
         console.error("Search error:", err);
         setResults([]);
-        setError("Something went wrong. Please try again.");
+        setError("Something went wrong. Please try again in a few seconds.");
       } finally {
         setIsLoading(false);
       }

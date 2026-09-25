@@ -6,6 +6,7 @@ import { SearchAutocomplete } from "./SearchAutocomplete";
 export function StickyHeroSearch() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -14,6 +15,9 @@ export function StickyHeroSearch() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsSticky(!entry.isIntersecting);
+        if (!entry.isIntersecting) {
+          setHasScrolled(true);
+        }
       },
       { threshold: 0, rootMargin: '-100px 0px 0px 0px' }
     );
@@ -37,7 +41,9 @@ export function StickyHeroSearch() {
         <div className={`transition-all duration-500 ease-in-out ${
           isSticky 
             ? "shadow-lg rounded-full ring-1 ring-black/5" 
-            : "opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards]"
+            : hasScrolled 
+              ? "opacity-100" 
+              : "opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards]"
         }`}>
           <SearchAutocomplete compact={isSticky} />
         </div>

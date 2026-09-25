@@ -71,14 +71,14 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 w-full z-50 py-2">
-      {/* Pure Blur fading from 30% opacity at top to 0% at bottom */}
-      <div className="absolute top-0 left-0 right-0 h-[120px] backdrop-blur-md [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_100%)] -z-10 pointer-events-none transform-gpu will-change-transform" />
+      {/* Light gradient fade instead of heavy blur mask for mobile performance */}
+      <div className="absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-b from-white/90 to-transparent pointer-events-none -z-10" />
       
       <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2 relative">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2 group bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/40" onClick={() => setActivePath("/")}>
+            <Link href="/" className="flex items-center gap-2 group bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-white/40" onClick={() => setActivePath("/")}>
               <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-primary group-hover:scale-110 transition-transform" />
               <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-primary tracking-tight">
                 PharmaCare
@@ -93,15 +93,15 @@ export function Navbar() {
             <AnimatePresence>
               {(scrolled || isSearchExpanded) && !pathname?.startsWith('/trends') && (
                 <motion.div
-                  initial={{ opacity: 0, x: 40, scaleX: 2.5, scaleY: 0.6 }}
-                  animate={{ opacity: 1, x: 0, scaleX: 1, scaleY: 1 }}
-                  exit={{ opacity: 0, x: 40, scaleX: 2, scaleY: 0.7 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 15, mass: 0.8 }}
+                  initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                  transition={{ type: "tween", ease: "circOut", duration: 0.25 }}
                   className="relative z-10 origin-left"
                 >
                   <motion.div 
                     layout
-                    className={`bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-white/50 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
+                    className={`bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-white/50 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
                       isSearchExpanded ? 'w-[450px] p-1.5' : 'w-12 h-12 justify-center hover:bg-white hover:scale-105'
                     }`}
                     onClick={() => {
@@ -132,7 +132,7 @@ export function Navbar() {
             </AnimatePresence>
 
             {/* Desktop Nav - Floating Pill Container */}
-            <motion.div layout className="hidden md:flex items-center space-x-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-white/50 relative z-20">
+            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white/95 backdrop-blur-sm p-2 rounded-full shadow-lg border border-white/50 relative z-20">
               {[
                 { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
                 { path: "/medicines", label: "Medicines", icon: <Pill className="h-5 w-5" /> },
@@ -161,7 +161,7 @@ export function Navbar() {
                       <motion.div
                         layoutId="capsule"
                         className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
-                        transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                        transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
                       />
                     )}
                     <span className="relative z-10 flex-shrink-0">{item.icon}</span>
@@ -181,7 +181,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center bg-white/80 backdrop-blur-md rounded-full shadow-sm border border-white/40 p-1 relative">
+          <div className="md:hidden flex items-center bg-white/95 backdrop-blur-sm rounded-full shadow-sm border border-white/40 p-1 relative">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-full text-slate-700 hover:text-primary hover:bg-slate-100 focus:outline-none transition-colors"
@@ -198,11 +198,11 @@ export function Navbar() {
             <AnimatePresence>
               {isMobileMenuOpen && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="absolute top-full right-0 mt-3 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-accent overflow-hidden z-50 origin-top-right"
+                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                  transition={{ type: "tween", ease: "easeOut", duration: 0.2 }}
+                  className="absolute top-full right-0 mt-3 w-48 bg-white/98 rounded-2xl shadow-xl border border-accent overflow-hidden z-50 origin-top-right"
                 >
                   <div className="p-2 space-y-1">
                     {[
