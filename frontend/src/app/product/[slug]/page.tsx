@@ -252,28 +252,6 @@ export default async function ProductPage({
 
       </div>
 
-      {/* Sticky Bottom Bar for Mobile */}
-      <div className="fixed bottom-[60px] md:hidden left-0 right-0 bg-white border-t border-accent shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 z-40 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Lowest Price</p>
-          <p className="text-xl font-black text-green-600">
-            {lowestPrice ? `₹${lowestPrice}` : "Out of Stock"}
-          </p>
-        </div>
-        {lowestPrice ? (
-          <a
-            href="#compare"
-            className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-          >
-            Buy Now
-          </a>
-        ) : (
-          <button disabled className="bg-gray-100 text-gray-400 font-bold px-6 py-2.5 rounded-xl text-sm cursor-not-allowed">
-            Unavailable
-          </button>
-        )}
-      </div>
-
     </main>
   );
 }

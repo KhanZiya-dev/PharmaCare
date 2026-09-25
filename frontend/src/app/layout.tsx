@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { MessageCircle } from "lucide-react";
 import { Toaster } from "sonner";
 import NextTopLoader from 'nextjs-toploader';
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,11 +36,13 @@ export default function RootLayout({
       className={`${inter.variable} ${dmSerifDisplay.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
-        <NextTopLoader color="#00796B" showSpinner={false} height={3} shadow="0 0 10px #00796B,0 0 5px #00796B" />
-        <Navbar />
-        {children}
-        <Footer />
-        <Toaster position="bottom-center" toastOptions={{ style: { background: '#333', color: '#fff', border: 'none' } }} />
+        <ThemeProvider>
+          <NextTopLoader color="#00796B" showSpinner={false} height={3} shadow="0 0 10px #00796B,0 0 5px #00796B" />
+          <Navbar />
+          {children}
+          <Footer />
+          <Toaster position="bottom-center" toastOptions={{ style: { background: '#333', color: '#fff', border: 'none' } }} />
+        </ThemeProvider>
       </body>
     </html>
   );

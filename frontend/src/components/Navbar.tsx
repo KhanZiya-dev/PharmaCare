@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchAutocomplete } from "./SearchAutocomplete";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -177,10 +178,16 @@ export function Navbar() {
                 );
               })}
             </motion.div>
+            
+            {/* Theme Toggle Desktop */}
+            <div className="hidden md:flex bg-white p-1 rounded-full shadow-lg border border-gray-100 relative z-20 dark:bg-slate-900 dark:border-slate-800">
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center bg-white rounded-full shadow-sm border border-gray-100 p-1 relative">
+          <div className="md:hidden flex items-center bg-white rounded-full shadow-sm border border-gray-100 p-1 relative gap-1 dark:bg-slate-900 dark:border-slate-800">
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-full text-slate-700 hover:text-primary hover:bg-slate-100 focus:outline-none transition-colors"
