@@ -78,9 +78,9 @@ export function Navbar() {
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2 group bg-[#ffffff] px-4 py-2 rounded-full shadow-sm border border-[#f3f4f6]" onClick={() => setActivePath("/")}>
-              <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-[#00236f] group-hover:scale-110 transition-transform" />
-              <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-[#00236f] tracking-tight">
+            <Link href="/" className="flex items-center gap-2 group bg-white dark:bg-transparent px-4 py-2 rounded-full shadow-sm dark:shadow-none border border-gray-100 dark:border-transparent" onClick={() => setActivePath("/")}>
+              <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-primary dark:text-[#ffffff] group-hover:scale-110 transition-transform" />
+              <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-primary dark:text-[#ffffff] tracking-tight">
                 PharmaCare
               </span>
             </Link>
