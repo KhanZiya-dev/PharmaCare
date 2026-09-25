@@ -71,14 +71,13 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 w-full z-50 py-2">
-      {/* Light gradient fade instead of heavy blur mask for mobile performance */}
-      <div className="absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-b from-white/90 to-transparent pointer-events-none -z-10" />
+
       
       <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2 relative">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2 group bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-white/40" onClick={() => setActivePath("/")}>
+            <Link href="/" className="flex items-center gap-2 group bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100" onClick={() => setActivePath("/")}>
               <Pill className="h-[clamp(1.5rem,4vw,2rem)] w-[clamp(1.5rem,4vw,2rem)] text-primary group-hover:scale-110 transition-transform" />
               <span className="font-serif text-[clamp(1.25rem,4vw,1.75rem)] font-bold text-primary tracking-tight">
                 PharmaCare
@@ -101,7 +100,7 @@ export function Navbar() {
                 >
                   <motion.div 
                     layout
-                    className={`bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-white/50 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
+                    className={`bg-white rounded-full shadow-lg border border-gray-100 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
                       isSearchExpanded ? 'w-[450px] p-1.5' : 'w-12 h-12 justify-center hover:bg-white hover:scale-105'
                     }`}
                     onClick={() => {
@@ -132,7 +131,7 @@ export function Navbar() {
             </AnimatePresence>
 
             {/* Desktop Nav - Floating Pill Container */}
-            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white/95 backdrop-blur-sm p-2 rounded-full shadow-lg border border-white/50 relative z-20">
+            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 relative z-20">
               {[
                 { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
                 { path: "/medicines", label: "Medicines", icon: <Pill className="h-5 w-5" /> },
@@ -181,7 +180,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center bg-white/95 backdrop-blur-sm rounded-full shadow-sm border border-white/40 p-1 relative">
+          <div className="md:hidden flex items-center bg-white rounded-full shadow-sm border border-gray-100 p-1 relative">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-full text-slate-700 hover:text-primary hover:bg-slate-100 focus:outline-none transition-colors"
