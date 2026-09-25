@@ -106,19 +106,25 @@ body {
 
 /* Two-step bounce transition */
 /* 1. Fast transition into the flash state */
-html.theme-flash,
-html.theme-flash *,
-html.theme-flash *::before,
-html.theme-flash *::after {
+html.theme-flash *:not(.no-flash),
+html.theme-flash *:not(.no-flash)::before,
+html.theme-flash *:not(.no-flash)::after {
   transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* 2. Smooth settling into the final state */
-html.theme-transition:not(.theme-flash),
-html.theme-transition:not(.theme-flash) *,
-html.theme-transition:not(.theme-flash) *::before,
-html.theme-transition:not(.theme-flash) *::after {
+html.theme-transition:not(.theme-flash) *:not(.no-flash),
+html.theme-transition:not(.theme-flash) *:not(.no-flash)::before,
+html.theme-transition:not(.theme-flash) *:not(.no-flash)::after {
   transition: background-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1), border-color 400ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* .no-flash elements get a smooth single transition that matches total duration (200 + 400 = 600ms) */
+html.theme-transition .no-flash,
+html.theme-transition .no-flash *,
+html.theme-transition .no-flash *::before,
+html.theme-transition .no-flash *::after {
+  transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1), border-color 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Custom flash states for theme toggle bounce effect */
