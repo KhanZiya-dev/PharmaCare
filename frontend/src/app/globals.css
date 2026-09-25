@@ -130,16 +130,16 @@ html.theme-flash:not(.dark) {
 }
 
 /* Elements that end up Gray in Dark Mode should flash Black */
-html.theme-flash.dark [class*="bg-white"],
-html.theme-flash.dark [class*="dark:bg-[#111111]"] {
+html.theme-flash.dark [class*="bg-white"]:not(.no-flash),
+html.theme-flash.dark [class*="dark:bg-[#111111]"]:not(.no-flash) {
   background-color: #000000 !important;
 }
 
 /* Elements that end up Black in Dark Mode should flash Gray */
-html.theme-flash.dark [class*="bg-gray-50"],
-html.theme-flash.dark [class*="bg-gray-100"],
-html.theme-flash.dark [class*="dark:bg-black"],
-html.theme-flash.dark [class*="bg-black"] {
+html.theme-flash.dark [class*="bg-gray-50"]:not(.no-flash),
+html.theme-flash.dark [class*="bg-gray-100"]:not(.no-flash),
+html.theme-flash.dark [class*="dark:bg-black"]:not(.no-flash),
+html.theme-flash.dark [class*="bg-black"]:not(.no-flash) {
   background-color: #171717 !important;
 }
 

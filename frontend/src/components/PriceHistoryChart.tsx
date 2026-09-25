@@ -96,7 +96,7 @@ export function PriceHistoryChart({ platforms }: PriceHistoryChartProps) {
   }
 
   return (
-    <div className="w-full h-[400px] bg-white rounded-2xl shadow-sm border border-accent p-6 relative">
+    <div className="w-full h-[400px] bg-white rounded-2xl shadow-sm border border-accent p-6 relative no-flash">
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-bold text-foreground text-lg">30-Day Price History</h3>
       </div>

@@ -33,7 +33,7 @@ export function ComparisonTable({ platforms }: ComparisonTableProps) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-accent overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-accent overflow-hidden no-flash">
       
       {/* Desktop View (Table) */}
       <div className="hidden md:block overflow-x-auto">
