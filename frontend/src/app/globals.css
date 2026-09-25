@@ -133,36 +133,19 @@ body {
 }
 
 /* 
-  The "Black/Gray Sequence" Overlay 
-  We add a pseudo-element overlay during the transition that fades into black/gray 
-  at the 40% mark, giving the exact liquid sequence feel the user wants, 
-  without any DOM snapping or component blinking!
+  The "Black/Gray Sequence" Wash 
+  Since PostCSS doesn't support chaining ::after on view-transition pseudo-elements,
+  we use a brightness filter on the image pair to simulate the "dip" into dark gray!
 */
-::view-transition-image-pair(root)::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* When going to Dark, dip into a deep black/gray wash */
-html.vt-going-dark::view-transition-image-pair(root)::after {
-  background-color: #111111;
-  animation: sequenceWash 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* When going to Light, dip into a gray/black wash */
-html.vt-going-light::view-transition-image-pair(root)::after {
-  background-color: #171717;
+html.vt-going-dark::view-transition-image-pair(root),
+html.vt-going-light::view-transition-image-pair(root) {
   animation: sequenceWash 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes sequenceWash {
-  0% { opacity: 0; }
-  40% { opacity: 0.6; } /* The visual "dip" into black/gray */
-  100% { opacity: 0; }
+  0% { filter: brightness(1); }
+  40% { filter: brightness(0.4); } /* The visual "dip" into deep black/gray */
+  100% { filter: brightness(1); }
 }
 
 @keyframes fade-out {
