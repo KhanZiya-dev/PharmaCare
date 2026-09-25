@@ -19,7 +19,7 @@ export function ThemeToggle() {
     
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transition');
-    }, 400);
+    }, 800);
   };
 
   if (!mounted) return <div className="w-9 h-9" />;
