@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.monochrome, .monochrome *));
 
 @theme {
   --color-primary: #00236f;
@@ -56,7 +56,7 @@
   --foreground: #171717;
 }
 
-.dark {
+.monochrome {
   --background: #000000;
   --foreground: #ffffff;
   --color-background: #000000;

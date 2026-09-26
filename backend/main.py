@@ -172,16 +172,17 @@ def search_products(
             results.extend(response.data or [])
 
     # Log missing search if no results found (min 5 chars to avoid partial typing fragments)
-    if not results and len(q.strip()) >= 5:
-        try:
-            existing = supabase.table("missing_searches").select("id").eq("search_query", q).execute()
-            if not existing.data:
-                supabase.table("missing_searches").insert({
-                    "search_query": q,
-                    "search_type": "text"
-                }).execute()
-        except Exception as e:
-            logging.warning(f"Failed to log missing search: {e}")
+    # Temporarily disabled during testing to save DB space
+    # if not results and len(q.strip()) >= 5:
+    #     try:
+    #         existing = supabase.table("missing_searches").select("id").eq("search_query", q).execute()
+    #         if not existing.data:
+    #             supabase.table("missing_searches").insert({
+    #                 "search_query": q,
+    #                 "search_type": "text"
+    #             }).execute()
+    #     except Exception as e:
+    #         logging.warning(f"Failed to log missing search: {e}")
 
     cache_set(cache_key, results, ttl=300)  # 5 min
     return results
@@ -288,22 +289,23 @@ async def vision_search(request: Request, file: UploadFile = File(...), supabase
                             all_matches.append(product)
 
         # --- Log missing searches (deduplicated) ---
-        if not_found_names:
-            try:
-                existing = (
-                    supabase.table("missing_searches")
-                    .select("search_query")
-                    .in_("search_query", not_found_names)
-                    .execute()
-                )
-                existing_names = {row["search_query"] for row in existing.data}
-                new_names = [n for n in not_found_names if n not in existing_names]
-
-                if new_names:
-                    inserts = [{"search_query": n, "search_type": "vision"} for n in new_names]
-                    supabase.table("missing_searches").insert(inserts).execute()
-            except Exception as e:
-                logging.warning(f"Failed to log missing vision searches: {e}")
+        # Temporarily disabled during testing to save DB space
+        # if not_found_names:
+        #     try:
+        #         existing = (
+        #             supabase.table("missing_searches")
+        #             .select("search_query")
+        #             .in_("search_query", not_found_names)
+        #             .execute()
+        #         )
+        #         existing_names = {row["search_query"] for row in existing.data}
+        #         new_names = [n for n in not_found_names if n not in existing_names]
+        # 
+        #         if new_names:
+        #             inserts = [{"search_query": n, "search_type": "vision"} for n in new_names]
+        #             supabase.table("missing_searches").insert(inserts).execute()
+        #     except Exception as e:
+        #         logging.warning(f"Failed to log missing vision searches: {e}")
 
         return {
             "results": all_matches,

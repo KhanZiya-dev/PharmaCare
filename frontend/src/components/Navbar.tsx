@@ -99,40 +99,39 @@ export function Navbar() {
                   transition={{ type: "tween", ease: "circOut", duration: 0.25 }}
                   className="relative z-10 origin-left"
                 >
-                  <motion.div 
-                    layout
-                    className={`bg-white rounded-full shadow-lg border border-gray-100 flex items-center overflow-hidden cursor-pointer transition-all duration-300 ${
-                      isSearchExpanded ? 'w-[450px] p-1.5' : 'w-12 h-12 justify-center hover:bg-white hover:scale-105'
+                  <div 
+                    className={`bg-white rounded-full shadow-lg border border-gray-100 flex items-center overflow-hidden cursor-pointer transition-all transform-gpu duration-300 relative ${
+                      isSearchExpanded ? 'w-[450px] h-[52px]' : 'w-12 h-12 hover:bg-white hover:scale-[1.03]'
                     }`}
                     onClick={() => {
                       if (!isSearchExpanded) setIsSearchExpanded(true);
                     }}
                   >
-                    {!isSearchExpanded ? (
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isSearchExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                       <Search className="w-5 h-5 text-slate-600" />
-                    ) : (
-                      <div className="flex w-full items-center gap-2">
-                        <div className="flex-1">
-                          <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
-                        </div>
-                        <button 
-                          className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors mr-1 shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsSearchExpanded(false);
-                          }}
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                    </div>
+                    
+                    <div className={`flex w-full items-center gap-2 px-1.5 transition-opacity duration-300 delay-75 ${isSearchExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                      <div className="flex-1 min-w-[250px]">
+                        <SearchAutocomplete compact hideCameraIcon={pathname?.startsWith('/lab-tests')} />
                       </div>
-                    )}
-                  </motion.div>
+                      <button 
+                        className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors shrink-0 mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsSearchExpanded(false);
+                        }}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Desktop Nav - Floating Pill Container */}
-            <motion.div layout layoutRoot className="hidden md:flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 dark:border-gray-200 relative z-20">
+            <div className="hidden md:flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 dark:border-gray-200 relative z-20">
               {[
                 { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
                 { path: "/medicines", label: "Medicines", icon: <Pill className="h-5 w-5" /> },
@@ -161,23 +160,29 @@ export function Navbar() {
                       <motion.div
                         layoutId="capsule"
                         className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
-                        transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
                     )}
                     <span className="relative z-10 flex-shrink-0">{item.icon}</span>
-                    <div 
-                      className={`overflow-hidden transition-all duration-300 ease-in-out flex items-center ${
-                        active ? "max-w-[120px] opacity-100 ml-2.5" : "max-w-0 opacity-0 ml-0"
-                      }`}
-                    >
-                      <span className="font-bold text-[15px] whitespace-nowrap">
-                        {item.label}
-                      </span>
-                    </div>
+                    <AnimatePresence initial={false}>
+                      {active && (
+                        <motion.div
+                          initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                          animate={{ width: "auto", opacity: 1, marginLeft: 10 }}
+                          exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          className="overflow-hidden flex items-center"
+                        >
+                          <span className="font-bold text-[15px] whitespace-nowrap">
+                            {item.label}
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </Link>
                 );
               })}
-            </motion.div>
+            </div>
             
             {/* Theme Toggle Desktop */}
             <div className="hidden md:flex bg-white p-1 rounded-full shadow-lg border border-gray-100 dark:border-gray-200 relative z-20">
