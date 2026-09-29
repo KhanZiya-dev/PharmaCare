@@ -260,14 +260,14 @@ export default function LensSearchModal({ isOpen, onClose }: LensSearchModalProp
           {/* Upload Area */}
           {!preview ? (
             <div 
-              className={`grid grid-cols-2 gap-4 p-4 -m-4 rounded-xl transition-colors border-2 border-dashed ${isDragging ? "border-indigo-500 bg-indigo-50/50" : "border-transparent"}`}
+              className={`grid grid-cols-2 md:grid-cols-1 gap-4 p-4 -m-4 rounded-xl transition-colors border-2 border-dashed ${isDragging ? "border-indigo-500 bg-indigo-50/50" : "border-transparent"}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
               {/* Camera Button */}
               <label 
-                className="border-2 border-dashed border-indigo-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95 bg-white shadow-sm"
+                className="md:hidden border-2 border-dashed border-indigo-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group active:scale-95 bg-white shadow-sm"
               >
                 <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <Camera className="w-6 h-6" />
