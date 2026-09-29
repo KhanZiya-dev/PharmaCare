@@ -353,6 +353,51 @@ def list_products(request: Request, category: str = None, limit: int = 40, supab
     cache_set(cache_key, result, ttl=600)  # 10 min
     return result
 
+def sync_persist_zeno_price(product_id: str, zeno_data: dict):
+    try:
+        if not zeno_data.get("price") or zeno_data["price"] <= 0:
+            return
+            
+        p_res = supabase.table("platforms").select("id").eq("name", "Zeno Health").execute()
+        if not p_res.data:
+            return
+        platform_id = p_res.data[0]["id"]
+        
+        m_res = supabase.table("platform_product_links").select("id").eq("product_id", product_id).eq("platform_id", platform_id).execute()
+        
+        if m_res.data:
+            mapping_id = m_res.data[0]["id"]
+            supabase.table("platform_product_links").update({
+                "last_scraped_at": datetime.now(timezone.utc).isoformat(),
+                "scrape_url": zeno_data["url"],
+                "affiliate_url": zeno_data["url"]
+            }).eq("id", mapping_id).execute()
+        else:
+            insert_res = supabase.table("platform_product_links").insert({
+                "product_id": product_id,
+                "platform_id": platform_id,
+                "affiliate_url": zeno_data["url"],
+                "scrape_url": zeno_data["url"],
+                "last_scraped_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+            if not insert_res.data:
+                return
+            mapping_id = insert_res.data[0]["id"]
+            
+        supabase.table("price_history").insert({
+            "mapping_id": mapping_id,
+            "selling_price": zeno_data["price"],
+            "mrp": zeno_data["mrp"],
+            "in_stock": zeno_data["in_stock"],
+            "is_restricted": False,
+            "scraped_at": datetime.now(timezone.utc).isoformat()
+        }).execute()
+    except Exception as e:
+        print(f"Error persisting Zeno price: {e}")
+
+async def persist_zeno_price(product_id: str, zeno_data: dict):
+    await asyncio.to_thread(sync_persist_zeno_price, product_id, zeno_data)
+
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
 async def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
@@ -404,6 +449,9 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
             return zeno_cached
         try:
             result = await fetch_zeno_price(product["name"])
+            if result and result.get("price") and result.get("price") > 0:
+                # Fire and forget the persistence so history builds up over time
+                asyncio.create_task(persist_zeno_price(product["id"], result))
             cache_set(zeno_cache_key, result, ttl=900)  # 15 min
             return result
         except Exception:
@@ -438,7 +486,6 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
     # 4. Append Zeno data to mappings
     if zeno_data:
         now = datetime.now(timezone.utc)
-        td_ago = now - timedelta(days=30)
         if zeno_data.get("price") and zeno_data.get("price") > 0:
             latest_price_obj = {
                 "selling_price": zeno_data["price"],
@@ -447,36 +494,44 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
                 "is_restricted": False,
                 "scraped_at": now.isoformat()
             }
-            past_price_obj = {
-                "selling_price": zeno_data["price"],
-                "mrp": zeno_data["mrp"],
-                "in_stock": zeno_data["in_stock"],
-                "is_restricted": False,
-                "scraped_at": td_ago.isoformat()
-            }
-            mappings.append({
-                "id": "zeno_live",
-                "affiliate_url": zeno_data["url"],
-                "scrape_url": zeno_data["url"],
-                "platforms": {
-                    "name": "Zeno Health",
-                    "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
-                },
-                "history": [past_price_obj, latest_price_obj],
-                "latest_price": latest_price_obj
-            })
+            
+            # Check if Zeno is already in mappings (from DB history)
+            zeno_mapping = next((m for m in mappings if m.get("platforms", {}).get("name") == "Zeno Health"), None)
+            
+            if zeno_mapping:
+                # Append live data to existing DB history
+                zeno_mapping["history"].append(latest_price_obj)
+                zeno_mapping["latest_price"] = latest_price_obj
+                if not zeno_mapping.get("affiliate_url"):
+                    zeno_mapping["affiliate_url"] = zeno_data["url"]
+                if not zeno_mapping.get("scrape_url"):
+                    zeno_mapping["scrape_url"] = zeno_data["url"]
+            else:
+                mappings.append({
+                    "id": "zeno_live",
+                    "affiliate_url": zeno_data["url"],
+                    "scrape_url": zeno_data["url"],
+                    "platforms": {
+                        "name": "Zeno Health",
+                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                    },
+                    "history": [latest_price_obj],
+                    "latest_price": latest_price_obj
+                })
         else:
-            mappings.append({
-                "id": "zeno_live",
-                "affiliate_url": None,
-                "scrape_url": "https://www.zeno.health",
-                "platforms": {
-                    "name": "Zeno Health",
-                    "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
-                },
-                "history": [],
-                "latest_price": None
-            })
+            zeno_mapping = next((m for m in mappings if m.get("platforms", {}).get("name") == "Zeno Health"), None)
+            if not zeno_mapping:
+                mappings.append({
+                    "id": "zeno_live",
+                    "affiliate_url": None,
+                    "scrape_url": "https://www.zeno.health",
+                    "platforms": {
+                        "name": "Zeno Health",
+                        "logo_url": "https://d3pmeofo468e0p.cloudfront.net/zeno-app-v1/images/other/user_stats.svg"
+                    },
+                    "history": [],
+                    "latest_price": None
+                })
     
     response = {
         "product": product,

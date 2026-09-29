@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { TrendingDown, Pill, Activity, Store, Microscope, AlertCircle } from "lucide-react";
+import { TrendingDown, Pill, Activity, Store, Microscope, AlertCircle, Share2, Check } from "lucide-react";
 
 interface ProductCardProps {
   name: string;
@@ -30,11 +30,41 @@ function isValidImageUrl(url?: string): boolean {
 
 export function ProductCard({ name, slug, category, composition, image_url, lowestPrice, platformCount, discountPct, requires_rx }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
+  const [shared, setShared] = useState(false);
   const hasValidImage = isValidImageUrl(image_url) && !imgError;
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const url = `${window.location.origin}${category === "lab_test" ? `/lab-tests/${slug}` : `/product/${slug}`}`;
+    const shareData = {
+      title: name,
+      text: `Check out ${name} on PharmaCare`,
+      url: url,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      }
+    } catch (err) {
+      console.log('Error sharing', err);
+    }
+  };
 
   return (
     <Link
       href={category === "lab_test" ? `/lab-tests/${slug}` : `/product/${slug}`}
+      onClick={() => {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("pharmacare_from", window.location.pathname);
+        }
+      }}
       className="group bg-white rounded-2xl border border-accent shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all hover:-translate-y-1 overflow-hidden flex flex-col p-3 md:p-4 relative"
     >
       {/* Top Section: Identity */}
@@ -59,7 +89,7 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
         </div>
         
         {/* Name & Composition */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-8">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
               {category}
@@ -77,6 +107,14 @@ export function ProductCard({ name, slug, category, composition, image_url, lowe
             <p className="text-[10px] md:text-[11px] text-gray-500 line-clamp-1 mt-0.5 md:mt-1 truncate">{composition}</p>
           )}
         </div>
+        
+        <button 
+           onClick={handleShare}
+           className="absolute top-3 right-3 md:top-4 md:right-4 p-1.5 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-full transition-colors border border-gray-100 shadow-sm"
+           title="Share product"
+        >
+          {shared ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4" />}
+        </button>
       </div>
 
       {/* Middle Section: Price Tracking Data */}

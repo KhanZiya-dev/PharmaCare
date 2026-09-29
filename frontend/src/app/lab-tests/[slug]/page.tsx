@@ -7,6 +7,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ProductImage } from "./ProductImage";
+import { ShareButton } from "@/components/ShareButton";
+import { BackButton } from "@/components/BackButton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -79,10 +81,7 @@ export default async function LabTestPage({
         
         {/* Top Navigation & Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back to Search
-          </Link>
+          <BackButton />
           <div className="w-full md:w-96 page-search-bar transition-opacity duration-500">
             <SearchAutocomplete />
           </div>
@@ -94,9 +93,13 @@ export default async function LabTestPage({
             <ProductImage imageUrl={product.image_url} name={product.name} />
           </div>
           
-          <div className="flex-1 min-w-0 w-full">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h1 className="font-serif text-2xl md:text-3xl font-bold text-gray-900 truncate">
+          <div className="flex-1 min-w-0 w-full relative">
+            <div className="absolute top-0 right-0">
+              <ShareButton title={product.name} path={`/lab-tests/${product.slug}`} />
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3 mb-2 pr-12">
+              <h1 className="font-serif text-2xl md:text-3xl font-bold text-gray-900 line-clamp-2">
                 {product.name}
               </h1>
               {product.fasting_required && (
@@ -107,8 +110,8 @@ export default async function LabTestPage({
               )}
             </div>
             
-            <div className="flex items-center gap-2 mb-4">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2 mb-4 pr-2">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md shrink-0">
                 <Microscope className="w-3 h-3" />
                 Lab Test
               </span>

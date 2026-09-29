@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { Search, Loader2, Microscope, Camera } from "lucide-react";
 import LensSearchModal from "@/components/LensSearchModal";
+import { extractSearchTermFromUrl } from "@/utils/urlParser";
 
 interface Product {
   id: string;
@@ -19,6 +20,17 @@ export default function LabTestsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLensOpen, setIsLensOpen] = useState(false);
+
+  // Read search query from URL on initial load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q") || params.get("search");
+      if (q) {
+        setSearchQuery(q);
+      }
+    }
+  }, []);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -72,9 +84,13 @@ export default function LabTestsPage() {
           <input
             type="text"
             className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
-            placeholder="Search lab tests by name..."
+            placeholder="Search lab tests by name or paste link..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              const extracted = extractSearchTermFromUrl(val);
+              setSearchQuery(extracted || val);
+            }}
           />
 
         </div>

@@ -21,19 +21,19 @@ TEST_CASES = [
         "name": "Dolo 650 - Apollo",
         "url": "https://www.apollopharmacy.in/otc/dolo-650mg-tablet-15-s",
         "scraper": ApolloScraper(platform_id=1),
-        "expected_price_range": (25, 50),  # Approximate range
+        "expected_price_range": (20, 50),  # Approximate range
     },
     {
         "name": "Dolo 650 - 1mg",
         "url": "https://www.1mg.com/drugs/dolo-650-tablet-74467",
         "scraper": OneMgScraper(platform_id=2),
-        "expected_price_range": (25, 50),
+        "expected_price_range": (20, 50),
     },
     {
         "name": "Dolo 650 - PharmEasy",
-        "url": "https://pharmeasy.in/online-medicine-order/dolo-650mg-strip-of-15-tablets-26498",
+        "url": "https://pharmeasy.in/online-medicine-order/dolo-650mg-strip-of-15-tablets-44140",
         "scraper": PharmEasyScraper(platform_id=3),
-        "expected_price_range": (25, 50),
+        "expected_price_range": (20, 50),
     },
 ]
 

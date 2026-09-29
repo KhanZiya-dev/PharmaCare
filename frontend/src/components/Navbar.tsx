@@ -158,9 +158,10 @@ export function Navbar() {
                   >
                     {active && (
                       <motion.div
-                        layoutId="capsule"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         className="absolute inset-0 bg-gradient-to-r from-[#00796B] to-[#002169] rounded-full shadow-md shadow-[#00796B]/20 -z-10"
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        transition={{ duration: 0.2 }}
                       />
                     )}
                     <span className="relative z-10 flex-shrink-0">{item.icon}</span>
