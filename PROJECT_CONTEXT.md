@@ -7,9 +7,9 @@
 ---
 
 ## 📅 Last Updated
-- **Date:** 2026-10-31 (14:39 IST)
-- **Updated By:** Claude Opus 4.6 (Thinking)
-- **Conversation Summary:** Fixed 1mg "Data unavailable" issue — 263/385 products had stale data. Applied Fix A (latest_price without time limit + 30/90 day chart toggle) and Fix B (scraper priority queue by staleness).
+- **Date:** 2026-10-31 (14:57 IST)
+- **Updated By:** Gemini 3.8 Flash
+- **Conversation Summary:** Fixed 1mg "Data unavailable" issue (staleness-based scraper priority queue + latest_price without time limit + 30/90 day chart toggle). Fixed PriceHistoryChart dark mode visibility issues (high-contrast line/legend colors, dark custom tooltip, theme-aware axis/grid, hollow dot rings).
 
 ---
 
