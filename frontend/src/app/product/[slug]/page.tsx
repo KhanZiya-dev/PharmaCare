@@ -84,9 +84,16 @@ export default async function ProductPage({
 
       <div className="flex-1 max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] w-full py-[clamp(1.5rem,5vw,3rem)]">
         
-        {/* Top Navigation & Search */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        {/* Mobile: Back Button (scrolls away with page) */}
+        <div className="mb-3 md:hidden">
           <BackButton />
+        </div>
+
+        {/* Top Search: Sticky on mobile under navbar, static on desktop */}
+        <div className="sticky top-[4.75rem] md:static z-30 -mx-[clamp(1rem,5vw,2rem)] px-[clamp(1rem,5vw,2rem)] py-2 bg-background/95 backdrop-blur-md md:bg-transparent md:backdrop-blur-none md:p-0 md:m-0 mb-6 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
+          <div className="hidden md:block">
+            <BackButton />
+          </div>
           <div className="w-full md:w-96 page-search-bar transition-opacity duration-500">
             <SearchAutocomplete />
           </div>
