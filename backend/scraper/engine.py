@@ -130,8 +130,8 @@ async def platform_worker(
     platform_name = links[0].get("platforms", {}).get("name", worker_name)
     logger.info(f"Worker [{worker_name}] starting with {len(links)} URLs for {platform_name}")
     
-    # Shuffle to avoid predictable order
-    random.shuffle(links)
+    # Links are pre-sorted by staleness (oldest/never-scraped first) in run_engine_async.
+    # Do NOT shuffle — priority order ensures neglected products get scraped first.
     
     # Track failed URLs for retry
     failed_links = []
@@ -297,13 +297,13 @@ async def run_engine_async():
 
     logger.info("Fetching platform product links...")
     links_res = supabase.table("platform_product_links").select(
-        "id, scrape_url, product_id, platforms(id, name)"
+        "id, scrape_url, product_id, last_scraped, platforms(id, name)"
     ).execute()
     product_links = links_res.data or []
 
     logger.info("Fetching platform lab test links...")
     lab_links_res = supabase.table("platform_lab_test_links").select(
-        "id, scrape_url, lab_test_id, platforms(id, name)"
+        "id, scrape_url, lab_test_id, last_scraped, platforms(id, name)"
     ).execute()
     lab_links = lab_links_res.data or []
 
@@ -330,7 +330,10 @@ async def run_engine_async():
         platform_groups[platform_key].append(link)
     
     for key, links in platform_groups.items():
-        logger.info(f"Platform '{key}': {len(links)} URLs to scrape")
+        # Priority sort: never-scraped first (NULL), then oldest last_scraped first.
+        # This ensures neglected products get scraped before recently-updated ones.
+        links.sort(key=lambda x: x.get('last_scraped') or '0000-01-01T00:00:00')
+        logger.info(f"Platform '{key}': {len(links)} URLs to scrape (priority-sorted by staleness)")
 
     results = []
     

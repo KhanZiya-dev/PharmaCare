@@ -400,12 +400,14 @@ async def persist_zeno_price(product_id: str, zeno_data: dict):
 
 @app.get("/product/{slug}")
 @limiter.limit("60/minute")
-async def get_product(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
+async def get_product(request: Request, slug: str, days: int = Query(30, ge=7, le=90), supabase: Client = Depends(get_supabase)):
     """
-    Fetch product data with 5-min cache, parallel DB queries, and cached Zeno API.
+    Fetch product data with cache, parallel DB queries, and cached Zeno API.
+    `days` controls how far back the price history chart goes (default 30, max 90).
+    latest_price is always the most recent entry regardless of `days`.
     """
     # ── Check full-response cache first ──
-    cache_key = f"product:{slug}"
+    cache_key = f"product:{slug}:{days}"
     cached = cache_get(cache_key)
     if cached is not None:
         return cached
@@ -421,7 +423,7 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
         raise HTTPException(status_code=404, detail="Product not found")
     
     from datetime import datetime, timedelta, timezone
-    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    history_cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
     # 2. Run remaining DB queries IN PARALLEL using asyncio.to_thread
     async def fetch_mappings():
@@ -472,18 +474,32 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
     history_data = []
     if mapping_ids:
         history_res = await asyncio.to_thread(
-            lambda: supabase.table("price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", thirty_days_ago).order("scraped_at", desc=False).execute()
+            lambda: supabase.table("price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", history_cutoff).order("scraped_at", desc=False).execute()
         )
         history_data = history_res.data
+    
+    # 4. Fetch the MOST RECENT price per mapping (no time limit) for latest_price
+    #    This ensures products always show a price even if not scraped recently
+    latest_prices = {}
+    if mapping_ids:
+        latest_res = await asyncio.to_thread(
+            lambda: supabase.table("price_history").select("*").in_("mapping_id", mapping_ids).order("scraped_at", desc=True).limit(len(mapping_ids) * 3).execute()
+        )
+        for row in (latest_res.data or []):
+            if row["mapping_id"] not in latest_prices:
+                latest_prices[row["mapping_id"]] = row
         
     for mapping in mappings:
         mapping["history"] = [h for h in history_data if h["mapping_id"] == mapping["id"]]
-        if mapping["history"]:
+        # latest_price = most recent entry ever (not limited by days param)
+        if mapping["id"] in latest_prices:
+            mapping["latest_price"] = latest_prices[mapping["id"]]
+        elif mapping["history"]:
             mapping["latest_price"] = mapping["history"][-1]
         else:
             mapping["latest_price"] = None
 
-    # 4. Append Zeno data to mappings
+    # 5. Append Zeno data to mappings
     if zeno_data:
         now = datetime.now(timezone.utc)
         if zeno_data.get("price") and zeno_data.get("price") > 0:
@@ -672,13 +688,14 @@ def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = D
 
 @app.get("/lab-test/{slug}")
 @limiter.limit("60/minute")
-def get_lab_test(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
+def get_lab_test(request: Request, slug: str, days: int = Query(30, ge=7, le=90), supabase: Client = Depends(get_supabase)):
     """
-    Fetch current prices and 30-day history data for a specific lab test.
-    Cached for 5 minutes.
+    Fetch current prices and history data for a specific lab test.
+    `days` controls how far back the price history chart goes (default 30, max 90).
+    latest_price is always the most recent entry regardless of `days`.
     """
     # ── Check cache first ──
-    cache_key = f"lab_test:{slug}"
+    cache_key = f"lab_test:{slug}:{days}"
     cached = cache_get(cache_key)
     if cached is not None:
         return cached
@@ -700,20 +717,30 @@ def get_lab_test(request: Request, slug: str, supabase: Client = Depends(get_sup
     
     mappings = mappings_res.data
     
-    # 3. Fetch price history for these mappings for the last 30 days
+    # 3. Fetch price history for these mappings
     from datetime import datetime, timedelta, timezone
-    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    history_cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     
     mapping_ids = [m["id"] for m in mappings]
     history_data = []
     
     if mapping_ids:
-        history_res = supabase.table("lab_test_price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", thirty_days_ago).order("scraped_at", desc=False).execute()
+        history_res = supabase.table("lab_test_price_history").select("*").in_("mapping_id", mapping_ids).gte("scraped_at", history_cutoff).order("scraped_at", desc=False).execute()
         history_data = history_res.data
+    
+    # Fetch MOST RECENT price per mapping (no time limit) for latest_price
+    latest_prices = {}
+    if mapping_ids:
+        latest_res = supabase.table("lab_test_price_history").select("*").in_("mapping_id", mapping_ids).order("scraped_at", desc=True).limit(len(mapping_ids) * 3).execute()
+        for row in (latest_res.data or []):
+            if row["mapping_id"] not in latest_prices:
+                latest_prices[row["mapping_id"]] = row
         
     for mapping in mappings:
         mapping["history"] = [h for h in history_data if h["mapping_id"] == mapping["id"]]
-        if mapping["history"]:
+        if mapping["id"] in latest_prices:
+            mapping["latest_price"] = latest_prices[mapping["id"]]
+        elif mapping["history"]:
             mapping["latest_price"] = mapping["history"][-1]
         else:
             mapping["latest_price"] = None

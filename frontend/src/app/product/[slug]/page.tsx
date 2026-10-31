@@ -13,9 +13,9 @@ import { BackButton } from "@/components/BackButton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-async function getProductData(slug: string) {
+async function getProductData(slug: string, days: number = 30) {
   try {
-    const res = await fetch(`${API_URL}/product/${slug}`, {
+    const res = await fetch(`${API_URL}/product/${slug}?days=${days}`, {
       next: { revalidate: 300 }
     });
     
@@ -55,11 +55,15 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ days?: string }>;
 }) {
   const { slug } = await params;
-  const data = await getProductData(slug);
+  const resolvedSearchParams = await searchParams;
+  const days = Math.min(90, Math.max(7, Number(resolvedSearchParams.days) || 30));
+  const data = await getProductData(slug, days);
 
   if (!data) {
     notFound();
@@ -173,7 +177,7 @@ export default async function ProductPage({
           {/* Right Column: Price History Chart */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <PriceHistoryChart platforms={platforms} />
+              <PriceHistoryChart platforms={platforms} days={days} />
             </div>
           </div>
 

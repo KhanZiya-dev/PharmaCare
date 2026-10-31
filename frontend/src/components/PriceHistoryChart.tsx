@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import {
   LineChart,
@@ -34,9 +35,30 @@ interface PlatformData {
 
 interface PriceHistoryChartProps {
   platforms: PlatformData[];
+  days?: number;
 }
 
-export function PriceHistoryChart({ platforms }: PriceHistoryChartProps) {
+const RANGE_OPTIONS = [
+  { label: "30 Days", value: 30 },
+  { label: "90 Days", value: 90 },
+] as const;
+
+export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleRangeChange = (newDays: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newDays === 30) {
+      params.delete("days");
+    } else {
+      params.set("days", String(newDays));
+    }
+    const query = params.toString();
+    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  };
+
   // Wrap in useMemo to prevent expensive recalculations on every render
   const chartData = React.useMemo(() => {
     const dateSet = new Set<string>();
@@ -98,7 +120,23 @@ export function PriceHistoryChart({ platforms }: PriceHistoryChartProps) {
   return (
     <div className="w-full h-[400px] bg-white rounded-2xl shadow-sm border border-accent p-6 relative">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-foreground text-lg">30-Day Price History</h3>
+        <h3 className="font-bold text-foreground text-lg">Price History</h3>
+        {/* 30 / 90 Day Toggle */}
+        <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+          {RANGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleRangeChange(opt.value)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                days === opt.value
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -131,7 +169,6 @@ export function PriceHistoryChart({ platforms }: PriceHistoryChartProps) {
                 return (
                   <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-5">
                     {payload.map((entry: any, index: number) => {
-                      // Fix: extract original color if it was dimmed by hide=true earlier, but in our case, the color in payload is still the same, we just override opacity.
                       return (
                         <li 
                           key={`item-${index}`} 
