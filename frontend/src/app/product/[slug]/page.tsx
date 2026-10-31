@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { ProductImage } from "./ProductImage";
 import { ShareButton } from "@/components/ShareButton";
 import { BackButton } from "@/components/BackButton";
+import { StickyMobileSearch } from "@/components/StickyMobileSearch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -87,9 +88,9 @@ export default async function ProductPage({
         {/* Top Navigation & Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <BackButton />
-          <div className="w-full md:w-96 page-search-bar transition-opacity duration-500">
+          <StickyMobileSearch className="w-full md:w-96 page-search-bar transition-opacity duration-500">
             <SearchAutocomplete />
-          </div>
+          </StickyMobileSearch>
         </div>
 
         {/* Scanned Medicines Quick Nav */}

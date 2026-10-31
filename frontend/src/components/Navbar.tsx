@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pill, Menu, X, Home, FlaskConical, TrendingUp, Search } from "lucide-react";
+import { Pill, Menu, X, MessageCircle, Home, FlaskConical, TrendingUp, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,61 +29,40 @@ export function Navbar() {
   }, [isSearchExpanded]);
 
   useEffect(() => {
-    let observer: IntersectionObserver | null = null;
-    let removeScrollListener: (() => void) | null = null;
-
-    const setupWatcher = () => {
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
-      if (removeScrollListener) {
-        removeScrollListener();
-        removeScrollListener = null;
-      }
-
-      // Check if page has an in-page search bar (.page-search-bar or #hero-search-bar)
-      const pageSearchBar = document.querySelector('.page-search-bar');
+    // Watch the hero search bar on the home page using IntersectionObserver
+    const heroSearchBar = document.getElementById('hero-search-bar');
+    
+    if (heroSearchBar) {
+      // Home page: show navbar search when hero search bar scrolls out of view
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setScrolled(!entry.isIntersecting);
+        },
+        { threshold: 0, rootMargin: '-80px 0px 0px 0px' }
+      );
+      observer.observe(heroSearchBar);
+      return () => observer.disconnect();
+    } else {
+      // Other pages: use scroll position as fallback
+      let ticking = false;
+      let lastKnownScrolled = false;
       
-      if (pageSearchBar) {
-        // When the in-page search bar scrolls out of view under the navbar, activate sticky navbar search
-        observer = new IntersectionObserver(
-          ([entry]) => {
-            setScrolled(!entry.isIntersecting);
-          },
-          { threshold: 0, rootMargin: '-65px 0px 0px 0px' }
-        );
-        observer.observe(pageSearchBar);
-      } else {
-        // Fallback for pages without an in-page search bar (e.g. /trends)
-        let ticking = false;
-        let lastKnown = false;
-        const handleScroll = () => {
-          if (!ticking) {
-            window.requestAnimationFrame(() => {
-              const isScrolled = window.scrollY > 80;
-              if (isScrolled !== lastKnown) {
-                lastKnown = isScrolled;
-                setScrolled(isScrolled);
-              }
-              ticking = false;
-            });
-            ticking = true;
-          }
-        };
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        removeScrollListener = () => window.removeEventListener("scroll", handleScroll);
-      }
-    };
-
-    // Small delay to ensure client-side DOM is mounted after page transitions
-    const timer = setTimeout(setupWatcher, 60);
-
-    return () => {
-      clearTimeout(timer);
-      if (observer) observer.disconnect();
-      if (removeScrollListener) removeScrollListener();
-    };
+      const handleScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const isScrolled = window.scrollY > 300;
+            if (isScrolled !== lastKnownScrolled) {
+              lastKnownScrolled = isScrolled;
+              setScrolled(isScrolled);
+            }
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, [pathname]);
 
   const isActive = (path: string) => {
@@ -92,12 +71,10 @@ export function Navbar() {
   };
 
   return (
-    <nav className={`sticky top-0 w-full z-50 transition-colors duration-200 ${
-      scrolled 
-        ? "bg-background/85 backdrop-blur-md shadow-xs py-1.5" 
-        : "py-2"
-    }`}>
-      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-1 relative">
+    <nav className="sticky top-0 w-full z-50 py-2">
+
+      
+      <div className="max-w-7xl mx-auto px-[clamp(1rem,5vw,2rem)] pt-2 relative">
         <div className="flex justify-between items-center h-[clamp(3.5rem,8vw,4.5rem)]">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -269,26 +246,6 @@ export function Navbar() {
             </AnimatePresence>
           </div>
         </div>
-
-        {/* Mobile Floating Sticky Search Bar (shown on scroll across all pages) */}
-        <AnimatePresence>
-          {scrolled && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="md:hidden w-full pt-1 pb-1"
-            >
-              <div className="w-full drop-shadow-md">
-                <SearchAutocomplete 
-                  compact 
-                  hideCameraIcon={pathname?.startsWith('/lab-tests')} 
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </nav>
   );

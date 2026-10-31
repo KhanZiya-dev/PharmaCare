@@ -1,4 +1,5 @@
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { StickyMobileSearch } from "@/components/StickyMobileSearch";
 import { FloatingCards } from "@/components/FloatingCards";
 import { ShieldCheck, TrendingDown, Camera, Activity } from "lucide-react";
 import Link from "next/link";
@@ -39,7 +40,9 @@ export default async function Home() {
           </p>
           
           <div id="hero-search-bar" className="page-search-bar w-full max-w-xl mx-auto lg:mx-0 opacity-0 animate-[fadeUp_1s_ease-out_0.6s_forwards] transition-opacity duration-500">
-            <SearchAutocomplete />
+            <StickyMobileSearch>
+              <SearchAutocomplete />
+            </StickyMobileSearch>
           </div>
         </div>
 

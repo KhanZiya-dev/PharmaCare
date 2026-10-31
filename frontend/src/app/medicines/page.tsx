@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { StickyMobileSearch } from "@/components/StickyMobileSearch";
 import { Search, Loader2, Stethoscope, Camera } from "lucide-react";
 import LensSearchModal from "@/components/LensSearchModal";
 import { extractSearchTermFromUrl } from "@/utils/urlParser";

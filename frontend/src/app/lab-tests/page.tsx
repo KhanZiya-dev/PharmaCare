@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { StickyMobileSearch } from "@/components/StickyMobileSearch";
 import { Search, Loader2, Microscope, Camera } from "lucide-react";
 import LensSearchModal from "@/components/LensSearchModal";
 import { extractSearchTermFromUrl } from "@/utils/urlParser";
@@ -79,21 +80,22 @@ export default function LabTestsPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-xl mb-8 page-search-bar transition-opacity duration-500">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
-            placeholder="Search lab tests by name or paste link..."
-            value={searchQuery}
-            onChange={(e) => {
-              const val = e.target.value;
-              const extracted = extractSearchTermFromUrl(val);
-              setSearchQuery(extracted || val);
-            }}
-          />
-
-        </div>
+        <StickyMobileSearch className="max-w-xl mb-8 page-search-bar transition-opacity duration-500">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
+              placeholder="Search lab tests by name or paste link..."
+              value={searchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                const extracted = extractSearchTermFromUrl(val);
+                setSearchQuery(extracted || val);
+              }}
+            />
+          </div>
+        </StickyMobileSearch>
 
         {/* Product Grid */}
         {isLoading ? (
