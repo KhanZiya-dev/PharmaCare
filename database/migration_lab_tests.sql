@@ -54,3 +54,19 @@ CREATE POLICY "Enable read access for all users" ON public.lab_test_price_histor
 
 -- Index for fast time-series fetching
 CREATE INDEX idx_lab_test_price_history_mapping_time ON public.lab_test_price_history (mapping_id, scraped_at DESC);
+
+-- Explicit GRANT statements for Data API access (required for tables created after Oct 30, 2025)
+-- anon: read-only access for public frontend
+GRANT SELECT ON public.lab_tests TO anon;
+GRANT SELECT ON public.platform_lab_test_links TO anon;
+GRANT SELECT ON public.lab_test_price_history TO anon;
+
+-- authenticated: read-only access
+GRANT SELECT ON public.lab_tests TO authenticated;
+GRANT SELECT ON public.platform_lab_test_links TO authenticated;
+GRANT SELECT ON public.lab_test_price_history TO authenticated;
+
+-- service_role: full CRUD access for backend/scraper
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.lab_tests TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_lab_test_links TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.lab_test_price_history TO service_role;

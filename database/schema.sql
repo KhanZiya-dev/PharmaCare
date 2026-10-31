@@ -83,3 +83,25 @@ CREATE POLICY "Enable read access for all users" ON public.missing_searches FOR 
 
 -- Note: The Service Role Key (used by backend/scraper) automatically bypasses RLS,
 -- so we do not need to create explicit INSERT/UPDATE/DELETE policies for the scraper API.
+
+-- Explicit GRANT statements for Data API access (required for tables created after Oct 30, 2025)
+-- anon: read-only access for public frontend
+GRANT SELECT ON public.products TO anon;
+GRANT SELECT ON public.platforms TO anon;
+GRANT SELECT ON public.platform_product_links TO anon;
+GRANT SELECT ON public.price_history TO anon;
+GRANT SELECT ON public.missing_searches TO anon;
+
+-- authenticated: read-only access (same as anon for this app)
+GRANT SELECT ON public.products TO authenticated;
+GRANT SELECT ON public.platforms TO authenticated;
+GRANT SELECT ON public.platform_product_links TO authenticated;
+GRANT SELECT ON public.price_history TO authenticated;
+GRANT SELECT ON public.missing_searches TO authenticated;
+
+-- service_role: full CRUD access for backend/scraper
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.products TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platforms TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_product_links TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.price_history TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.missing_searches TO service_role;

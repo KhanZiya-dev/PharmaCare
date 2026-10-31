@@ -546,12 +546,37 @@ async def get_product(request: Request, slug: str, supabase: Client = Depends(ge
 @app.get("/trends/variance")
 def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
     """
-    Returns products with the highest price variance. Cached for 30 minutes (heavy query).
+    Returns products with the highest price variance. Cached for 30 minutes.
+    Uses DB-side RPC for performance, with Python fallback.
     """
     cached = cache_get("trends:variance")
     if cached is not None:
         return cached
 
+    # ── Try fast RPC path first ──
+    try:
+        rpc_res = supabase.rpc("get_high_variance_products", {"result_limit": 12}).execute()
+        if rpc_res.data:
+            result = []
+            for row in rpc_res.data:
+                result.append({
+                    "id": row["id"],
+                    "name": row["name"],
+                    "slug": row["slug"],
+                    "category": row["category"],
+                    "image_url": row.get("image_url"),
+                    "lowestPrice": float(row["lowest_price"]),
+                    "highestPrice": float(row["highest_price"]),
+                    "variance_pct": float(row["variance_pct"]),
+                    "discount_pct": float(row["discount_pct"]),
+                    "platformCount": int(row["platform_count"])
+                })
+            cache_set("trends:variance", result, ttl=1800)  # 30 min
+            return result
+    except Exception:
+        logging.info("get_high_variance_products RPC not available, falling back to Python computation.")
+
+    # ── Fallback: Python-side computation (slower) ──
     try:
         res = supabase.table("products").select(
             "id, name, slug, category, image_url, platform_product_links(id, price_history(mrp, selling_price, in_stock, is_restricted))"
@@ -587,10 +612,7 @@ def get_high_variance_trends(supabase: Client = Depends(get_supabase)):
                 var_pct = (variance / min_p) * 100
                 discount_pct = (variance / max_p) * 100
                 
-                # Filter out suspicious data:
-                # - Lowest price should be at least ₹10 (not some glitch)
-                # - Highest price should be under ₹50,000
-                # - Variance shouldn't exceed 85% (likely a data error)
+                # Filter out suspicious data
                 if min_p < 10 or max_p > 50000 or var_pct > 85:
                     continue
                 
@@ -653,7 +675,14 @@ def redirect_to_platform(request: Request, mapping_id: str, supabase: Client = D
 def get_lab_test(request: Request, slug: str, supabase: Client = Depends(get_supabase)):
     """
     Fetch current prices and 30-day history data for a specific lab test.
+    Cached for 5 minutes.
     """
+    # ── Check cache first ──
+    cache_key = f"lab_test:{slug}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     # 1. Fetch lab test details
     try:
         test_res = supabase.table("lab_tests").select("*").eq("slug", slug).single().execute()
@@ -692,8 +721,11 @@ def get_lab_test(request: Request, slug: str, supabase: Client = Depends(get_sup
     # Append category for frontend consistency
     lab_test["category"] = "lab_test"
             
-    return {
+    response = {
         "product": lab_test,
         "platforms": mappings,
         "alternatives": []
     }
+
+    cache_set(cache_key, response, ttl=300)  # 5 min
+    return response

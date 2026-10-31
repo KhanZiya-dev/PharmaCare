@@ -15,7 +15,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 async function getProductData(slug: string) {
   try {
     const res = await fetch(`${API_URL}/lab-test/${slug}`, {
-      next: { revalidate: 60 } // Revalidate every minute
+      next: { revalidate: 300 } // Revalidate every 5 minutes
     });
     
     if (!res.ok) {
