@@ -2,7 +2,7 @@ import httpx
 import urllib.parse
 from typing import Dict, Any, Optional
 
-ZENO_SEARCH_API = "https://zeno-search.zeno.health/api/search"
+ZENO_SEARCH_API = "https://ecom.zeno.health/api/search-service/v1/zeno-search/drugs/"
 
 async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = None) -> Dict[str, Any]:
     """
@@ -46,7 +46,7 @@ async def fetch_zeno_price(query: str, client: Optional[httpx.AsyncClient] = Non
                     ]
                     pack_patterns = [
                         r'strip\s*of\s*\d+', r'pack\s*of\s*\d+', r'bottle\s*of\s*\d+\s*(?:ml|tablets?|capsules?)?',
-                        r'box\s*of\s*\d+', r'tube\s*of\s*\d+\s*(?:gm?|g)?', r'\d+\s*(?:ml|gm?|g|mg|mcg|l|kg)\b',
+                        r'box\s*of\s*\d+', r'tube\s*of\s*\d+\s*(?:gm?|g)?',
                         r'\d+\s*(?:s|\'s)\b', r'\(\s*\d+[^)]*\)'
                     ]
                     def normalize(n):
