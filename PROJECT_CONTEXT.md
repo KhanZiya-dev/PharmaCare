@@ -7,13 +7,13 @@
 ---
 
 ## 📅 Last Updated
-- **Date:** 2026-10-31 (15:40 IST)
+- **Date:** 2026-10-31 (15:45 IST)
 - **Updated By:** Gemini 3.8 Flash
 - **Conversation Summary:** 
   1. Fixed 1mg "Data unavailable" issue (staleness-based scraper priority queue + latest_price without time limit + 30/90 day chart toggle).
   2. Fixed PriceHistoryChart dark mode visibility issues (high-contrast line/legend colors, dark custom tooltip, theme-aware axis/grid, hollow dot rings).
   3. Reverted global Navbar floating search bar changes from commit `89ea6f6`.
-  4. Implemented dedicated `StickyMobileSearch` component for the actual in-page search bars across all pages (`product/[slug]`, `lab-tests/[slug]`, `medicines`, `lab-tests`, `home`). Floats cleanly as a rounded pill (`drop-shadow-md`, transparent backdrop, no solid background band) right below navbar pills (`top-[4.75rem]`). Keeps an exact-height placeholder to eliminate layout shifts, and stays floating indefinitely even when scrolling all the way to the footer / About PharmaCare section without hiding. Desktop view remains fully static and responsive.
+  4. Implemented dedicated `StickyMobileSearch` component for the actual in-page search bars across ALL 6 pages of the entire app: Home (`/`), Medicines (`/medicines`), Lab Tests (`/lab-tests`), Price Trends (`/trends`), Medicine Details (`/product/[slug]`), and Lab Test Details (`/lab-tests/[slug]`). Floats cleanly as a rounded pill (`drop-shadow-md`, transparent backdrop, no solid background band) right below navbar pills (`top-[4.75rem]`). Keeps an exact-height placeholder to eliminate layout shifts, and stays floating indefinitely even when scrolling all the way to the footer / About PharmaCare section without hiding. Desktop view remains fully static and responsive.
 
 ---
 

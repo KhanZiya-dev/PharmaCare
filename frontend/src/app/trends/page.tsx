@@ -1,4 +1,6 @@
 import { ProductCard } from "@/components/ProductCard";
+import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { StickyMobileSearch } from "@/components/StickyMobileSearch";
 import { TrendingDown, TrendingUp, BarChart3, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -42,6 +44,11 @@ export default async function TrendsPage() {
             Understand pricing patterns, spot fake discounts with historical data, and make informed purchasing decisions.
           </p>
         </div>
+
+        {/* Search Bar */}
+        <StickyMobileSearch className="max-w-xl mb-8 page-search-bar transition-opacity duration-500">
+          <SearchAutocomplete />
+        </StickyMobileSearch>
 
         {/* How It Works Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

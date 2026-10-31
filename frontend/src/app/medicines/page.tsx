@@ -82,29 +82,31 @@ export default function MedicinesPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-xl mb-8 page-search-bar transition-opacity duration-500">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
-            placeholder="Search medicines by name or paste link..."
-            value={searchQuery}
-            onChange={(e) => {
-              const val = e.target.value;
-              const extracted = extractSearchTermFromUrl(val);
-              setSearchQuery(extracted || val);
-            }}
-          />
+        <StickyMobileSearch className="max-w-xl mb-8 page-search-bar transition-opacity duration-500">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              className="w-full pl-12 pr-14 py-3.5 rounded-full border-2 border-accent bg-white focus:border-primary focus:ring-0 text-base shadow-sm transition-colors outline-none"
+              placeholder="Search medicines by name or paste link..."
+              value={searchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                const extracted = extractSearchTermFromUrl(val);
+                setSearchQuery(extracted || val);
+              }}
+            />
 
-          <button
-            type="button"
-            onClick={() => setIsLensOpen(true)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
-            title="Search by Image"
-          >
-            <Camera className="w-5 h-5" />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setIsLensOpen(true)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+              title="Search by Image"
+            >
+              <Camera className="w-5 h-5" />
+            </button>
+          </div>
+        </StickyMobileSearch>
 
         {/* Product Grid */}
         {isLoading ? (
