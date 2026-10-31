@@ -7,9 +7,9 @@
 ---
 
 ## 📅 Last Updated
-- **Date:** 2026-10-31 (15:15 IST)
+- **Date:** 2026-10-31 (15:25 IST)
 - **Updated By:** Gemini 3.8 Flash
-- **Conversation Summary:** Fixed 1mg "Data unavailable" issue (staleness-based scraper priority queue + latest_price without time limit + 30/90 day chart toggle). Fixed PriceHistoryChart dark mode visibility issues (high-contrast line/legend colors, dark custom tooltip, theme-aware axis/grid, hollow dot rings). Added sticky mobile search bar that scrolls into place below navbar and sticks permanently during page scroll.
+- **Conversation Summary:** Fixed 1mg "Data unavailable" issue (staleness-based scraper priority queue + latest_price without time limit + 30/90 day chart toggle). Fixed PriceHistoryChart dark mode visibility issues (high-contrast line/legend colors, dark custom tooltip, theme-aware axis/grid, hollow dot rings). Fixed mobile floating search bar across ALL pages via global Navbar integration: triggers on scroll via IntersectionObserver on .page-search-bar, remains floating without hiding in footer/about section, and has clean floating pill shadow with backdrop blur.
 
 ---
 
