@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useTheme } from "next-themes";
 
 import {
   LineChart,
@@ -43,10 +44,23 @@ const RANGE_OPTIONS = [
   { label: "90 Days", value: 90 },
 ] as const;
 
+// High contrast palette: dark mode uses vibrant pastels/neons so they pop on dark backgrounds
+const LIGHT_COLORS = ["#00236f", "#006a61", "#e85d04", "#7209b7", "#0284c7"];
+const DARK_COLORS = ["#60a5fa", "#2dd4bf", "#fb923c", "#c084fc", "#38bdf8"];
+
 export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { theme, resolvedTheme } = useTheme();
+
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && (theme === "monochrome" || resolvedTheme === "monochrome");
+  const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
 
   const handleRangeChange = (newDays: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -99,14 +113,48 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
     });
   }, [platforms]);
 
-  // Colors for different platforms
-  const colors = ["#00236f", "#006a61", "#e85d04", "#7209b7", "#3a0ca3"];
-
-  const [activePlatform, React_useState] = React.useState<string | null>(null);
+  const [activePlatform, setActivePlatform] = React.useState<string | null>(null);
 
   const handleLegendClick = (e: any) => {
     const { dataKey } = e;
-    React_useState(prev => (prev === dataKey ? null : dataKey));
+    setActivePlatform(prev => (prev === dataKey ? null : dataKey));
+  };
+
+  // Custom Theme-Aware Tooltip
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div
+          className={`rounded-xl p-3 shadow-xl border text-xs min-w-[150px] transition-colors ${
+            isDark
+              ? "bg-[#18181b] border-zinc-700/80 text-zinc-100 shadow-black/70"
+              : "bg-white border-gray-200 text-gray-900 shadow-gray-200/60"
+          }`}
+        >
+          <p
+            className={`font-semibold mb-2 pb-1 border-b ${
+              isDark ? "text-zinc-400 border-zinc-700/60" : "text-gray-500 border-gray-100"
+            }`}
+          >
+            {label}
+          </p>
+          <div className="space-y-1.5">
+            {payload.map((entry: any, index: number) => (
+              <div key={`tip-${index}`} className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 font-medium truncate max-w-[120px]" style={{ color: entry.color }}>
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                  <span className="truncate">{entry.name}</span>
+                </span>
+                <span className="font-bold tabular-nums shrink-0" style={{ color: entry.color }}>
+                  ₹{entry.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   if (!chartData || chartData.length === 0) {
@@ -122,15 +170,15 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-bold text-foreground text-lg">Price History</h3>
         {/* 30 / 90 Day Toggle */}
-        <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+        <div className="flex items-center bg-gray-100 dark:bg-zinc-800/80 rounded-lg p-0.5 border border-transparent dark:border-zinc-700/60">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => handleRangeChange(opt.value)}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 days === opt.value
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-primary shadow-sm dark:bg-zinc-700 dark:text-white dark:shadow-none"
+                  : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
             >
               {opt.label}
@@ -144,25 +192,26 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
             data={chartData}
             margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e3e5" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke={isDark ? "#2a2d32" : "#e0e3e5"}
+            />
             <XAxis 
               dataKey="displayDate" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#6b7280', fontSize: 12 }} 
+              tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }} 
               dy={10}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#6b7280', fontSize: 12 }}
+              tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}
               tickFormatter={(value) => `₹${value}`}
               dx={-10}
             />
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: '1px solid #e0e3e5', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-              formatter={(value: any) => [`₹${value}`, undefined]}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend 
               content={(props: any) => {
                 const { payload } = props;
@@ -172,7 +221,7 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
                       return (
                         <li 
                           key={`item-${index}`} 
-                          className="flex items-center cursor-pointer text-sm font-medium"
+                          className="flex items-center cursor-pointer text-sm font-medium transition-opacity"
                           style={{ 
                             opacity: activePlatform !== null && activePlatform !== entry.value ? 0.3 : 1,
                             color: entry.color 
@@ -191,7 +240,7 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            React_useState(null);
+                            setActivePlatform(null);
                           }}
                           className="text-xs font-semibold bg-primary/10 text-primary px-3 py-1 rounded-full hover:bg-primary/20 transition-colors"
                         >
@@ -208,15 +257,25 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
               // Only render line if platform has data
               if (platform.history.length > 0) {
                 const isHidden = activePlatform !== null && activePlatform !== platform.platforms.name;
+                const lineColor = colors[index % colors.length];
                 return (
                   <Line
                     key={platform.id}
                     type="monotone"
                     dataKey={platform.platforms.name}
-                    stroke={colors[index % colors.length]}
+                    stroke={lineColor}
                     strokeWidth={3}
-                    dot={{ r: 4, strokeWidth: 2 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    dot={{
+                      r: 4,
+                      strokeWidth: 2,
+                      fill: isDark ? "#171717" : "#ffffff",
+                      stroke: lineColor,
+                    }}
+                    activeDot={{
+                      r: 6,
+                      strokeWidth: 0,
+                      fill: lineColor,
+                    }}
                     hide={isHidden}
                     opacity={isHidden ? 0.3 : 1}
                   />
