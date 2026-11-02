@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import LensSearchModal from "./LensSearchModal";
+import { extractSearchTermFromUrl } from "@/utils/urlParser";
 
 // --- Types ---
 interface SearchAutocompleteProps {
@@ -310,11 +311,17 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            const extracted = extractSearchTermFromUrl(query);
+            const effectiveQuery = (extracted || query).trim();
             if (results.length > 0) {
               const target =
                 highlightedIndex >= 0 ? results[highlightedIndex] : results[0];
-              saveRecentSearch(query.trim());
+              saveRecentSearch(effectiveQuery);
               router.push(target.category === "lab_test" ? `/lab-tests/${target.slug}` : `/product/${target.slug}`);
+              setIsOpen(false);
+            } else if (effectiveQuery.length >= 2) {
+              saveRecentSearch(effectiveQuery);
+              router.push(`/medicines?q=${encodeURIComponent(effectiveQuery)}`);
               setIsOpen(false);
             }
           }}
@@ -330,15 +337,26 @@ export function SearchAutocomplete({ hideCameraIcon = false, compact = false }: 
               }`}
               placeholder={
                 pathname?.startsWith('/lab-tests') 
-                  ? "Search for lab tests..." 
+                  ? "Search lab tests or paste link..." 
                   : pathname?.startsWith('/medicines') || pathname?.startsWith('/product')
-                    ? "Search for medicines..."
-                    : "Search for medicines or lab tests..."
+                    ? "Search medicines or paste link..."
+                    : "Search medicines, lab tests or paste link..."
               }
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value);
+                const val = e.target.value;
+                const extracted = extractSearchTermFromUrl(val);
+                setQuery(extracted || val);
                 setShowRecent(false);
+              }}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("text");
+                const extracted = extractSearchTermFromUrl(pasted);
+                if (extracted) {
+                  e.preventDefault();
+                  setQuery(extracted);
+                  setShowRecent(false);
+                }
               }}
               onFocus={handleFocus}
               onKeyDown={handleKeyDown}
