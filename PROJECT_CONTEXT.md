@@ -7,7 +7,7 @@
 ---
 
 ## 📅 Last Updated
-- **Date:** 2026-11-03 (00:35 IST)
+- **Date:** 2026-11-03 (10:07 IST)
 - **Updated By:** Gemini 3.8 Flash
 - **Conversation Summary:** 
   1. Fixed 1mg "Data unavailable" issue (staleness-based scraper priority queue + latest_price without time limit + 30/90 day chart toggle).
@@ -16,6 +16,7 @@
   4. Implemented dedicated `StickyMobileSearch` component for the actual in-page search bars across ALL 6 pages of the entire app: Home (`/`), Medicines (`/medicines`), Lab Tests (`/lab-tests`), Price Trends (`/trends`), Medicine Details (`/product/[slug]`), and Lab Test Details (`/lab-tests/[slug]`). Floats cleanly as a rounded pill (`drop-shadow-md`, transparent backdrop, no solid background band) right below navbar pills (`top-[4.75rem]`). Keeps an exact-height placeholder to eliminate layout shifts, and stays floating indefinitely even when scrolling all the way to the footer / About PharmaCare section without hiding.
   5. Fixed Home page (`/`) mobile stickiness: removed `animate-[fadeUp]` CSS keyframe transform on `#hero-search-bar` wrapper which previously created a CSS transform containing block trapping `position: fixed` inside the scrolling hero div. Now floats properly to the viewport below navbar.
   6. Added Pharmacy URL link paste extraction to `SearchAutocomplete` (used on Home page and Navbar): pasting links from 1mg, PharmEasy, Apollo, Netmeds, Practo, and Zeno automatically parses clean medicine name into query and triggers autocomplete/search directly, with support for URLs without protocol and Enter key fallback redirection to `/medicines?q=...`.
+  7. Fixed PriceHistoryChart 30/90 days toggle lag: Replaced slow blocking full-page server roundtrip (`router.push`) with instantaneous (0ms) client-side filtering via `useMemo` and local React state. Initial page load fetches up to 90 days of history once, allowing 30 Days and 90 Days buttons to switch in 0ms with zero wait or UI freeze, and non-blocking `replaceState` for URL sync. Optimized backend async DB queries with `asyncio.to_thread`.
 
 ---
 

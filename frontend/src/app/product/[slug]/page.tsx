@@ -64,7 +64,8 @@ export default async function ProductPage({
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   const days = Math.min(90, Math.max(7, Number(resolvedSearchParams.days) || 30));
-  const data = await getProductData(slug, days);
+  // Always fetch up to 90 days from backend so client chart toggles instantly
+  const data = await getProductData(slug, 90);
 
   if (!data) {
     notFound();

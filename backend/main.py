@@ -427,17 +427,21 @@ async def get_product(request: Request, slug: str, days: int = Query(30, ge=7, l
 
     # 2. Run remaining DB queries IN PARALLEL using asyncio.to_thread
     async def fetch_mappings():
-        return supabase.table("platform_product_links").select(
-            "id, affiliate_url, scrape_url, platforms(name, logo_url)"
-        ).eq("product_id", product["id"]).execute()
+        return await asyncio.to_thread(
+            lambda: supabase.table("platform_product_links").select(
+                "id, affiliate_url, scrape_url, platforms(name, logo_url)"
+            ).eq("product_id", product["id"]).execute()
+        )
 
     async def fetch_alternatives():
         if not product.get("composition"):
             return None
         try:
-            return supabase.table("products").select(
-                "id, name, slug, category, composition, image_url, requires_rx"
-            ).eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
+            return await asyncio.to_thread(
+                lambda: supabase.table("products").select(
+                    "id, name, slug, category, composition, image_url, requires_rx"
+                ).eq("composition", product["composition"]).neq("id", product["id"]).limit(4).execute()
+            )
         except Exception:
             return None
 

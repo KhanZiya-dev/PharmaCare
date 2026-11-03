@@ -49,39 +49,70 @@ const LIGHT_COLORS = ["#00236f", "#006a61", "#e85d04", "#7209b7", "#0284c7"];
 const DARK_COLORS = ["#60a5fa", "#2dd4bf", "#fb923c", "#c084fc", "#38bdf8"];
 
 export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { theme, resolvedTheme } = useTheme();
 
   const [mounted, setMounted] = React.useState(false);
+  const [selectedDays, setSelectedDays] = React.useState<number>(days);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync if days prop changes externally
+  React.useEffect(() => {
+    if (days && days !== selectedDays) {
+      setSelectedDays(days);
+    }
+  }, [days]);
 
   const isDark = mounted && (theme === "monochrome" || resolvedTheme === "monochrome");
   const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
 
   const handleRangeChange = (newDays: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (newDays === 30) {
-      params.delete("days");
-    } else {
-      params.set("days", String(newDays));
+    // 1. Instant client-side state update (0ms latency!)
+    setSelectedDays(newDays);
+
+    // 2. Seamless URL update without full-page server re-render
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (newDays === 30) {
+        params.delete("days");
+      } else {
+        params.set("days", String(newDays));
+      }
+      const query = params.toString();
+      const newUrl = `${pathname}${query ? `?${query}` : ""}`;
+      window.history.replaceState(null, "", newUrl);
+    } catch (e) {
+      // ignore in SSR
     }
-    const query = params.toString();
-    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   };
 
-  // Wrap in useMemo to prevent expensive recalculations on every render
+  // Wrap in useMemo to recalculate instantly when selectedDays or platforms change
   const chartData = React.useMemo(() => {
-    const dateSet = new Set<string>();
+    const cutoffDate = new Date(Date.now() - selectedDays * 24 * 60 * 60 * 1000);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+    let dateSet = new Set<string>();
     platforms.forEach((platform) => {
       platform.history.forEach((entry) => {
         const dateStr = entry.scraped_at.split('T')[0];
-        dateSet.add(dateStr);
+        if (dateStr >= cutoffStr) {
+          dateSet.add(dateStr);
+        }
       });
     });
+
+    // Fallback: if no data falls within cutoff but history exists, show all available history
+    if (dateSet.size === 0) {
+      platforms.forEach((platform) => {
+        platform.history.forEach((entry) => {
+          dateSet.add(entry.scraped_at.split('T')[0]);
+        });
+      });
+    }
 
     const sortedDates = Array.from(dateSet).sort();
 
@@ -111,7 +142,7 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
 
       return dataPoint;
     });
-  }, [platforms]);
+  }, [platforms, selectedDays]);
 
   const [activePlatform, setActivePlatform] = React.useState<string | null>(null);
 
@@ -168,17 +199,18 @@ export function PriceHistoryChart({ platforms, days = 30 }: PriceHistoryChartPro
   return (
     <div className="w-full h-[400px] bg-white rounded-2xl shadow-sm border border-accent p-6 relative">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-foreground text-lg">Price History</h3>
+        <h3 className="font-bold text-foreground text-lg">{selectedDays}-Day Price History</h3>
         {/* 30 / 90 Day Toggle */}
         <div className="flex items-center bg-gray-100 dark:bg-zinc-800/80 rounded-lg p-0.5 border border-transparent dark:border-zinc-700/60">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => handleRangeChange(opt.value)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                days === opt.value
-                  ? "bg-white text-primary shadow-sm dark:bg-zinc-700 dark:text-white dark:shadow-none"
-                  : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                selectedDays === opt.value
+                  ? "bg-white text-primary shadow-sm dark:bg-zinc-700 dark:text-white dark:shadow-none font-bold"
+                  : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
             >
               {opt.label}
